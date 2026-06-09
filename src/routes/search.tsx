@@ -88,7 +88,7 @@ function SearchPage() {
   const products = data?.products ?? [];
 
   const update = (patch: Partial<typeof search>) =>
-    navigate({ search: (prev) => ({ ...prev, ...patch }) as any, replace: true });
+    navigate({ search: (prev: any) => ({ ...prev, ...patch }), replace: true });
 
   const onSubmit = (e: React.FormEvent) => {
     e.preventDefault();
