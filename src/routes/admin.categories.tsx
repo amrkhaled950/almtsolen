@@ -281,7 +281,7 @@ function CategoriesPage() {
               <button onClick={resetForm} className="flex-1 h-10 rounded-lg border border-input text-sm font-semibold hover:bg-muted">
                 {isAr ? "إلغاء" : "Cancel"}
               </button>
-              <button onClick={handleSave} disabled={!nameAr.trim() || !slug.trim() || upsertMut.isPending}
+              <button onClick={handleSave} disabled={!nameAr.trim() || upsertMut.isPending}
                 className="flex-1 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover disabled:opacity-50 flex items-center justify-center gap-1.5">
                 {upsertMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 {isAr ? "حفظ" : "Save"}
