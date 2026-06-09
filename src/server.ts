@@ -26,7 +26,7 @@ async function getServerEntry(): Promise<ServerEntry> {
 const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function readCatastrophicSsrBody(response: Response): Promise<string | undefined> {
-  if (response.status < 500) return response;
+  if (response.status < 500) return undefined;
   const contentType = response.headers.get("content-type") ?? "";
   if (!contentType.includes("application/json")) return undefined;
 
