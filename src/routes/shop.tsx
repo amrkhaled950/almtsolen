@@ -8,9 +8,20 @@ import { listProductsPublic, listCategoriesPublic } from "../lib/catalog.functio
 import { SlidersHorizontal, Loader2 } from "lucide-react";
 
 export const Route = createFileRoute("/shop")({
-  head: () => ({ meta: [{ title: "المتجر | المتسولين للكتب" }] }),
+  head: () => ({
+    meta: [
+      { title: "المتجر | تسوق الكتب العربية | مكتبة المتسولين" },
+      { name: "description", content: "تصفح كل كتب مكتبة المتسولين: روايات، أدب، تنمية ذاتية، تاريخ، فلسفة وغيرها. توصيل لكل مصر ودفع عند الاستلام." },
+      { property: "og:title", content: "المتجر | مكتبة المتسولين" },
+      { property: "og:description", content: "تصفح آلاف الكتب العربية والمترجمة بأسعار مميزة." },
+      { property: "og:url", content: "https://www.almotasolen.com/shop" },
+      { property: "og:type", content: "website" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/shop" }],
+  }),
   component: Shop,
 });
+
 
 function Shop() {
   const locale = useLocale((s) => s.locale);
