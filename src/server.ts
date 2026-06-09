@@ -15,8 +15,15 @@ async function getServerEntry(): Promise<ServerEntry> {
       (m) => (m.default ?? m) as ServerEntry,
     );
   }
-  return serverEntryPromise;
+  try {
+    return await serverEntryPromise;
+  } catch (error) {
+    serverEntryPromise = undefined;
+    throw error;
+  }
 }
+
+const wait = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
 
 // h3 swallows in-handler throws into a normal 500 Response with body
 // {"unhandled":true,"message":"HTTPError"} — try/catch alone never fires for those.
@@ -42,7 +49,16 @@ export default {
     try {
       const handler = await getServerEntry();
       const response = await handler.fetch(request, env, ctx);
-      return await normalizeCatastrophicSsrResponse(response);
+      const normalized = await normalizeCatastrophicSsrResponse(response);
+
+      if (normalized.status >= 500 && (request.method === "GET" || request.method === "HEAD")) {
+        await wait(250);
+        const retryHandler = await getServerEntry();
+        const retryResponse = await retryHandler.fetch(request, env, ctx);
+        return await normalizeCatastrophicSsrResponse(retryResponse);
+      }
+
+      return normalized;
     } catch (error) {
       console.error(error);
       return new Response(renderErrorPage(), {
