@@ -14,7 +14,9 @@ import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 import { SiteHeader } from "../components/layout/SiteHeader";
 import { SiteFooter } from "../components/layout/SiteFooter";
+import { WhatsAppFloat } from "../components/layout/WhatsAppFloat";
 import { CartDrawer } from "../components/cart/CartDrawer";
+
 import { Toaster } from "../components/ui/sonner";
 import { useLocale } from "../lib/i18n";
 import { ensureAuthInit } from "../lib/auth-store";
@@ -187,8 +189,10 @@ function RootComponent() {
         </main>
         <SiteFooter />
         <CartDrawer />
+        <WhatsAppFloat />
         <Toaster position="top-center" richColors />
       </div>
     </QueryClientProvider>
   );
+
 }
