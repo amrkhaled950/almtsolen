@@ -17,10 +17,19 @@ export function SiteHeader() {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [searchQ, setSearchQ] = useState("");
+  const navigate = useNavigate();
   const catRef = useRef<HTMLDivElement>(null);
   const { settings } = useSiteSettings();
   const siteName = (locale === "ar" ? settings?.site_name_ar : settings?.site_name_en) || "مكتبة المتسولين";
   const logoUrl = settings?.logo_url || "/logo.png";
+
+  const submitSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const q = searchQ.trim();
+    navigate({ to: "/search", search: { q } as any });
+    setMobileOpen(false);
+  };
 
   const fetchCats = useServerFn(listCategoriesPublic);
   const { data: catData } = useQuery({ queryKey: ["categories-nav"], queryFn: () => fetchCats() });
