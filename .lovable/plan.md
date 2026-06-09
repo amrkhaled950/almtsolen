@@ -1,102 +1,52 @@
-# خطة المراحل 2 → 5
+## الوضع
 
-## نظرة عامة
-الباك إند الخاص بالإعدادات (`site-settings.functions.ts` + جدول `site_settings`) موجود بالفعل ويحتوي كل الحقول المطلوبة (لوجو/favicon/نصوص ar+en/سوشيال/Hero/سياسات). صفحة `/admin/settings` الحالية فيها تابات شكلية بس مش متربطة بالـ backend. هنبني على اللي موجود.
-
----
-
-## المرحلة 2 — `/admin/settings` كاملة
-
-تابات جديدة بدل القديمة:
-- **العلامة التجارية**: لوجو + favicon (رفع لـ Supabase Storage bucket `site-assets`) + اسم الموقع ar/en + tagline ar/en + meta description ar/en
-- **Hero**: صور Hero متعددة (URL + title ar/en + link لكل صورة) + Hero title/subtitle ar/en — Drag to reorder
-- **التواصل والسوشيال**: تليفون/إيميل/عنوان ar/en + فيسبوك/انستجرام/تويتر/تيكتوك/يوتيوب/واتساب
-- **الفوتر**: نص "عن المتجر" ar/en
-- **الصفحات القانونية**: سياسة الخصوصية، الشروط، الاسترجاع، الشحن، عن المتجر — كل واحدة ar+en (textarea كبيرة، Markdown مدعوم)
-
-كل تاب فيه زرار Save بيستخدم mutation موجودة `updateSiteSettings`.
+طلبت 16 ميزة + إضافات. ده شغل ضخم جداً ومش هينفع يتعمل كله مرة واحدة بأمان (هيخلي الكود يطلع buggy وصعب نراجعه). هقسمه على **4 موجات منطقية** — كل موجة هتبقى رد منفصل وتشتغل لوحدها.
 
 ---
 
-## المرحلة 3 — CRUD تصنيفات + ربط Settings بالواجهة
+## الموجة 1 — Quick Wins (تغييرات سريعة بدون داتابيز)
 
-**التصنيفات** (`/admin/categories` موجودة جزئيا):
-- جدول بكل التصنيفات
-- إضافة/تعديل/حذف بـ modal
-- حقول: slug، الاسم ar/en، الصورة، الترتيب، إظهار/إخفاء
-- استخدام functions موجودة في `admin-catalog.functions.ts` أو إضافة الناقص
+1. **شيل علامة فوري من الفوتر** (`SiteFooter.tsx`)
+2. **WhatsApp floating button** — زرار عائم في كل الصفحات يفتح واتساب على رقم من الإعدادات
+3. **Stock urgency badges** — "متبقي X نسخ" تحت السعر في صفحة المنتج والكارت
+4. **Skeleton loaders** — استبدال السبينر في الـ shop / index / product / categories
+5. **Social share buttons** — Facebook / X / WhatsApp / نسخ الرابط في صفحة المنتج
 
-**ربط Settings**:
-- `SiteHeader`: لوجو + اسم الموقع من Settings
-- `SiteFooter`: روابط السوشيال + نص about + معلومات الاتصال
-- `index.tsx` Hero: الصور + النصوص من Settings
-- صفحات `/privacy /terms /returns /shipping /about`: المحتوى من Settings
-- `__root.tsx`: favicon ديناميكي + meta description
+## الموجة 2 — البحث + كتب مشابهة
 
-كله عبر `getSiteSettings` server fn + React Query.
+6. **صفحة `/search?q=` بفلاتر كاملة** — بحث في الاسم/المؤلف/الوصف + فلاتر (تصنيف، نطاق سعر، تقييم، توفر) + ترتيب + URL search params
+7. **Search bar في الهيدر** — يوجه لـ `/search?q=`
+8. **"كتب مشابهة" / "اشترى أيضاً"** — في صفحة المنتج: نفس التصنيف، استبعاد نفس الكتاب، 8 كتب
 
----
+## الموجة 3 — التقييمات + الكوبونات + الـ Wishlist
 
-## المرحلة 4 — تصدير CSV + بوليصة شحن PDF + تحديث حالات الطلبات
+9. **جدول `reviews`** (id, product_id, user_id, rating, title, body, created_at) + RLS
+10. **مكون reviews في صفحة المنتج**: عرض المراجعات + متوسط التقييم + فورم كتابة مراجعة (للمسجلين)
+11. **جدول `coupons`** (code, type نسبة/مبلغ، value, min_subtotal, expires_at, usage_limit, used_count, is_active) + RLS
+12. **تطبيق الكوبون في checkout** — حقل إدخال + validation + إعادة حساب
+13. **إدارة الكوبونات من الأدمن** — صفحة `/admin/coupons`
+14. **نقل Wishlist للداتابيز** — جدول `wishlists` (user_id, product_id) + مزامنة من localStorage للمسجلين
+15. **Guest checkout** — السماح بإتمام الطلب بدون تسجيل (اسم + إيميل + موبايل + عنوان فقط)
 
-**تحديث حالة الطلب** (في `/admin/orders`):
-- Dropdown بحالات: pending, confirmed, processing, shipped, delivered, cancelled, returned
-- زرار حفظ + server fn `updateOrderStatus`
-- Timeline بسيط لتاريخ التغييرات (جدول `order_status_history`)
+## الموجة 4 — الأدمن المتقدم
 
-**تصدير CSV**:
-- زرار "تصدير CSV" مع فلاتر (تاريخ، حالة)
-- server fn `exportOrdersCsv` ترجع نص CSV
-- تنزيل client-side عبر Blob
-
-**بوليصة شحن PDF**:
-- زرار "طباعة بوليصة" لكل طلب
-- استخدام `jspdf` (مفيش subprocess) + خط عربي (Cairo/Tajawal من Google Fonts كـ base64)
-- محتوى: اسم/تليفون/عنوان العميل، المحافظة، المنتجات، الإجمالي، تعليمات، QR code رقم الطلب
-- يفتح في تاب جديد للطباعة
+16. **Dashboard analytics حقيقي** — مبيعات يومية (chart 30 يوم)، أفضل 10 منتجات، أكثر تصنيفاً مبيعاً، معدل التحويل، عدد الطلبات
+17. **CSV bulk import للمنتجات** — رفع ملف، معاينة، استيراد دفعة واحدة
+18. **إدارة المخزون** — تنبيه low stock (`stock <= 5`) في dashboard، history للحركة عبر جدول `stock_movements`
+19. **تقارير قابلة للتصدير** — تصدير الطلبات والمبيعات كـ CSV (وExcel-compatible)
 
 ---
 
-## المرحلة 5 — صفحة التحليلات بفلتر تاريخ
+## ملحوظات
 
-تطوير `/admin/analytics` الموجودة:
-- فلتر تاريخ (آخر 7 أيام / 30 يوم / مخصص بـ Date Range Picker)
-- مقاييس: عدد الطلبات، الإيرادات، متوسط قيمة الطلب، عدد الزبائن الجدد
-- رسوم بيانية (`recharts` لو متركب، وإلا SVG بسيط):
-  - مبيعات يومية (line)
-  - الطلبات حسب الحالة (donut)
-  - أفضل 10 منتجات (bar)
-  - الطلبات حسب المحافظة (bar)
-- تحديث `admin-analytics.functions.ts` لقبول `from`/`to`
+- **Dynamic OG images للمنتجات**: مش هحطها في الخطة دلوقتي لأنها بتحتاج إما edge image generation (مش متوفر بسهولة على Workers) أو خدمة خارجية. الحل البديل اللي عملته (صورة الكتاب نفسها = og:image) كافي 90%.
+- **Excel export فعلي (.xlsx)**: هستخدم CSV لأن مكتبات xlsx ثقيلة على Worker runtime. CSV بيفتح في Excel عادي.
+- كل موجة هتاخد ~ميجراشن واحدة على الأكثر + شوية ملفات. هتقدر تختبر بعد كل موجة.
 
 ---
 
-## تفاصيل تقنية
+## ابدأ بأي موجة؟
 
-**Schema جديد**:
-```sql
--- Storage bucket
-create bucket 'site-assets' public
+التوصية: **ابدأ بالموجة 1** (سريعة، بدون مخاطر، وبتدي إحساس فوري بالتحسن). بعدها ننتقل للـ 2 وهكذا.
 
--- order status history
-create table order_status_history (
-  id uuid primary key default gen_random_uuid(),
-  order_id uuid references orders(id) on delete cascade,
-  status text not null,
-  changed_by uuid,
-  note text,
-  created_at timestamptz default now()
-);
-```
-
-**حزم محتاجة**:
-- `jspdf` + `qrcode` (للبوليصة)
-- `recharts` (لو مش موجود)
-- `react-day-picker` (موجود مع shadcn calendar)
-
-**ترتيب التنفيذ**:
-1. أبدأ بالمرحلة 2 كاملة (UI + ربط بالباك إند الموجود)
-2. بعد موافقتك أكمل للمرحلة 3
-3. ثم 4 ثم 5
-
-هل أبدأ بالمرحلة 2 دلوقتي؟ أم عايز تعديل في الخطة قبل ما أبدأ؟
+لو موافق، رد بـ "ابدأ بالموجة 1" أو حدد موجة معينة عاوز تبدأ بيها.

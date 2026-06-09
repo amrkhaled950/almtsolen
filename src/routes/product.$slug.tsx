@@ -1,13 +1,16 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, queryOptions } from "@tanstack/react-query";
-import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Loader2 } from "lucide-react";
+import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Flame } from "lucide-react";
 import { useState } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
 import { useCart, useWishlist } from "../lib/cart-store";
 import { getProductPublic } from "../lib/catalog.functions";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
+import { ProductPageSkeleton } from "../components/ui/skeletons";
+import { ShareButtons } from "../components/product/ShareButtons";
+
 
 const productQueryOptions = (slug: string) =>
   queryOptions({
@@ -122,7 +125,8 @@ function ProductPage() {
   });
 
   if (isLoading) {
-    return <div className="container-page py-20 grid place-items-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>;
+    return <ProductPageSkeleton />;
+
   }
   const product = data?.product;
   if (!product) {
@@ -169,11 +173,18 @@ function ProductPage() {
             )}
           </div>
           {description && <p className="text-foreground/80 leading-relaxed mb-6">{description}</p>}
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex items-center gap-3 mb-6 flex-wrap">
             <span className={cn("text-sm font-semibold px-3 py-1 rounded-full", inStock ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
               {inStock ? t("product.inStock", locale) : t("product.outOfStock", locale)}
             </span>
+            {inStock && product.stock > 0 && product.stock <= 5 && (
+              <span className="text-sm font-bold px-3 py-1 rounded-full bg-primary/10 text-primary flex items-center gap-1.5 animate-pulse">
+                <Flame className="h-3.5 w-3.5" />
+                {isAr ? `متبقي ${product.stock} نسخ فقط!` : `Only ${product.stock} left!`}
+              </span>
+            )}
           </div>
+
           {inStock && (
             <div className="flex items-center gap-3 mb-6">
               <div className="flex items-center border border-border rounded-md h-12">
@@ -204,8 +215,15 @@ function ProductPage() {
               </div>
             ))}
           </div>
+          <div className="mt-6 pt-6 border-t border-border">
+            <ShareButtons
+              url={`https://www.almotasolen.com/product/${product.slug}`}
+              title={title}
+            />
+          </div>
         </div>
       </div>
     </div>
   );
 }
+
