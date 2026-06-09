@@ -1,6 +1,6 @@
 import { Link, useNavigate } from "@tanstack/react-router";
 import {
-  LayoutDashboard, Package, ShoppingBag, Users, Tags, Settings, BookOpen, LogOut, BarChart3, UserCog,
+  LayoutDashboard, Package, ShoppingBag, Users, Tags, Settings, BookOpen, LogOut, BarChart3, UserCog, Ticket,
 } from "lucide-react";
 import { useLocale } from "../../lib/i18n";
 import { useAuth } from "@/lib/auth-store";
@@ -26,6 +26,7 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
         { to: "/admin/orders", icon: ShoppingBag, label: { ar: "الطلبات", en: "Orders" } },
         { to: "/admin/products", icon: Package, label: { ar: "المنتجات", en: "Products" } },
         { to: "/admin/categories", icon: Tags, label: { ar: "التصنيفات", en: "Categories" } },
+        { to: "/admin/coupons", icon: Ticket, label: { ar: "الكوبونات", en: "Coupons" } },
         { to: "/admin/customers", icon: Users, label: { ar: "العملاء", en: "Customers" } },
       ],
     },
