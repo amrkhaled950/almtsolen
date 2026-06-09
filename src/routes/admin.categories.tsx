@@ -87,10 +87,10 @@ function CategoriesPage() {
   };
 
   const handleSave = () => {
-    if (!nameAr.trim() || !slug.trim()) return;
+    if (!nameAr.trim()) return;
     upsertMut.mutate({
       ...(editTarget?.id ? { id: editTarget.id } : {}),
-      slug: slug.trim().toLowerCase().replace(/\s+/g,"-"),
+      ...(slug.trim() ? { slug: slug.trim().toLowerCase().replace(/\s+/g,"-") } : {}),
       name_ar: nameAr.trim(),
       name_en: nameEn.trim() || nameAr.trim(),
       image_url: icon,
@@ -102,6 +102,7 @@ function CategoriesPage() {
       parent_id: parentId || undefined,
     });
   };
+
 
   return (
     <div className="space-y-5 max-w-[1400px] mx-auto">
