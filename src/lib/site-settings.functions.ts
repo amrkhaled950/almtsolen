@@ -55,6 +55,9 @@ export const getSiteSettings = createServerFn({ method: "GET" }).handler(
   },
 );
 
+// Public alias (no auth) – same behavior, semantic clarity for public callers
+export const getPublicSiteSettings = getSiteSettings;
+
 const updateSchema = z
   .object({
     logo_url: z.string().max(1000).optional().nullable(),
