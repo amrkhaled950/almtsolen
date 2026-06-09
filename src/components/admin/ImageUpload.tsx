@@ -35,20 +35,27 @@ export function ImageUpload({ value, onChange, folder = "misc", accept = "image/
   const upload = useServerFn(uploadAssetAdmin);
   const [busy, setBusy] = useState(false);
 
-  const handlePick = async (file: File) => {
-    if (!file) return;
-    if (file.size > 10 * 1024 * 1024) {
-      toast.error(isAr ? "حجم الصورة أكبر من 10MB" : "File exceeds 10MB");
+  const handlePick = async (rawFile: File) => {
+    if (!rawFile) return;
+    if (rawFile.size > 20 * 1024 * 1024) {
+      toast.error(isAr ? "حجم الصورة أكبر من 20MB" : "File exceeds 20MB");
       return;
     }
     try {
       setBusy(true);
+      // Resize/compress in the browser before upload (max 1600px, ~85% quality).
+      const file = await resizeImage(rawFile, { maxWidth: 1600, maxHeight: 1600, quality: 0.85 });
       const dataBase64 = await fileToBase64(file);
       const res = await upload({
         data: { folder, filename: file.name, contentType: file.type || "image/jpeg", dataBase64 },
       });
       onChange(res.url);
-      toast.success(isAr ? "تم رفع الصورة" : "Image uploaded");
+      const savedKb = Math.max(0, Math.round((rawFile.size - file.size) / 1024));
+      toast.success(
+        isAr
+          ? `تم رفع الصورة${savedKb > 20 ? ` (تم توفير ${savedKb}KB)` : ""}`
+          : `Image uploaded${savedKb > 20 ? ` (saved ${savedKb}KB)` : ""}`,
+      );
     } catch (e: any) {
       toast.error(e?.message || (isAr ? "فشل رفع الصورة" : "Upload failed"));
     } finally {
@@ -56,6 +63,7 @@ export function ImageUpload({ value, onChange, folder = "misc", accept = "image/
       if (inputRef.current) inputRef.current.value = "";
     }
   };
+
 
   return (
     <div className={`flex items-start gap-3 ${className}`}>
