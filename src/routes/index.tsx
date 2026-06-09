@@ -52,10 +52,33 @@ function Home() {
     })),
   });
 
+  const heroTitle = (isAr ? settings?.hero_title_ar : settings?.hero_title_en) || t("hero.title", locale);
+  const heroSubtitle = (isAr ? settings?.hero_subtitle_ar : settings?.hero_subtitle_en) || t("hero.subtitle", locale);
+  const heroImages = settings?.hero_images ?? [];
+
+  const [heroIdx, setHeroIdx] = useState(0);
+  useEffect(() => {
+    if (heroImages.length < 2) return;
+    const id = setInterval(() => setHeroIdx((i) => (i + 1) % heroImages.length), 5000);
+    return () => clearInterval(id);
+  }, [heroImages.length]);
+
   return (
     <div>
       {/* ── Hero ─────────────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
+        {heroImages.length > 0 && (
+          <>
+            {heroImages.map((img, i) => (
+              <div
+                key={i}
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
+                style={{ backgroundImage: `url(${img.url})`, opacity: i === heroIdx ? 0.35 : 0 }}
+              />
+            ))}
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/40 to-primary/80" />
+          </>
+        )}
         <div className="container-page relative py-16 md:py-24 text-center">
           <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-foreground/10 backdrop-blur text-xs font-semibold mb-5">
@@ -63,11 +86,13 @@ function Home() {
               {t("hero.tag", locale)}
             </span>
             <h1 className="font-display font-black text-4xl md:text-6xl leading-tight mb-5">
-              {t("hero.title", locale)}
-              <span className="block text-gold mt-2">{isAr ? "بين يديك" : "in your hands"}</span>
+              {heroTitle}
+              {!settings?.hero_title_ar && !settings?.hero_title_en && (
+                <span className="block text-gold mt-2">{isAr ? "بين يديك" : "in your hands"}</span>
+              )}
             </h1>
             <p className="text-lg text-primary-foreground/80 mb-8 leading-relaxed max-w-xl mx-auto">
-              {t("hero.subtitle", locale)}
+              {heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
               <Link to="/shop" className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary-foreground text-primary font-bold hover:bg-gold hover:text-gold-foreground transition-colors shadow-elegant">
@@ -77,6 +102,18 @@ function Home() {
                 {t("hero.cta2", locale)}
               </Link>
             </div>
+            {heroImages.length > 1 && (
+              <div className="flex justify-center gap-1.5 mt-8">
+                {heroImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setHeroIdx(i)}
+                    className={`h-2 rounded-full transition-all ${i === heroIdx ? "w-8 bg-primary-foreground" : "w-2 bg-primary-foreground/40"}`}
+                    aria-label={`Slide ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
           </motion.div>
         </div>
       </section>
