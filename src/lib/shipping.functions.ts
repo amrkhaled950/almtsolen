@@ -19,12 +19,12 @@ async function assertAdmin(supabase: any, userId: string) {
 export const getShippingRates = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ rates: GovernorateShipping[] }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    const { data, error } = await (supabaseAdmin as any)
       .from("shipping_rates")
       .select("*")
       .order("governorate_ar");
     if (error) throw new Error(error.message);
-    return { rates: (data ?? []) as GovernorateShipping[] };
+    return { rates: (data ?? []) as unknown as GovernorateShipping[] };
   }
 );
 
@@ -46,7 +46,7 @@ export const upsertShippingRates = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { error } = await supabaseAdmin
+    const { error } = await (supabaseAdmin as any)
       .from("shipping_rates")
       .upsert(data.rates, { onConflict: "governorate_en" });
     if (error) throw new Error(error.message);
