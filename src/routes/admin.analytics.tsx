@@ -157,15 +157,40 @@ function AnalyticsPage() {
             {isAr ? "أرقام حقيقية من قاعدة البيانات" : "Real numbers from your database"}
           </p>
         </div>
-        <div className="inline-flex bg-muted rounded-lg p-1">
-          {(["7d", "14d", "30d", "90d"] as Range[]).map((r) => (
-            <button key={r} onClick={() => setRange(r)}
-              className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                range === r ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}>
-              {r}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex bg-muted rounded-lg p-1">
+            {(["7d", "14d", "30d", "90d"] as Preset[]).map((r) => (
+              <button key={r} onClick={() => applyPreset(r)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-semibold transition-colors",
+                  preset === r ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}>
+                {r}
+              </button>
+            ))}
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("gap-2", preset === "custom" && "border-primary text-primary")}>
+                <CalendarIcon className="h-4 w-4" />
+                {format(from, "dd MMM", { locale: isAr ? arLocale : undefined })} – {format(to, "dd MMM yyyy", { locale: isAr ? arLocale : undefined })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={{ from, to }}
+                onSelect={(r: any) => {
+                  if (r?.from) setFrom(r.from);
+                  if (r?.to) setTo(r.to);
+                  if (r?.from && r?.to) setPreset("custom");
+                }}
+                numberOfMonths={2}
+                locale={isAr ? arLocale : undefined}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
