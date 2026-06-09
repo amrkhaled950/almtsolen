@@ -131,10 +131,8 @@ export const placeOrder = createServerFn({ method: "POST" })
       .single();
     if (oErr) throw new Error(oErr.message);
     if (coupon_id) {
-      await supabaseAdmin.rpc("noop").catch(() => {});
-      await supabaseAdmin.from("coupons").update({
-        used_count: ((await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon_id).single()).data?.used_count ?? 0) + 1
-      }).eq("id", coupon_id);
+      const { data: cur } = await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon_id).single();
+      await supabaseAdmin.from("coupons").update({ used_count: (cur?.used_count ?? 0) + 1 }).eq("id", coupon_id);
     }
 
     const itemsWithOrder = orderItems.map((i) => ({ ...i, order_id: order.id }));
