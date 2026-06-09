@@ -5,9 +5,19 @@ import { useLocale } from "../lib/i18n";
 import { listCategoriesPublic } from "../lib/catalog.functions";
 
 export const Route = createFileRoute("/categories")({
-  head: () => ({ meta: [{ title: "التصنيفات | المتسولين" }] }),
+  head: () => ({
+    meta: [
+      { title: "التصنيفات | تصفح أقسام الكتب | مكتبة المتسولين" },
+      { name: "description", content: "تصفح جميع تصنيفات الكتب في مكتبة المتسولين: روايات، أدب، تنمية، تاريخ، فلسفة، علوم وأكثر." },
+      { property: "og:title", content: "كل تصنيفات الكتب | مكتبة المتسولين" },
+      { property: "og:description", content: "اكتشف الكتب حسب التصنيف بسهولة." },
+      { property: "og:url", content: "https://www.almotasolen.com/categories" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/categories" }],
+  }),
   component: Categories,
 });
+
 
 function Categories() {
   const locale = useLocale((s) => s.locale);
