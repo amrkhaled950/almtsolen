@@ -179,13 +179,18 @@ export function SiteHeader() {
           </nav>
 
           {/* Search (desktop) */}
-          <div className="hidden md:flex flex-1 max-w-md mx-auto">
+          <form onSubmit={submitSearch} className="hidden md:flex flex-1 max-w-md mx-auto">
             <div className="relative w-full">
               <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
-              <input type="search" placeholder={t("nav.search", locale)}
-                className="w-full h-10 ps-10 pe-4 rounded-full bg-muted text-sm border border-transparent focus:border-primary focus:bg-background focus:outline-none transition-colors" />
+              <input
+                type="search"
+                value={searchQ}
+                onChange={(e) => setSearchQ(e.target.value)}
+                placeholder={t("nav.search", locale)}
+                className="w-full h-10 ps-10 pe-4 rounded-full bg-muted text-sm border border-transparent focus:border-primary focus:bg-background focus:outline-none transition-colors"
+              />
             </div>
-          </div>
+          </form>
 
           {/* Actions */}
           <div className="flex items-center gap-1">
@@ -207,13 +212,18 @@ export function SiteHeader() {
         </div>
 
         {/* Mobile search */}
-        <div className="md:hidden border-t border-border/60 px-4 py-2">
+        <form onSubmit={submitSearch} className="md:hidden border-t border-border/60 px-4 py-2">
           <div className="relative">
             <Search className="absolute top-1/2 -translate-y-1/2 start-3 h-4 w-4 text-muted-foreground" />
-            <input type="search" placeholder={t("nav.search", locale)}
-              className="w-full h-9 ps-10 pe-4 rounded-full bg-muted text-sm focus:outline-none" />
+            <input
+              type="search"
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder={t("nav.search", locale)}
+              className="w-full h-9 ps-10 pe-4 rounded-full bg-muted text-sm focus:outline-none"
+            />
           </div>
-        </div>
+        </form>
       </header>
 
       {/* Mobile drawer */}
