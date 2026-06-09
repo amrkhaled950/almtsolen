@@ -89,7 +89,7 @@ export function SiteHeader() {
 
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0">
-            <img src="/logo.png" alt="مكتبة المتسولين" className="h-16 w-16 md:h-20 md:w-20 object-contain" />
+            <img src={logoUrl} alt={siteName} className="h-16 w-16 md:h-20 md:w-20 object-contain" />
           </Link>
 
           {/* Desktop nav */}
