@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import {
   Palette, Image as ImageIcon, Share2, FileText, Truck, CreditCard, Bell,
-  Loader2, Check, Plus, Trash2, ArrowUp, ArrowDown, ExternalLink,
+  Loader2, Check, Plus, Trash2, ArrowUp, ArrowDown, ExternalLink, Megaphone,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
 });
 
-type Tab = "branding" | "hero" | "social" | "footer" | "legal" | "shipping" | "payment" | "notifications";
+type Tab = "branding" | "hero" | "promo" | "social" | "footer" | "legal" | "shipping" | "payment" | "notifications";
 
 function SettingsPage() {
   const locale = useLocale((s) => s.locale);
@@ -26,6 +26,7 @@ function SettingsPage() {
   const tabs: { id: Tab; label: { ar: string; en: string }; icon: any }[] = [
     { id: "branding",      label: { ar: "العلامة التجارية", en: "Branding" },      icon: Palette },
     { id: "hero",          label: { ar: "البانر الرئيسي",   en: "Hero" },          icon: ImageIcon },
+    { id: "promo",         label: { ar: "العروض والإعلانات", en: "Promo & Banner" }, icon: Megaphone },
     { id: "social",        label: { ar: "التواصل والسوشيال", en: "Contact & Social" }, icon: Share2 },
     { id: "footer",        label: { ar: "الفوتر",          en: "Footer" },        icon: FileText },
     { id: "legal",         label: { ar: "الصفحات القانونية", en: "Legal Pages" },  icon: FileText },
@@ -61,6 +62,7 @@ function SettingsPage() {
 
       {tab === "branding"      && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <BrandingTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "hero"          && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <HeroTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
+      {tab === "promo"         && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <PromoTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "social"        && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <SocialTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "footer"        && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <FooterTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "legal"         && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <LegalTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
