@@ -117,6 +117,7 @@ function Checkout() {
           apartment: form.apartment.trim() || undefined,
           notes: form.notes.trim() || undefined,
           payment_method: "cod",
+          coupon_code: coupon?.code,
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         },
       });
