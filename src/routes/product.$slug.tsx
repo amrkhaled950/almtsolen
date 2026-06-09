@@ -11,6 +11,7 @@ import { cn } from "../lib/utils";
 import { ProductPageSkeleton } from "../components/ui/skeletons";
 import { ShareButtons } from "../components/product/ShareButtons";
 import { ProductCard } from "../components/product/ProductCard";
+import { ProductReviews } from "../components/product/Reviews";
 
 
 const productQueryOptions = (slug: string) =>
