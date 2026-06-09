@@ -2,10 +2,12 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { ArrowLeft, Sparkles, TrendingUp, Loader2, ChevronRight } from "lucide-react";
 import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
+import { useSiteSettings } from "../lib/use-site-settings";
 
 export const Route = createFileRoute("/")({
   head: () => ({
