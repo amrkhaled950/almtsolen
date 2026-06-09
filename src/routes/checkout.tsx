@@ -8,6 +8,7 @@ import { useCart } from "../lib/cart-store";
 import { EG_GOVERNORATES, EG_PHONE_REGEX } from "../lib/governorates";
 import { placeOrder } from "../lib/orders.functions";
 import { getShippingRates } from "../lib/shipping.functions";
+import { validateCoupon, type CouponPreview } from "../lib/coupons.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
