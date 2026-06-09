@@ -11,6 +11,7 @@ import { cn } from "../lib/utils";
 import { ProductPageSkeleton } from "../components/ui/skeletons";
 import { ShareButtons } from "../components/product/ShareButtons";
 import { ProductCard } from "../components/product/ProductCard";
+import { ProductReviews } from "../components/product/Reviews";
 
 
 const productQueryOptions = (slug: string) =>
@@ -225,6 +226,7 @@ function ProductPage() {
         </div>
       </div>
 
+      <ProductReviews productId={product.id} isAr={isAr} />
       <RelatedProducts productId={product.id} isAr={isAr} />
     </div>
   );
