@@ -84,16 +84,8 @@ export function SiteHeader() {
           </button>
 
           {/* Logo */}
-          <Link to="/" className="flex items-center gap-2 shrink-0">
-            <img src="/logo.png" alt="مكتبة المتسولين" className="h-12 w-12 md:h-14 md:w-14 object-contain" />
-            <div className="hidden sm:block">
-              <div className="font-display font-extrabold text-lg leading-none text-primary">
-                {locale === "ar" ? "مكتبة المتسولين" : "Al-Motasawelin Library"}
-              </div>
-              <div className="text-[10px] text-muted-foreground tracking-widest uppercase mt-0.5">
-                {locale === "ar" ? "للكتب العربية" : "Arabic Books"}
-              </div>
-            </div>
+          <Link to="/" className="flex items-center shrink-0">
+            <img src="/logo.png" alt="مكتبة المتسولين" className="h-16 w-16 md:h-20 md:w-20 object-contain" />
           </Link>
 
           {/* Desktop nav */}
