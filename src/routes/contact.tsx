@@ -4,9 +4,19 @@ import { useSiteSettings } from "../lib/use-site-settings";
 import { Mail, Phone, MapPin } from "lucide-react";
 
 export const Route = createFileRoute("/contact")({
-  head: () => ({ meta: [{ title: "تواصل معنا | المتسولين" }] }),
+  head: () => ({
+    meta: [
+      { title: "تواصل معنا | مكتبة المتسولين" },
+      { name: "description", content: "تواصل مع خدمة عملاء مكتبة المتسولين عبر البريد الإلكتروني أو الهاتف للاستفسار عن الكتب والطلبات والتوصيل." },
+      { property: "og:title", content: "تواصل معنا | مكتبة المتسولين" },
+      { property: "og:description", content: "نحن هنا للإجابة على استفساراتك بخصوص الكتب والطلبات." },
+      { property: "og:url", content: "https://www.almotasolen.com/contact" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/contact" }],
+  }),
   component: ContactPage,
 });
+
 
 function ContactPage() {
   const locale = useLocale((s) => s.locale);
