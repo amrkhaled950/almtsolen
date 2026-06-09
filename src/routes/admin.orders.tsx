@@ -47,6 +47,23 @@ function OrdersPage() {
   const fetchOrder  = useServerFn(getOrderAdmin);
   const updateStatus = useServerFn(updateOrderStatusAdmin);
   const deleteFn    = useServerFn(deleteOrderAdmin);
+  const exportCsvFn = useServerFn(exportOrdersCsvAdmin);
+
+  const exportMut = useMutation({
+    mutationFn: (vars: { status?: OrderStatus }) =>
+      exportCsvFn({ data: vars.status ? { status: vars.status } : {} }),
+    onSuccess: (res: any) => {
+      const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(isAr ? `تم تصدير ${res.count} طلب` : `Exported ${res.count} orders`);
+    },
+    onError: (e: any) => toast.error(e?.message || "Error"),
+  });
 
   const ordersQ = useQuery({
     queryKey: ["admin", "orders"],
