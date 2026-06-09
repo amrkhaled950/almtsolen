@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery, queryOptions, useSuspenseQuery } from "@tanstack/react-query";
+import { useQuery, queryOptions } from "@tanstack/react-query";
 import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
