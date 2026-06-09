@@ -10,6 +10,7 @@ import { toast } from "sonner";
 import { useLocale } from "@/lib/i18n";
 import { getShippingRates, upsertShippingRates, type GovernorateShipping } from "@/lib/shipping.functions";
 import { getSiteSettings, updateSiteSettings, type SiteSettings } from "@/lib/site-settings.functions";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
@@ -183,13 +184,11 @@ function BrandingTab({ isAr, s, set, save, saving }: { isAr: boolean; s: FormSta
   return (
     <div className="rounded-2xl border border-border bg-card shadow-card-soft p-6 space-y-5">
       <div className="grid sm:grid-cols-2 gap-4">
-        <Field label={isAr ? "رابط اللوجو" : "Logo URL"}>
-          <TextInput value={s.logo_url} onChange={(v) => set("logo_url", v)} placeholder="/logo.png أو https://..." />
-          <ImagePreview url={s.logo_url} />
+        <Field label={isAr ? "اللوجو" : "Logo"}>
+          <ImageUpload value={s.logo_url} onChange={(v) => set("logo_url", v)} folder="branding" />
         </Field>
-        <Field label={isAr ? "رابط الـ Favicon" : "Favicon URL"}>
-          <TextInput value={s.favicon_url} onChange={(v) => set("favicon_url", v)} placeholder="/favicon.ico" />
-          <ImagePreview url={s.favicon_url} />
+        <Field label={isAr ? "أيقونة الموقع (Favicon)" : "Favicon"}>
+          <ImageUpload value={s.favicon_url} onChange={(v) => set("favicon_url", v)} folder="branding" size={64} accept="image/png,image/x-icon,image/svg+xml" />
         </Field>
         <Field label={isAr ? "اسم الموقع (عربي)" : "Site name (Arabic)"}>
           <TextInput value={s.site_name_ar} onChange={(v) => set("site_name_ar", v)} />
@@ -274,9 +273,8 @@ function HeroTab({ isAr, s, set, save, saving }: { isAr: boolean; s: FormState; 
                 <button onClick={() => updateImages(images.filter((_, idx) => idx !== i))} className="p-1.5 rounded text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
               </div>
             </div>
-            <Field label={isAr ? "رابط الصورة" : "Image URL"}>
-              <TextInput value={img.url} onChange={(v) => updateImage(i, { url: v })} placeholder="https://..." />
-              <ImagePreview url={img.url} />
+            <Field label={isAr ? "الصورة" : "Image"}>
+              <ImageUpload value={img.url} onChange={(v) => updateImage(i, { url: v })} folder="hero" size={120} />
             </Field>
             <div className="grid sm:grid-cols-2 gap-3">
               <Field label={isAr ? "العنوان (عربي)" : "Title (Arabic)"}>
