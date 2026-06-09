@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Palette, Image as ImageIcon, Share2, FileText, Truck, CreditCard, Bell,
   Loader2, Check, Plus, Trash2, ArrowUp, ArrowDown, ExternalLink, Megaphone,
+  LayoutGrid,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,6 +11,8 @@ import { toast } from "sonner";
 import { useLocale } from "@/lib/i18n";
 import { getShippingRates, upsertShippingRates, type GovernorateShipping } from "@/lib/shipping.functions";
 import { getSiteSettings, updateSiteSettings, type SiteSettings } from "@/lib/site-settings.functions";
+import { listCategoriesPublic } from "@/lib/catalog.functions";
+import { parseHomeSections, serializeHomeSections, type HomeSection } from "@/lib/home-sections";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export const Route = createFileRoute("/admin/settings")({
