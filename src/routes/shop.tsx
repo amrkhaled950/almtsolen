@@ -1,15 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { useLocale } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { listProductsPublic, listCategoriesPublic } from "../lib/catalog.functions";
 import { SlidersHorizontal } from "lucide-react";
 import { ProductGridSkeleton } from "../components/ui/skeletons";
 
+const shopSearchSchema = z.object({
+  category: fallback(z.string(), "").default(""),
+});
 
 export const Route = createFileRoute("/shop")({
+  validateSearch: zodValidator(shopSearchSchema),
   head: () => ({
     meta: [
       { title: "المتجر | تسوق الكتب العربية | مكتبة المتسولين" },
