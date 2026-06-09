@@ -62,17 +62,35 @@ interface WishlistState {
   ids: string[];
   toggle: (id: string) => void;
   has: (id: string) => boolean;
+  setIds: (ids: string[]) => void;
+  mergeIds: (ids: string[]) => void;
 }
 
 export const useWishlist = create<WishlistState>()(
   persist(
     (set, get) => ({
       ids: [],
-      toggle: (id) =>
+      toggle: (id) => {
+        const inList = get().ids.includes(id);
         set((s) => ({
-          ids: s.ids.includes(id) ? s.ids.filter((x) => x !== id) : [...s.ids, id],
-        })),
+          ids: inList ? s.ids.filter((x) => x !== id) : [...s.ids, id],
+        }));
+        // Best-effort server sync (only if signed in)
+        if (typeof window !== "undefined") {
+          import("@/integrations/supabase/client").then(({ supabase }) =>
+            supabase.auth.getSession().then(({ data }) => {
+              if (!data.session) return;
+              import("./wishlist.functions").then(({ toggleWishlist }) => {
+                toggleWishlist({ data: { product_id: id } }).catch(() => {});
+              });
+            }),
+          );
+        }
+      },
       has: (id) => get().ids.includes(id),
+      setIds: (ids) => set({ ids: Array.from(new Set(ids)) }),
+      mergeIds: (ids) =>
+        set((s) => ({ ids: Array.from(new Set([...s.ids, ...ids])) })),
     }),
     { name: "almatasawilein-wishlist" },
   ),
