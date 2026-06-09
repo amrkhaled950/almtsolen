@@ -166,9 +166,9 @@ export function SiteFooter() {
           <div className="flex items-center gap-3">
             <span className="px-2 py-1 rounded bg-muted font-semibold">VISA</span>
             <span className="px-2 py-1 rounded bg-muted font-semibold">Mastercard</span>
-            <span className="px-2 py-1 rounded bg-muted font-semibold">Fawry</span>
             <span className="px-2 py-1 rounded bg-muted font-semibold">COD</span>
           </div>
+
         </div>
       </div>
     </footer>
