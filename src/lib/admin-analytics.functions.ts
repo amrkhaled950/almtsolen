@@ -7,14 +7,23 @@ async function assertAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Forbidden");
 }
 
-export const getAnalyticsAdmin = createServerFn({ method: "GET" })
+export const getAnalyticsAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
-  .handler(async ({ context }) => {
+  .inputValidator((d: { from?: string; to?: string } | undefined) => d ?? {})
+  .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-    // Fetch all orders with items
-    const { data: orders, error } = await supabaseAdmin
+    // Resolve date range (default: last 30 days)
+    const toDate = data.to ? new Date(data.to) : new Date();
+    const fromDate = data.from ? new Date(data.from) : new Date(toDate.getTime() - 30 * 86400000);
+    // Include the full "to" day
+    const toBound = new Date(toDate);
+    toBound.setHours(23, 59, 59, 999);
+    const fromBound = new Date(fromDate);
+    fromBound.setHours(0, 0, 0, 0);
+
+    let q = supabaseAdmin
       .from("orders")
       .select(`
         id, order_number, created_at, status, total, subtotal, shipping_cost,
@@ -22,14 +31,21 @@ export const getAnalyticsAdmin = createServerFn({ method: "GET" })
         shipping_address,
         order_items ( product_id, product_title_ar, product_title_en, quantity, unit_price, line_total )
       `)
+      .gte("created_at", fromBound.toISOString())
+      .lte("created_at", toBound.toISOString())
       .order("created_at", { ascending: false });
 
+    const { data: orders, error } = await q;
     if (error) throw new Error(error.message);
-
     const rows = orders ?? [];
 
-    // ── Revenue by day (last 90 days) ──────────────────────────────────────
+    // ── Revenue by day ─────────────────────────────────────────────────────
     const dayMap = new Map<string, { sales: number; orders: number }>();
+    // seed days
+    for (let t = fromBound.getTime(); t <= toBound.getTime(); t += 86400000) {
+      const d = new Date(t).toISOString().slice(0, 10);
+      dayMap.set(d, { sales: 0, orders: 0 });
+    }
     rows.forEach((o: any) => {
       const d = new Date(o.created_at).toISOString().slice(0, 10);
       const cur = dayMap.get(d) ?? { sales: 0, orders: 0 };
@@ -46,7 +62,6 @@ export const getAnalyticsAdmin = createServerFn({ method: "GET" })
     const totalOrders = rows.length;
     const avgOrder = totalOrders ? totalRevenue / totalOrders : 0;
 
-    // unique customers by phone
     const phones = new Set(rows.map((o: any) => o.guest_phone || (o.shipping_address as any)?.phone).filter(Boolean));
     const totalCustomers = phones.size;
 
@@ -100,10 +115,9 @@ export const getAnalyticsAdmin = createServerFn({ method: "GET" })
       orders: hourMap.get(h) ?? 0,
     }));
 
-    // Recent orders (last 6)
     const recentOrders = rows.slice(0, 6);
 
-    // Products stats
+    // Products stats (global, not range-scoped)
     const { data: productsData } = await supabaseAdmin
       .from("products")
       .select("id, is_active, stock, track_stock");
@@ -112,6 +126,8 @@ export const getAnalyticsAdmin = createServerFn({ method: "GET" })
     const outOfStock = allProducts.filter((p: any) => p.track_stock && p.stock === 0).length;
 
     return {
+      from: fromBound.toISOString(),
+      to: toBound.toISOString(),
       salesByDay,
       totalRevenue,
       totalOrders,
