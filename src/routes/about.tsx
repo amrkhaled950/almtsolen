@@ -3,7 +3,17 @@ import { useLocale } from "../lib/i18n";
 import { useSiteSettings } from "../lib/use-site-settings";
 
 export const Route = createFileRoute("/about")({
-  head: () => ({ meta: [{ title: "من نحن | المتسولين" }] }),
+  head: () => ({
+    meta: [
+      { title: "من نحن | قصة مكتبة المتسولين" },
+      { name: "description", content: "تعرف على مكتبة المتسولين — رحلتنا في نشر الكتاب العربي وإيصاله لكل قارئ في مصر بأسعار مناسبة." },
+      { property: "og:title", content: "من نحن — مكتبة المتسولين" },
+      { property: "og:description", content: "قصتنا ورسالتنا في عالم الكتب العربية." },
+      { property: "og:url", content: "https://www.almotasolen.com/about" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/about" }],
+  }),
+
   component: () => {
     const locale = useLocale((s) => s.locale);
     const isAr = locale === "ar";

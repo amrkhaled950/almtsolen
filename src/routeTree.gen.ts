@@ -12,6 +12,7 @@ import { Route as rootRouteImport } from './routes/__root'
 import { Route as WishlistRouteImport } from './routes/wishlist'
 import { Route as TermsRouteImport } from './routes/terms'
 import { Route as SysInitAdmin9f3k2pRouteImport } from './routes/sys-init-admin-9f3k2p'
+import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as ReturnsRouteImport } from './routes/returns'
@@ -48,6 +49,11 @@ const TermsRoute = TermsRouteImport.update({
 const SysInitAdmin9f3k2pRoute = SysInitAdmin9f3k2pRouteImport.update({
   id: '/sys-init-admin-9f3k2p',
   path: '/sys-init-admin-9f3k2p',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
+  id: '/sitemap.xml',
+  path: '/sitemap.xml',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ShopRoute = ShopRouteImport.update({
@@ -175,6 +181,7 @@ export interface FileRoutesByFullPath {
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sys-init-admin-9f3k2p': typeof SysInitAdmin9f3k2pRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
@@ -201,6 +208,7 @@ export interface FileRoutesByTo {
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sys-init-admin-9f3k2p': typeof SysInitAdmin9f3k2pRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
@@ -229,6 +237,7 @@ export interface FileRoutesById {
   '/returns': typeof ReturnsRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
+  '/sitemap.xml': typeof SitemapDotxmlRoute
   '/sys-init-admin-9f3k2p': typeof SysInitAdmin9f3k2pRoute
   '/terms': typeof TermsRoute
   '/wishlist': typeof WishlistRoute
@@ -258,6 +267,7 @@ export interface FileRouteTypes {
     | '/returns'
     | '/shipping'
     | '/shop'
+    | '/sitemap.xml'
     | '/sys-init-admin-9f3k2p'
     | '/terms'
     | '/wishlist'
@@ -284,6 +294,7 @@ export interface FileRouteTypes {
     | '/returns'
     | '/shipping'
     | '/shop'
+    | '/sitemap.xml'
     | '/sys-init-admin-9f3k2p'
     | '/terms'
     | '/wishlist'
@@ -311,6 +322,7 @@ export interface FileRouteTypes {
     | '/returns'
     | '/shipping'
     | '/shop'
+    | '/sitemap.xml'
     | '/sys-init-admin-9f3k2p'
     | '/terms'
     | '/wishlist'
@@ -339,6 +351,7 @@ export interface RootRouteChildren {
   ReturnsRoute: typeof ReturnsRoute
   ShippingRoute: typeof ShippingRoute
   ShopRoute: typeof ShopRoute
+  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   SysInitAdmin9f3k2pRoute: typeof SysInitAdmin9f3k2pRoute
   TermsRoute: typeof TermsRoute
   WishlistRoute: typeof WishlistRoute
@@ -366,6 +379,13 @@ declare module '@tanstack/react-router' {
       path: '/sys-init-admin-9f3k2p'
       fullPath: '/sys-init-admin-9f3k2p'
       preLoaderRoute: typeof SysInitAdmin9f3k2pRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/sitemap.xml': {
+      id: '/sitemap.xml'
+      path: '/sitemap.xml'
+      fullPath: '/sitemap.xml'
+      preLoaderRoute: typeof SitemapDotxmlRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/shop': {
@@ -563,6 +583,7 @@ const rootRouteChildren: RootRouteChildren = {
   ReturnsRoute: ReturnsRoute,
   ShippingRoute: ShippingRoute,
   ShopRoute: ShopRoute,
+  SitemapDotxmlRoute: SitemapDotxmlRoute,
   SysInitAdmin9f3k2pRoute: SysInitAdmin9f3k2pRoute,
   TermsRoute: TermsRoute,
   WishlistRoute: WishlistRoute,

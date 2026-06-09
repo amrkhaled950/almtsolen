@@ -1,0 +1,12 @@
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /admin/
+Disallow: /admin-login
+Disallow: /auth
+Disallow: /account
+Disallow: /checkout
+Disallow: /wishlist
+Disallow: /sys-init-admin-9f3k2p
+
+Sitemap: https://www.almotasolen.com/sitemap.xml
