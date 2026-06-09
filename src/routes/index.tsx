@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQueries, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { ArrowLeft, Sparkles, TrendingUp, Loader2, ChevronRight } from "lucide-react";
 import { useLocale, t } from "../lib/i18n";
@@ -41,10 +41,13 @@ function Home() {
 
   // Fetch products for each root category
   const catSlugs = rootCats.map((c: any) => c.slug);
-  const catProductQueries = catSlugs.map((slug: string) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({ queryKey: ["products","cat",slug], queryFn: () => fetchProducts({ data: { category_slug: slug, limit: 8 } }), enabled: !!slug })
-  );
+  const catProductQueries = useQueries({
+    queries: catSlugs.map((slug: string) => ({
+      queryKey: ["products", "cat", slug],
+      queryFn: () => fetchProducts({ data: { category_slug: slug, limit: 8 } }),
+      enabled: !!slug,
+    })),
+  });
 
   return (
     <div>
