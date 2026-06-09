@@ -141,8 +141,12 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const finalSlug = data.slug && data.slug.length >= 2
+      ? data.slug
+      : await ensureUniqueSlug(supabaseAdmin, "products", data.title_en || data.title_ar, data.id);
     const payload = {
-      slug: data.slug,
+      slug: finalSlug,
+
       title_ar: data.title_ar,
       title_en: data.title_en,
       author_ar: data.author_ar,
