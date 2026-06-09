@@ -523,3 +523,84 @@ function NotificationsTab({ isAr }: { isAr: boolean }) {
     </div>
   );
 }
+
+/* ── Promo & Announcement Tab ──────────────────────────── */
+function PromoTab({ isAr, s, set, save, saving }: { isAr: boolean; s: FormState; set: any; save: () => void; saving: boolean }) {
+  const cs = s.custom_strings || {};
+  const get = (key: string, lang: "ar" | "en") => cs[key]?.[lang] ?? "";
+  const setCs = (key: string, lang: "ar" | "en", value: string) => {
+    const next = { ...(s.custom_strings || {}) };
+    next[key] = { ...(next[key] || {}), [lang]: value };
+    set("custom_strings", next);
+  };
+  const promoEnabled = (cs["promo_enabled"]?.ar ?? "") === "1";
+  const toggleEnabled = (on: boolean) => setCs("promo_enabled", "ar", on ? "1" : "");
+
+  return (
+    <div className="space-y-4">
+      {/* Announcement Bar */}
+      <div className="rounded-2xl border border-border bg-card shadow-card-soft p-6 space-y-4">
+        <div>
+          <h3 className="font-bold">{isAr ? "شريط الإعلانات العلوي" : "Top announcement bar"}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isAr ? "النص الذي يظهر في أعلى الموقع. اتركه فاضي لإخفاء الشريط." : "Shown at the very top of the site. Leave empty to hide."}
+          </p>
+        </div>
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label={isAr ? "النص (عربي)" : "Text (Arabic)"}>
+            <TextInput value={get("announcement_bar", "ar")} onChange={(v) => setCs("announcement_bar", "ar", v)} placeholder="🚚 شحن مجاني للطلبات فوق 2000 ج.م" />
+          </Field>
+          <Field label={isAr ? "النص (إنجليزي)" : "Text (English)"}>
+            <TextInput value={get("announcement_bar", "en")} onChange={(v) => setCs("announcement_bar", "en", v)} placeholder="🚚 Free shipping on orders over 2000 EGP" />
+          </Field>
+        </div>
+      </div>
+
+      {/* Promo Popup */}
+      <div className="rounded-2xl border border-border bg-card shadow-card-soft p-6 space-y-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold">{isAr ? "نافذة الترويج المنبثقة" : "Promo popup"}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isAr ? "تظهر مرة واحدة لكل زائر." : "Shown once per visitor session."}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => toggleEnabled(!promoEnabled)}
+            className={`relative h-6 w-11 rounded-full transition-colors ${promoEnabled ? "bg-primary" : "bg-muted"}`}
+            aria-label="Toggle promo"
+          >
+            <span className={`absolute top-0.5 ${promoEnabled ? "end-0.5" : "start-0.5"} h-5 w-5 rounded-full bg-white shadow transition-all`} />
+          </button>
+        </div>
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <Field label={isAr ? "العنوان (عربي)" : "Title (Arabic)"}>
+            <TextInput value={get("promo_title", "ar")} onChange={(v) => setCs("promo_title", "ar", v)} placeholder="هناك عرض خاص لك!" />
+          </Field>
+          <Field label={isAr ? "العنوان (إنجليزي)" : "Title (English)"}>
+            <TextInput value={get("promo_title", "en")} onChange={(v) => setCs("promo_title", "en", v)} placeholder="A special offer for you!" />
+          </Field>
+          <Field label={isAr ? "الوصف (عربي)" : "Description (Arabic)"}>
+            <TextArea value={get("promo_description", "ar")} onChange={(v) => setCs("promo_description", "ar", v)} rows={3} />
+          </Field>
+          <Field label={isAr ? "الوصف (إنجليزي)" : "Description (English)"}>
+            <TextArea value={get("promo_description", "en")} onChange={(v) => setCs("promo_description", "en", v)} rows={3} />
+          </Field>
+          <Field label={isAr ? "كود الكوبون" : "Coupon code"}>
+            <TextInput value={get("promo_coupon", "ar")} onChange={(v) => setCs("promo_coupon", "ar", v)} placeholder="new5" />
+          </Field>
+          <Field label={isAr ? "نص الزر (عربي/إنجليزي)" : "Button text (Arabic/English)"}>
+            <div className="grid grid-cols-2 gap-2">
+              <TextInput value={get("promo_cta", "ar")} onChange={(v) => setCs("promo_cta", "ar", v)} placeholder="متابعة التسوق" />
+              <TextInput value={get("promo_cta", "en")} onChange={(v) => setCs("promo_cta", "en", v)} placeholder="Continue shopping" />
+            </div>
+          </Field>
+        </div>
+      </div>
+
+      <SaveBar onSave={save} saving={saving} isAr={isAr} />
+    </div>
+  );
+}
