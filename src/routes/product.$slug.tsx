@@ -5,11 +5,12 @@ import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Flame } from "
 import { useState } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
 import { useCart, useWishlist } from "../lib/cart-store";
-import { getProductPublic } from "../lib/catalog.functions";
+import { getProductPublic, listRelatedProductsPublic } from "../lib/catalog.functions";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
 import { ProductPageSkeleton } from "../components/ui/skeletons";
 import { ShareButtons } from "../components/product/ShareButtons";
+import { ProductCard } from "../components/product/ProductCard";
 
 
 const productQueryOptions = (slug: string) =>
@@ -223,7 +224,34 @@ function ProductPage() {
           </div>
         </div>
       </div>
+
+      <RelatedProducts productId={product.id} isAr={isAr} />
     </div>
   );
 }
+
+function RelatedProducts({ productId, isAr }: { productId: string; isAr: boolean }) {
+  const fetchRelated = useServerFn(listRelatedProductsPublic);
+  const { data } = useQuery({
+    queryKey: ["related", productId],
+    queryFn: () => fetchRelated({ data: { product_id: productId, limit: 8 } }),
+    staleTime: 5 * 60 * 1000,
+  });
+  const items = data?.products ?? [];
+  if (items.length === 0) return null;
+
+  return (
+    <section className="mt-16">
+      <h2 className="font-display font-black text-2xl md:text-3xl mb-6">
+        {isAr ? "كتب قد تعجبك" : "You may also like"}
+      </h2>
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+        {items.map((p, i) => (
+          <ProductCard key={p.id} product={p} index={i} />
+        ))}
+      </div>
+    </section>
+  );
+}
+
 

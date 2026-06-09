@@ -15,6 +15,7 @@ import { Route as SysInitAdmin9f3k2pRouteImport } from './routes/sys-init-admin-
 import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
 import { Route as ShopRouteImport } from './routes/shop'
 import { Route as ShippingRouteImport } from './routes/shipping'
+import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ContactRouteImport } from './routes/contact'
@@ -64,6 +65,11 @@ const ShopRoute = ShopRouteImport.update({
 const ShippingRoute = ShippingRouteImport.update({
   id: '/shipping',
   path: '/shipping',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SearchRoute = SearchRouteImport.update({
+  id: '/search',
+  path: '/search',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ReturnsRoute = ReturnsRouteImport.update({
@@ -179,6 +185,7 @@ export interface FileRoutesByFullPath {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/search': typeof SearchRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -206,6 +213,7 @@ export interface FileRoutesByTo {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/search': typeof SearchRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -235,6 +243,7 @@ export interface FileRoutesById {
   '/contact': typeof ContactRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
+  '/search': typeof SearchRoute
   '/shipping': typeof ShippingRoute
   '/shop': typeof ShopRoute
   '/sitemap.xml': typeof SitemapDotxmlRoute
@@ -265,6 +274,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/returns'
+    | '/search'
     | '/shipping'
     | '/shop'
     | '/sitemap.xml'
@@ -292,6 +302,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/returns'
+    | '/search'
     | '/shipping'
     | '/shop'
     | '/sitemap.xml'
@@ -320,6 +331,7 @@ export interface FileRouteTypes {
     | '/contact'
     | '/privacy'
     | '/returns'
+    | '/search'
     | '/shipping'
     | '/shop'
     | '/sitemap.xml'
@@ -349,6 +361,7 @@ export interface RootRouteChildren {
   ContactRoute: typeof ContactRoute
   PrivacyRoute: typeof PrivacyRoute
   ReturnsRoute: typeof ReturnsRoute
+  SearchRoute: typeof SearchRoute
   ShippingRoute: typeof ShippingRoute
   ShopRoute: typeof ShopRoute
   SitemapDotxmlRoute: typeof SitemapDotxmlRoute
@@ -400,6 +413,13 @@ declare module '@tanstack/react-router' {
       path: '/shipping'
       fullPath: '/shipping'
       preLoaderRoute: typeof ShippingRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/search': {
+      id: '/search'
+      path: '/search'
+      fullPath: '/search'
+      preLoaderRoute: typeof SearchRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/returns': {
@@ -581,6 +601,7 @@ const rootRouteChildren: RootRouteChildren = {
   ContactRoute: ContactRoute,
   PrivacyRoute: PrivacyRoute,
   ReturnsRoute: ReturnsRoute,
+  SearchRoute: SearchRoute,
   ShippingRoute: ShippingRoute,
   ShopRoute: ShopRoute,
   SitemapDotxmlRoute: SitemapDotxmlRoute,

@@ -1,15 +1,21 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
-import { useState, useMemo } from "react";
+import { useMemo, useState } from "react";
+import { z } from "zod";
+import { zodValidator, fallback } from "@tanstack/zod-adapter";
 import { useLocale } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { listProductsPublic, listCategoriesPublic } from "../lib/catalog.functions";
 import { SlidersHorizontal } from "lucide-react";
 import { ProductGridSkeleton } from "../components/ui/skeletons";
 
+const shopSearchSchema = z.object({
+  category: fallback(z.string(), "").default(""),
+});
 
 export const Route = createFileRoute("/shop")({
+  validateSearch: zodValidator(shopSearchSchema),
   head: () => ({
     meta: [
       { title: "المتجر | تسوق الكتب العربية | مكتبة المتسولين" },
@@ -28,7 +34,11 @@ export const Route = createFileRoute("/shop")({
 function Shop() {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
-  const [cat, setCat] = useState<string | null>(null);
+  const { category } = Route.useSearch();
+  const navigate = useNavigate({ from: "/shop" });
+  const cat = category || null;
+  const setCat = (next: string | null) =>
+    navigate({ search: { category: next ?? "" } as any, replace: true });
   const [sort, setSort] = useState<"new" | "price-asc" | "price-desc" | "rating">("new");
 
   const fetchProducts = useServerFn(listProductsPublic);
