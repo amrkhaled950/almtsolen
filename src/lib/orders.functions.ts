@@ -67,7 +67,35 @@ export const placeOrder = createServerFn({ method: "POST" })
     });
 
     const shipping = subtotal >= 500 ? 0 : 50;
-    const total = subtotal + shipping;
+
+    // Apply coupon if provided
+    let discount = 0;
+    let coupon_id: string | null = null;
+    let coupon_code: string | null = null;
+    if (data.coupon_code) {
+      const code = data.coupon_code.trim().toUpperCase();
+      const { data: c } = await supabaseAdmin
+        .from("coupons").select("*").eq("code", code).maybeSingle();
+      const now = new Date();
+      if (
+        c && c.is_active &&
+        (!c.starts_at || new Date(c.starts_at) <= now) &&
+        (!c.expires_at || new Date(c.expires_at) >= now) &&
+        (!c.usage_limit || c.used_count < c.usage_limit) &&
+        subtotal >= Number(c.min_subtotal)
+      ) {
+        let d = c.type === "percent"
+          ? (subtotal * Number(c.value)) / 100
+          : Number(c.value);
+        if (c.max_discount) d = Math.min(d, Number(c.max_discount));
+        d = Math.min(d, subtotal);
+        discount = Math.round(d * 100) / 100;
+        coupon_id = c.id;
+        coupon_code = c.code;
+      }
+    }
+
+    const total = Math.max(0, subtotal + shipping - discount);
 
     const shipping_address = {
       full_name: data.full_name,
@@ -92,7 +120,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         payment_status: "pending",
         subtotal,
         shipping_cost: shipping,
-        discount: 0,
+        discount,
+        coupon_id,
+        coupon_code,
         total,
         shipping_address,
         notes: data.notes || null,
@@ -100,6 +130,12 @@ export const placeOrder = createServerFn({ method: "POST" })
       .select("id, order_number")
       .single();
     if (oErr) throw new Error(oErr.message);
+    if (coupon_id) {
+      await supabaseAdmin.rpc("noop").catch(() => {});
+      await supabaseAdmin.from("coupons").update({
+        used_count: ((await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon_id).single()).data?.used_count ?? 0) + 1
+      }).eq("id", coupon_id);
+    }
 
     const itemsWithOrder = orderItems.map((i) => ({ ...i, order_id: order.id }));
     const { error: iErr } = await supabaseAdmin.from("order_items").insert(itemsWithOrder);
