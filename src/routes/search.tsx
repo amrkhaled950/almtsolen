@@ -28,24 +28,16 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/search")({
   validateSearch: zodValidator(searchSchema),
-  head: ({ search }) => {
-    const q = (search as any)?.q || "";
-    const title = q
-      ? `بحث: ${q} | مكتبة المتسولين`
-      : "البحث | مكتبة المتسولين";
-    return {
-      meta: [
-        { title },
-        {
-          name: "description",
-          content: q
-            ? `نتائج البحث عن "${q}" في مكتبة المتسولين.`
-            : "ابحث عن كتبك المفضلة في مكتبة المتسولين.",
-        },
-        { name: "robots", content: "noindex,follow" },
-      ],
-    };
-  },
+  head: () => ({
+    meta: [
+      { title: "البحث | مكتبة المتسولين" },
+      {
+        name: "description",
+        content: "ابحث عن كتبك المفضلة في مكتبة المتسولين بالعنوان، المؤلف، أو دار النشر.",
+      },
+      { name: "robots", content: "noindex,follow" },
+    ],
+  }),
   component: SearchPage,
 });
 
