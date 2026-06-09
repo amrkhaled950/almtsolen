@@ -5,7 +5,9 @@ import { useState, useMemo } from "react";
 import { useLocale } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { listProductsPublic, listCategoriesPublic } from "../lib/catalog.functions";
-import { SlidersHorizontal, Loader2 } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
+import { ProductGridSkeleton } from "../components/ui/skeletons";
+
 
 export const Route = createFileRoute("/shop")({
   head: () => ({
@@ -76,7 +78,8 @@ function Shop() {
             </select>
           </div>
           {isLoading ? (
-            <div className="grid place-items-center py-20"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            <ProductGridSkeleton count={8} />
+
           ) : filtered.length === 0 ? (
             <div className="text-center py-20 bg-card rounded-2xl border border-border">
               <p className="text-muted-foreground">{isAr ? "لا توجد كتب متاحة حالياً." : "No books available."}</p>
