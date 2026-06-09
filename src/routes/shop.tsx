@@ -34,7 +34,11 @@ export const Route = createFileRoute("/shop")({
 function Shop() {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
-  const [cat, setCat] = useState<string | null>(null);
+  const { category } = Route.useSearch();
+  const navigate = useNavigate({ from: "/shop" });
+  const cat = category || null;
+  const setCat = (next: string | null) =>
+    navigate({ search: { category: next ?? "" } as any, replace: true });
   const [sort, setSort] = useState<"new" | "price-asc" | "price-desc" | "rating">("new");
 
   const fetchProducts = useServerFn(listProductsPublic);
