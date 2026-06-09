@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Youtube, Twitter, Send, ShieldCheck, Truck, CreditCard, Headphones } from "lucide-react";
 import { useLocale, t } from "../../lib/i18n";
-import logoAsset from "../../assets/logo.png.asset.json";
+
 
 export function SiteFooter() {
   const locale = useLocale((s) => s.locale);
@@ -61,7 +61,7 @@ export function SiteFooter() {
       <div className="container-page py-12 grid gap-10 md:grid-cols-2 lg:grid-cols-5">
         <div className="lg:col-span-2">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logoAsset.url} alt="مكتبة المتسولين" className="h-14 w-14 object-contain" />
+            <img src="/logo.png" alt="مكتبة المتسولين" className="h-14 w-14 object-contain" />
             <div>
               <div className="font-display font-extrabold text-lg leading-none text-primary">
                 {locale === "ar" ? "مكتبة المتسولين" : "Al-Motasawelin Library"}
