@@ -226,6 +226,7 @@ function ProductPage() {
         </div>
       </div>
 
+      <ProductReviews productId={product.id} isAr={isAr} />
       <RelatedProducts productId={product.id} isAr={isAr} />
     </div>
   );
