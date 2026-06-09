@@ -3,14 +3,16 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
-import { Search, Eye, Loader2 } from "lucide-react";
+import { Search, Eye, Loader2, Download, Printer } from "lucide-react";
 import {
   listOrdersAdmin,
   getOrderAdmin,
   updateOrderStatusAdmin,
   deleteOrderAdmin,
+  exportOrdersCsvAdmin,
 } from "@/lib/orders.functions";
 import { useLocale, formatPrice } from "@/lib/i18n";
+import { printWaybill } from "@/lib/print-waybill";
 
 export const Route = createFileRoute("/admin/orders")({
   component: OrdersPage,
@@ -45,6 +47,23 @@ function OrdersPage() {
   const fetchOrder  = useServerFn(getOrderAdmin);
   const updateStatus = useServerFn(updateOrderStatusAdmin);
   const deleteFn    = useServerFn(deleteOrderAdmin);
+  const exportCsvFn = useServerFn(exportOrdersCsvAdmin);
+
+  const exportMut = useMutation({
+    mutationFn: (vars: { status?: OrderStatus }) =>
+      exportCsvFn({ data: vars.status ? { status: vars.status } : {} }),
+    onSuccess: (res: any) => {
+      const blob = new Blob([res.csv], { type: "text/csv;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `orders-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(isAr ? `تم تصدير ${res.count} طلب` : `Exported ${res.count} orders`);
+    },
+    onError: (e: any) => toast.error(e?.message || "Error"),
+  });
 
   const ordersQ = useQuery({
     queryKey: ["admin", "orders"],
@@ -120,6 +139,14 @@ function OrdersPage() {
               : isAr ? `${orders.length} طلب إجمالاً` : `${orders.length} total orders`}
           </p>
         </div>
+        <button
+          onClick={() => exportMut.mutate({ status: statusFilter === "all" ? undefined : statusFilter })}
+          disabled={exportMut.isPending || orders.length === 0}
+          className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover flex items-center gap-2 disabled:opacity-50"
+        >
+          {exportMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          {isAr ? "تصدير CSV" : "Export CSV"}
+        </button>
       </div>
 
       {/* Status tabs */}
@@ -328,6 +355,17 @@ function OrdersPage() {
                     >
                       {updateMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       {isAr ? "تحديث" : "Update"}
+                    </button>
+                  </section>
+
+                  {/* Print waybill */}
+                  <section>
+                    <button
+                      onClick={() => printWaybill(detail.order, detail.items, locale)}
+                      className="w-full h-10 rounded-lg bg-foreground text-background text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-2"
+                    >
+                      <Printer className="h-4 w-4" />
+                      {isAr ? "طباعة بوليصة الشحن" : "Print waybill"}
                     </button>
                   </section>
 

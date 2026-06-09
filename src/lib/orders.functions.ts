@@ -217,3 +217,63 @@ export const deleteOrderAdmin = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+// ───────────── CSV export ─────────────
+function csvEscape(v: any): string {
+  if (v === null || v === undefined) return "";
+  const s = String(v).replace(/\r?\n/g, " ").trim();
+  if (/[",;]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
+}
+
+export const exportOrdersCsvAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        from: z.string().datetime().optional(),
+        to: z.string().datetime().optional(),
+        status: z
+          .enum(["pending", "confirmed", "processing", "shipped", "delivered", "cancelled", "refunded"])
+          .optional(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ context, data }) => {
+    await assertAdmin(context.supabase, context.userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    let q = supabaseAdmin
+      .from("orders")
+      .select(
+        "order_number, status, payment_method, payment_status, subtotal, shipping_cost, discount, total, shipping_address, guest_name, guest_phone, guest_email, notes, created_at",
+      )
+      .order("created_at", { ascending: false })
+      .limit(5000);
+    if (data.from) q = q.gte("created_at", data.from);
+    if (data.to) q = q.lte("created_at", data.to);
+    if (data.status) q = q.eq("status", data.status);
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+
+    const headers = [
+      "order_number","created_at","status","payment_method","payment_status",
+      "customer_name","customer_phone","customer_email",
+      "governorate","city","street","building","apartment",
+      "subtotal","shipping","discount","total","notes",
+    ];
+    const lines = [headers.join(",")];
+    for (const o of rows ?? []) {
+      const addr: any = o.shipping_address || {};
+      lines.push([
+        o.order_number, o.created_at, o.status, o.payment_method, o.payment_status,
+        o.guest_name || addr.full_name || "",
+        o.guest_phone || addr.phone || "",
+        o.guest_email || addr.email || "",
+        addr.governorate || "", addr.city || "", addr.street || "",
+        addr.building || "", addr.apartment || "",
+        o.subtotal, o.shipping_cost, o.discount, o.total,
+        o.notes || "",
+      ].map(csvEscape).join(","));
+    }
+    return { csv: "\uFEFF" + lines.join("\n"), count: rows?.length ?? 0 };
+  });
