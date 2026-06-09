@@ -76,10 +76,6 @@ export function PromoModal() {
           <p className="text-gray-600 leading-relaxed text-sm mb-6">
             استخدم كوبون New5 لتحصل على 5% خصم لاي اوردر جديد وكمان في شحن
             مجاني لاي اوردر فوق الـ 2000 ج.م
-            <br />
-            <br />
-            وعشان العيد عندنا مميز زودنالك كمان كوبون خصم اسمه Book&apos;s7
-            بيديك خصم 7% لما تعمل اوردر بقيمة 1500 ج.م
           </p>
 
           {/* Coupon Code Box */}
