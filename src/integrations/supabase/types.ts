@@ -124,6 +124,57 @@ export type Database = {
           },
         ]
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          expires_at: string | null
+          id: string
+          is_active: boolean
+          max_discount: number | null
+          min_subtotal: number
+          starts_at: string | null
+          type: Database["public"]["Enums"]["coupon_type"]
+          updated_at: string
+          usage_limit: number | null
+          used_count: number
+          value: number
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_subtotal?: number
+          starts_at?: string | null
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value: number
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          expires_at?: string | null
+          id?: string
+          is_active?: boolean
+          max_discount?: number | null
+          min_subtotal?: number
+          starts_at?: string | null
+          type?: Database["public"]["Enums"]["coupon_type"]
+          updated_at?: string
+          usage_limit?: number | null
+          used_count?: number
+          value?: number
+        }
+        Relationships: []
+      }
       marketing_costs: {
         Row: {
           amount: number
@@ -213,6 +264,8 @@ export type Database = {
       }
       orders: {
         Row: {
+          coupon_code: string | null
+          coupon_id: string | null
           created_at: string
           discount: number
           guest_email: string | null
@@ -233,6 +286,8 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           discount?: number
           guest_email?: string | null
@@ -253,6 +308,8 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          coupon_code?: string | null
+          coupon_id?: string | null
           created_at?: string
           discount?: number
           guest_email?: string | null
@@ -272,7 +329,15 @@ export type Database = {
           updated_at?: string
           user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "orders_coupon_id_fkey"
+            columns: ["coupon_id"]
+            isOneToOne: false
+            referencedRelation: "coupons"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       products: {
         Row: {
@@ -413,6 +478,47 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string
+          id: string
+          product_id: string
+          rating: number
+          title: string | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          product_id: string
+          rating: number
+          title?: string | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          id?: string
+          product_id?: string
+          rating?: number
+          title?: string | null
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       shipping_rates: {
         Row: {
@@ -629,9 +735,14 @@ export type Database = {
         }
         Returns: boolean
       }
+      refresh_product_rating: {
+        Args: { _product_id: string }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "admin" | "customer"
+      coupon_type: "percent" | "fixed"
       order_status:
         | "pending"
         | "confirmed"
@@ -770,6 +881,7 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "customer"],
+      coupon_type: ["percent", "fixed"],
       order_status: [
         "pending",
         "confirmed",
