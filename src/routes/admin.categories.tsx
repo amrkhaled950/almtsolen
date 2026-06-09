@@ -29,7 +29,7 @@ function CategoriesPage() {
   const deleteFn  = useServerFn(deleteCategoryAdmin);
 
   const catsQ = useQuery({ queryKey: ["admin","categories"], queryFn: () => fetchCats() });
-  const all: Category[] = (catsQ.data?.categories ?? []) as Category[];
+  const all: Category[] = (catsQ.data?.categories ?? []) as unknown as Category[];
   const roots = all.filter((c) => !c.parent_id).sort((a,b) => a.nav_order - b.nav_order);
   const childrenOf = (pid: string) => all.filter((c) => c.parent_id === pid).sort((a,b) => a.nav_order - b.nav_order);
 
