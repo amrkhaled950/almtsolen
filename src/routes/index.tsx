@@ -44,13 +44,33 @@ function Home() {
   const newArrivals = newData?.products  ?? [];
   const latest      = latestData?.products ?? [];
 
-  // Fetch products for each root category
+  // Custom home-page carousels from settings
+  const homeSections = parseHomeSections(settings).filter((sec) => sec.enabled);
+  const hasCustomSections = homeSections.length > 0;
+
+  const carouselQueries = useQueries({
+    queries: homeSections.map((sec) => ({
+      queryKey: ["products", "home-sec", sec.source, sec.category_slug, sec.limit],
+      queryFn: () => fetchProducts({
+        data: {
+          ...(sec.source === "category"     ? { category_slug: sec.category_slug } : {}),
+          ...(sec.source === "bestsellers"  ? { bestseller: true }                 : {}),
+          ...(sec.source === "new_arrivals" ? { new_arrival: true }                : {}),
+          ...(sec.source === "featured"     ? { featured: true }                   : {}),
+          limit: sec.limit,
+        },
+      }),
+      enabled: sec.source !== "category" || !!sec.category_slug,
+    })),
+  });
+
+  // Fetch products for each root category (fallback when no custom sections set)
   const catSlugs = rootCats.map((c: any) => c.slug);
   const catProductQueries = useQueries({
     queries: catSlugs.map((slug: string) => ({
       queryKey: ["products", "cat", slug],
       queryFn: () => fetchProducts({ data: { category_slug: slug, limit: 8 } }),
-      enabled: !!slug,
+      enabled: !!slug && !hasCustomSections,
     })),
   });
 
