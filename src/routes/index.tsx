@@ -3,7 +3,9 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Sparkles, TrendingUp, Loader2, ChevronRight } from "lucide-react";
+import { ArrowLeft, Sparkles, TrendingUp, ChevronRight } from "lucide-react";
+import { ProductGridSkeleton } from "../components/ui/skeletons";
+
 import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { ProductCarousel } from "../components/home/ProductCarousel";
@@ -227,7 +229,8 @@ function Home() {
               </Link>
             </div>
             {loading ? (
-              <div className="grid place-items-center py-12"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+              <ProductGridSkeleton count={4} />
+
             ) : (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
                 {products.map((p: any, pi: number) => <ProductCard key={p.id} product={p} index={pi} />)}
@@ -278,7 +281,8 @@ function Home() {
           </Link>
         </div>
         {latestLoading ? (
-          <div className="grid place-items-center py-16"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+          <ProductGridSkeleton count={8} />
+
         ) : latest.length === 0 ? (
           <div className="text-center py-16 bg-card rounded-2xl border border-border">
             <p className="text-muted-foreground">{isAr ? "لا توجد كتب بعد." : "No books yet."}</p>
