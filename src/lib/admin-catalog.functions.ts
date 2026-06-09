@@ -95,9 +95,11 @@ const productInput = z.object({
   slug: z
     .string()
     .trim()
-    .min(2)
     .max(120)
-    .regex(/^[a-z0-9-]+$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -"),
+    .regex(/^[a-z0-9-]*$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -")
+    .optional()
+    .or(z.literal("")),
+
   title_ar: z.string().trim().min(1).max(200),
   title_en: z.string().trim().min(1).max(200),
   author_ar: z.string().trim().min(1).max(120),
