@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Sparkles, TrendingUp, Loader2, ChevronRight } from "lucide-react";
 import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
+import { ProductCarousel } from "../components/home/ProductCarousel";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
+import { parseHomeSections } from "../lib/home-sections";
 
 export const Route = createFileRoute("/")({
   head: () => ({
