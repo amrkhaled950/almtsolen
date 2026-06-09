@@ -42,7 +42,25 @@ function Checkout() {
   };
 
   const shipping = getShippingPrice();
-  const total = subtotal + shipping;
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
+  const [couponInput, setCouponInput] = useState("");
+  const [couponBusy, setCouponBusy] = useState(false);
+  const validateCouponFn = useServerFn(validateCoupon);
+  const discount = coupon?.discount ?? 0;
+  const total = Math.max(0, subtotal + shipping - discount);
+
+  const applyCoupon = async () => {
+    if (!couponInput.trim()) return;
+    setCouponBusy(true);
+    try {
+      const res = await validateCouponFn({ data: { code: couponInput.trim(), subtotal } });
+      setCoupon(res);
+      toast.success(isAr ? `تم تطبيق الكوبون: -${res.discount} ج.م` : `Applied: -${res.discount}`);
+    } catch (e: any) {
+      setCoupon(null);
+      toast.error(e?.message || "Invalid coupon");
+    } finally { setCouponBusy(false); }
+  };
 
   const [form, setForm] = useState({
     full_name: "",
