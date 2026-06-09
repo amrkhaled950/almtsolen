@@ -167,8 +167,28 @@ function Home() {
         </section>
       )}
 
-      {/* ── Per-category sections ────────────────────────────── */}
-      {rootCats.map((cat: any, i: number) => {
+      {/* ── Custom home carousels (managed from dashboard) ───── */}
+      {homeSections.map((sec, i) => {
+        const q = carouselQueries[i];
+        const products = q?.data?.products ?? [];
+        const loading  = q?.isLoading;
+        const title = (isAr ? sec.title_ar : sec.title_en) || (isAr ? sec.title_en : sec.title_ar) || "";
+        const viewAllSearch = sec.source === "category" && sec.category_slug ? { category: sec.category_slug } : undefined;
+        return (
+          <ProductCarousel
+            key={sec.id}
+            title={title}
+            products={products}
+            loading={loading}
+            isAr={isAr}
+            viewAllHref="/shop"
+            viewAllSearch={viewAllSearch}
+          />
+        );
+      })}
+
+      {/* ── Per-category sections (auto fallback if no custom carousels) ── */}
+      {!hasCustomSections && rootCats.map((cat: any, i: number) => {
         const subs = subCatsOf(cat.id);
         const products = catProductQueries[i]?.data?.products ?? [];
         const loading  = catProductQueries[i]?.isLoading;
