@@ -111,3 +111,111 @@ export const getProductPublic = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { product: (row as UIProduct | null) ?? null };
   });
+
+const PRODUCT_COLS =
+  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured";
+
+function escapeIlike(s: string) {
+  return s.replace(/[\\%_,()]/g, (m) => "\\" + m);
+}
+
+export const searchProductsPublic = createServerFn({ method: "GET" })
+  .inputValidator((input) =>
+    z
+      .object({
+        q: z.string().trim().max(200).optional(),
+        category_slug: z.string().max(120).optional(),
+        min_price: z.number().nonnegative().optional(),
+        max_price: z.number().nonnegative().optional(),
+        min_rating: z.number().min(0).max(5).optional(),
+        in_stock: z.boolean().optional(),
+        sort: z.enum(["relevance", "new", "price-asc", "price-desc", "rating"]).optional(),
+        limit: z.number().int().min(1).max(100).optional(),
+      })
+      .parse(input ?? {}),
+  )
+  .handler(async ({ data }): Promise<{ products: UIProduct[]; total: number }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    let categoryId: string | null = null;
+    if (data.category_slug) {
+      const { data: cat } = await supabaseAdmin
+        .from("categories")
+        .select("id")
+        .eq("slug", data.category_slug)
+        .maybeSingle();
+      categoryId = cat?.id ?? null;
+      if (!categoryId) return { products: [], total: 0 };
+    }
+
+    let q = supabaseAdmin
+      .from("products")
+      .select(PRODUCT_COLS, { count: "exact" })
+      .eq("is_active", true);
+
+    if (data.q) {
+      const term = `%${escapeIlike(data.q)}%`;
+      q = q.or(
+        `title_ar.ilike.${term},title_en.ilike.${term},author_ar.ilike.${term},author_en.ilike.${term},publisher_ar.ilike.${term},publisher_en.ilike.${term}`,
+      );
+    }
+    if (categoryId) q = q.eq("category_id", categoryId);
+    if (typeof data.min_price === "number") q = q.gte("price", data.min_price);
+    if (typeof data.max_price === "number") q = q.lte("price", data.max_price);
+    if (typeof data.min_rating === "number") q = q.gte("rating", data.min_rating);
+    if (data.in_stock) q = q.gt("stock", 0);
+
+    switch (data.sort) {
+      case "price-asc":
+        q = q.order("price", { ascending: true });
+        break;
+      case "price-desc":
+        q = q.order("price", { ascending: false });
+        break;
+      case "rating":
+        q = q.order("rating", { ascending: false });
+        break;
+      case "new":
+      case "relevance":
+      default:
+        q = q.order("created_at", { ascending: false });
+    }
+
+    q = q.limit(data.limit ?? 60);
+
+    const { data: rows, error, count } = await q;
+    if (error) throw new Error(error.message);
+    return { products: (rows ?? []) as UIProduct[], total: count ?? rows?.length ?? 0 };
+  });
+
+export const listRelatedProductsPublic = createServerFn({ method: "GET" })
+  .inputValidator((input) =>
+    z
+      .object({
+        product_id: z.string().uuid(),
+        limit: z.number().int().min(1).max(20).optional(),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }): Promise<{ products: UIProduct[] }> => {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { data: base } = await supabaseAdmin
+      .from("products")
+      .select("category_id")
+      .eq("id", data.product_id)
+      .maybeSingle();
+
+    const limit = data.limit ?? 8;
+    let q = supabaseAdmin
+      .from("products")
+      .select(PRODUCT_COLS)
+      .eq("is_active", true)
+      .neq("id", data.product_id)
+      .order("rating", { ascending: false })
+      .limit(limit);
+    if (base?.category_id) q = q.eq("category_id", base.category_id);
+
+    const { data: rows, error } = await q;
+    if (error) throw new Error(error.message);
+    return { products: (rows ?? []) as UIProduct[] };
+  });
