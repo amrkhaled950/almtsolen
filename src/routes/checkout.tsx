@@ -278,9 +278,32 @@ function Checkout() {
               );
             })}
           </div>
+          <div className="border-t border-border pt-4 mb-4">
+            <label className="block text-xs font-semibold mb-1.5">{isAr ? "كوبون خصم" : "Coupon"}</label>
+            {coupon ? (
+              <div className="flex items-center justify-between bg-success/10 text-success rounded-md px-3 py-2 text-sm">
+                <span className="font-bold">{coupon.code} · -{formatPrice(coupon.discount, locale)}</span>
+                <button onClick={() => { setCoupon(null); setCouponInput(""); }} className="text-xs underline">{isAr ? "إزالة" : "Remove"}</button>
+              </div>
+            ) : (
+              <div className="flex gap-2">
+                <input value={couponInput} onChange={(e) => setCouponInput(e.target.value.toUpperCase())}
+                  placeholder={isAr ? "أدخل الكود" : "Enter code"}
+                  className="flex-1 h-10 px-3 rounded-md border border-input bg-background text-sm" />
+                <button type="button" onClick={applyCoupon} disabled={couponBusy || !couponInput.trim()}
+                  className="h-10 px-4 rounded-md bg-foreground text-background text-sm font-semibold disabled:opacity-60 flex items-center gap-1">
+                  {couponBusy && <Loader2 className="h-4 w-4 animate-spin" />}
+                  {isAr ? "تطبيق" : "Apply"}
+                </button>
+              </div>
+            )}
+          </div>
           <div className="border-t border-border pt-4 space-y-2 text-sm">
             <Row label={isAr ? "المجموع الفرعي" : "Subtotal"} value={formatPrice(subtotal, locale)} />
             <Row label={isAr ? "الشحن" : "Shipping"} value={shipping === 0 ? (isAr ? "مجاناً" : "Free") : formatPrice(shipping, locale)} />
+            {discount > 0 && (
+              <Row label={isAr ? "خصم الكوبون" : "Coupon"} value={`-${formatPrice(discount, locale)}`} />
+            )}
             <div className="flex justify-between text-lg pt-3 border-t border-border">
               <span className="font-bold">{isAr ? "الإجمالي" : "Total"}</span>
               <span className="font-display font-black text-primary">{formatPrice(total, locale)}</span>
