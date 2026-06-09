@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, queryOptions, useSuspenseQuery } from "@tanstack/react-query";
 import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Loader2 } from "lucide-react";
 import { useState } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
@@ -9,8 +9,101 @@ import { getProductPublic } from "../lib/catalog.functions";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
 
+const productQueryOptions = (slug: string) =>
+  queryOptions({
+    queryKey: ["product", slug],
+    queryFn: () => getProductPublic({ data: { slug } }),
+    staleTime: 5 * 60 * 1000,
+  });
+
+const SITE_URL = "https://www.almotasolen.com";
+
 export const Route = createFileRoute("/product/$slug")({
-  ssr: false,
+  loader: ({ params, context }) =>
+    context.queryClient.ensureQueryData(productQueryOptions(params.slug)),
+  head: ({ params, loaderData }) => {
+    const p = (loaderData as any)?.product;
+    if (!p) {
+      return {
+        meta: [
+          { title: "كتاب | مكتبة المتسولين" },
+          { name: "robots", content: "noindex" },
+        ],
+      };
+    }
+    const title = `${p.title_ar} - ${p.author_ar} | مكتبة المتسولين`;
+    const rawDesc = (p.description_ar || `كتاب ${p.title_ar} للمؤلف ${p.author_ar}. اشتر الآن من مكتبة المتسولين بسعر ${p.price} ج.م مع توصيل لكل مصر.`).trim();
+    const description = rawDesc.slice(0, 160);
+    const url = `${SITE_URL}/product/${encodeURIComponent(params.slug)}`;
+    const image = p.cover_url || `${SITE_URL}/logo.png`;
+
+    return {
+      meta: [
+        { title },
+        { name: "description", content: description },
+        { property: "og:title", content: title },
+        { property: "og:description", content: description },
+        { property: "og:url", content: url },
+        { property: "og:type", content: "product" },
+        { property: "og:image", content: image },
+        { property: "product:price:amount", content: String(p.price) },
+        { property: "product:price:currency", content: "EGP" },
+        { property: "product:availability", content: p.stock > 0 ? "in stock" : "out of stock" },
+        { name: "twitter:card", content: "summary_large_image" },
+        { name: "twitter:image", content: image },
+        { name: "twitter:title", content: title },
+        { name: "twitter:description", content: description },
+      ],
+      links: [{ rel: "canonical", href: url }],
+      scripts: [
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "Product",
+            name: p.title_ar,
+            image: [image],
+            description: rawDesc,
+            sku: p.id,
+            ...(p.isbn ? { gtin13: p.isbn } : {}),
+            brand: { "@type": "Brand", name: p.publisher_ar || "مكتبة المتسولين" },
+            author: { "@type": "Person", name: p.author_ar },
+            offers: {
+              "@type": "Offer",
+              url,
+              priceCurrency: "EGP",
+              price: p.price,
+              availability: p.stock > 0
+                ? "https://schema.org/InStock"
+                : "https://schema.org/OutOfStock",
+              itemCondition: "https://schema.org/NewCondition",
+            },
+            ...(p.rating && p.reviews_count
+              ? {
+                  aggregateRating: {
+                    "@type": "AggregateRating",
+                    ratingValue: p.rating,
+                    reviewCount: p.reviews_count,
+                  },
+                }
+              : {}),
+          }),
+        },
+        {
+          type: "application/ld+json",
+          children: JSON.stringify({
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            itemListElement: [
+              { "@type": "ListItem", position: 1, name: "الرئيسية", item: `${SITE_URL}/` },
+              { "@type": "ListItem", position: 2, name: "المتجر", item: `${SITE_URL}/shop` },
+              { "@type": "ListItem", position: 3, name: p.title_ar, item: url },
+            ],
+          }),
+        },
+      ],
+    };
+  },
   component: ProductPage,
 });
 
@@ -24,7 +117,7 @@ function ProductPage() {
 
   const fetchProduct = useServerFn(getProductPublic);
   const { data, isLoading } = useQuery({
-    queryKey: ["product", slug],
+    ...productQueryOptions(slug),
     queryFn: () => fetchProduct({ data: { slug } }),
   });
 
