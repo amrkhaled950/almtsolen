@@ -87,10 +87,10 @@ function CategoriesPage() {
   };
 
   const handleSave = () => {
-    if (!nameAr.trim() || !slug.trim()) return;
+    if (!nameAr.trim()) return;
     upsertMut.mutate({
       ...(editTarget?.id ? { id: editTarget.id } : {}),
-      slug: slug.trim().toLowerCase().replace(/\s+/g,"-"),
+      ...(slug.trim() ? { slug: slug.trim().toLowerCase().replace(/\s+/g,"-") } : {}),
       name_ar: nameAr.trim(),
       name_en: nameEn.trim() || nameAr.trim(),
       image_url: icon,
@@ -102,6 +102,7 @@ function CategoriesPage() {
       parent_id: parentId || undefined,
     });
   };
+
 
   return (
     <div className="space-y-5 max-w-[1400px] mx-auto">
@@ -245,11 +246,14 @@ function CategoriesPage() {
                 className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary" />
             </div>
 
-            <div>
-              <label className="text-sm font-semibold mb-1 block">Slug *</label>
-              <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g,"-"))} placeholder="e.g. literature"
-                className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary" />
-            </div>
+            {editTarget && (
+              <div>
+                <label className="text-sm font-semibold mb-1 block">Slug {isAr ? "(يُولّد تلقائياً)" : "(auto)"}</label>
+                <input value={slug} readOnly
+                  className="w-full h-10 px-3 rounded-lg border border-input bg-muted/40 text-sm text-muted-foreground" />
+              </div>
+            )}
+
 
             <div>
               <label className="text-sm font-semibold mb-1 block">{isAr ? "الترتيب في القائمة" : "Nav order"}</label>
@@ -277,7 +281,7 @@ function CategoriesPage() {
               <button onClick={resetForm} className="flex-1 h-10 rounded-lg border border-input text-sm font-semibold hover:bg-muted">
                 {isAr ? "إلغاء" : "Cancel"}
               </button>
-              <button onClick={handleSave} disabled={!nameAr.trim() || !slug.trim() || upsertMut.isPending}
+              <button onClick={handleSave} disabled={!nameAr.trim() || upsertMut.isPending}
                 className="flex-1 h-10 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover disabled:opacity-50 flex items-center justify-center gap-1.5">
                 {upsertMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Check className="h-4 w-4" />}
                 {isAr ? "حفظ" : "Save"}

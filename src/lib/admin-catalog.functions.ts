@@ -1,6 +1,8 @@
 import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
+import { ensureUniqueSlug } from "./slugify";
+
 
 async function assertAdmin(supabase: any, userId: string) {
   const { data, error } = await supabase
@@ -19,9 +21,11 @@ const categoryInput = z.object({
   slug: z
     .string()
     .trim()
-    .min(2)
     .max(80)
-    .regex(/^[a-z0-9-]+$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -"),
+    .regex(/^[a-z0-9-]*$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -")
+    .optional()
+    .or(z.literal("")),
+
   name_ar: z.string().trim().min(1).max(120),
   name_en: z.string().trim().min(1).max(120),
   description_ar: z.string().trim().max(500).optional().or(z.literal("")),
@@ -50,8 +54,11 @@ export const upsertCategoryAdmin = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const finalSlug = data.slug && data.slug.length >= 2
+      ? data.slug
+      : await ensureUniqueSlug(supabaseAdmin, "categories", data.name_en || data.name_ar, data.id);
     const payload = {
-      slug: data.slug,
+      slug: finalSlug,
       name_ar: data.name_ar,
       name_en: data.name_en,
       description_ar: data.description_ar || null,
@@ -68,6 +75,7 @@ export const upsertCategoryAdmin = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
     return { ok: true };
+
   });
 
 export const deleteCategoryAdmin = createServerFn({ method: "POST" })
@@ -87,9 +95,11 @@ const productInput = z.object({
   slug: z
     .string()
     .trim()
-    .min(2)
     .max(120)
-    .regex(/^[a-z0-9-]+$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -"),
+    .regex(/^[a-z0-9-]*$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -")
+    .optional()
+    .or(z.literal("")),
+
   title_ar: z.string().trim().min(1).max(200),
   title_en: z.string().trim().min(1).max(200),
   author_ar: z.string().trim().min(1).max(120),
@@ -131,8 +141,12 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const finalSlug = data.slug && data.slug.length >= 2
+      ? data.slug
+      : await ensureUniqueSlug(supabaseAdmin, "products", data.title_en || data.title_ar, data.id);
     const payload = {
-      slug: data.slug,
+      slug: finalSlug,
+
       title_ar: data.title_ar,
       title_en: data.title_en,
       author_ar: data.author_ar,

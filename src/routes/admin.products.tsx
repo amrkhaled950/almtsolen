@@ -306,9 +306,12 @@ function ProductFormDialog({
             try { await onSave(form); } finally { setSaving(false); }
           }}
         >
-          <Field label={isAr ? "الـ slug (مرجع داخلي)" : "Slug"} required>
-            <input className="input" value={form.slug} onChange={(e) => set("slug", e.target.value)} required minLength={2} pattern="[a-z0-9-]+" />
-          </Field>
+          {product?.slug && (
+            <Field label={isAr ? "الـ slug (يُولّد تلقائياً)" : "Slug (auto-generated)"}>
+              <input className="input bg-muted/40" value={form.slug} readOnly />
+            </Field>
+          )}
+
           <div className="grid grid-cols-2 gap-3">
             <Field label={isAr ? "العنوان (عربي)" : "Title AR"} required><input className="input" value={form.title_ar} onChange={(e) => set("title_ar", e.target.value)} required /></Field>
             <Field label={isAr ? "العنوان (إنجليزي)" : "Title EN"} required><input className="input" value={form.title_en} onChange={(e) => set("title_en", e.target.value)} required /></Field>
