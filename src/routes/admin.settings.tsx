@@ -19,7 +19,7 @@ export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
 });
 
-type Tab = "branding" | "hero" | "promo" | "social" | "footer" | "legal" | "shipping" | "payment" | "notifications";
+type Tab = "branding" | "hero" | "home" | "promo" | "social" | "footer" | "legal" | "shipping" | "payment" | "notifications";
 
 function SettingsPage() {
   const locale = useLocale((s) => s.locale);
