@@ -8,16 +8,20 @@ import { useQuery } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
 import {
   TrendingUp, DollarSign, ShoppingBag, Users, Package,
-  MapPin, Award, Loader2,
+  MapPin, Award, Loader2, Calendar as CalendarIcon,
 } from "lucide-react";
 import { getAnalyticsAdmin } from "@/lib/admin-analytics.functions";
 import { useLocale, formatPrice } from "@/lib/i18n";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { ar as arLocale } from "date-fns/locale";
 
 export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
 });
-
-type Range = "7d" | "14d" | "30d" | "90d";
 
 const COLORS = ["#98040c", "#f59e0b", "#3b82f6", "#10b981", "#a855f7", "#ec4899"];
 
@@ -37,28 +41,48 @@ const paymentLabel: Record<string, { ar: string; en: string }> = {
   paymob_wallet: { ar: "محفظة",              en: "Wallet" },
 };
 
+type Preset = "7d" | "14d" | "30d" | "90d" | "custom";
+
+function daysAgo(n: number) {
+  const d = new Date();
+  d.setHours(0, 0, 0, 0);
+  d.setDate(d.getDate() - n + 1);
+  return d;
+}
+
 function AnalyticsPage() {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
-  const [range, setRange] = useState<Range>("14d");
+
+  const [preset, setPreset] = useState<Preset>("30d");
+  const [from, setFrom] = useState<Date>(daysAgo(30));
+  const [to, setTo] = useState<Date>(new Date());
+
+  const applyPreset = (p: Preset) => {
+    setPreset(p);
+    if (p === "custom") return;
+    const n = p === "7d" ? 7 : p === "14d" ? 14 : p === "30d" ? 30 : 90;
+    setFrom(daysAgo(n));
+    setTo(new Date());
+  };
 
   const fetchAnalytics = useServerFn(getAnalyticsAdmin);
-  const { data, isLoading } = useQuery({
-    queryKey: ["admin", "analytics"],
-    queryFn: () => fetchAnalytics(),
-    staleTime: 1000 * 60 * 5, // 5 min cache
-  });
+  const fromIso = from.toISOString().slice(0, 10);
+  const toIso = to.toISOString().slice(0, 10);
 
-  const rangeDays = range === "7d" ? 7 : range === "14d" ? 14 : range === "30d" ? 30 : 90;
+  const { data, isLoading } = useQuery({
+    queryKey: ["admin", "analytics", fromIso, toIso],
+    queryFn: () => fetchAnalytics({ data: { from: fromIso, to: toIso } }),
+    staleTime: 1000 * 60 * 2,
+  });
 
   const chartData = useMemo(() => {
     if (!data?.salesByDay) return [];
-    const sliced = data.salesByDay.slice(-rangeDays);
-    return sliced.map((d: any) => ({
+    return data.salesByDay.map((d: any) => ({
       ...d,
       date: new Date(d.date).toLocaleDateString(isAr ? "ar-EG" : "en-US", { day: "2-digit", month: "short" }),
     }));
-  }, [data, rangeDays, isAr]);
+  }, [data, isAr]);
 
   const rangeRevenue = chartData.reduce((s: number, d: any) => s + d.sales, 0);
   const rangeOrders  = chartData.reduce((s: number, d: any) => s + d.orders, 0);
@@ -133,15 +157,40 @@ function AnalyticsPage() {
             {isAr ? "أرقام حقيقية من قاعدة البيانات" : "Real numbers from your database"}
           </p>
         </div>
-        <div className="inline-flex bg-muted rounded-lg p-1">
-          {(["7d", "14d", "30d", "90d"] as Range[]).map((r) => (
-            <button key={r} onClick={() => setRange(r)}
-              className={`px-3 py-1.5 rounded-md text-sm font-semibold transition-colors ${
-                range === r ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}>
-              {r}
-            </button>
-          ))}
+        <div className="flex flex-wrap items-center gap-2">
+          <div className="inline-flex bg-muted rounded-lg p-1">
+            {(["7d", "14d", "30d", "90d"] as Preset[]).map((r) => (
+              <button key={r} onClick={() => applyPreset(r)}
+                className={cn(
+                  "px-3 py-1.5 rounded-md text-sm font-semibold transition-colors",
+                  preset === r ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}>
+                {r}
+              </button>
+            ))}
+          </div>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button variant="outline" size="sm" className={cn("gap-2", preset === "custom" && "border-primary text-primary")}>
+                <CalendarIcon className="h-4 w-4" />
+                {format(from, "dd MMM", { locale: isAr ? arLocale : undefined })} – {format(to, "dd MMM yyyy", { locale: isAr ? arLocale : undefined })}
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="end">
+              <Calendar
+                mode="range"
+                selected={{ from, to }}
+                onSelect={(r: any) => {
+                  if (r?.from) setFrom(r.from);
+                  if (r?.to) setTo(r.to);
+                  if (r?.from && r?.to) setPreset("custom");
+                }}
+                numberOfMonths={2}
+                locale={isAr ? arLocale : undefined}
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
       </div>
 
