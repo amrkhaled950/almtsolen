@@ -19,6 +19,7 @@ const checkoutSchema = z.object({
   apartment: z.string().trim().max(60).optional().or(z.literal("")),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
   payment_method: z.enum(["cod"]).default("cod"),
+  coupon_code: z.string().trim().max(50).optional().or(z.literal("")),
   items: z.array(itemSchema).min(1).max(50),
 });
 
