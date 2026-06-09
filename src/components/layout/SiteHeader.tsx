@@ -60,22 +60,27 @@ export function SiteHeader() {
     <>
       <PromoModal />
 
-      {/* Top bar */}
-      <div className="bg-primary text-primary-foreground text-xs">
-        <div className="container-page flex h-9 items-center justify-between">
-          <span className="font-medium">
-            {locale === "ar" ? "🚚 شحن مجاني للطلبات فوق 2000 ج.م" : "🚚 Free shipping on orders over 2000 EGP"}
-          </span>
-          <button
-            onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
-            className="flex items-center gap-1.5 font-medium hover:opacity-80 transition-opacity"
-            aria-label="Toggle language"
-          >
-            <Globe className="h-3.5 w-3.5" />
-            {locale === "ar" ? "English" : "العربية"}
-          </button>
-        </div>
-      </div>
+      {/* Top bar — hidden if no announcement text */}
+      {(() => {
+        const cs = settings?.custom_strings || {};
+        const announcement = (locale === "ar" ? cs["announcement_bar"]?.ar : cs["announcement_bar"]?.en)
+          || cs["announcement_bar"]?.ar || cs["announcement_bar"]?.en;
+        return (
+          <div className="bg-primary text-primary-foreground text-xs">
+            <div className="container-page flex h-9 items-center justify-between">
+              <span className="font-medium">{announcement || ""}</span>
+              <button
+                onClick={() => setLocale(locale === "ar" ? "en" : "ar")}
+                className="flex items-center gap-1.5 font-medium hover:opacity-80 transition-opacity"
+                aria-label="Toggle language"
+              >
+                <Globe className="h-3.5 w-3.5" />
+                {locale === "ar" ? "English" : "العربية"}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       <header className={cn(
         "sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md transition-shadow",
