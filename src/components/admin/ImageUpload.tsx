@@ -4,6 +4,8 @@ import { Upload, Loader2, X, Image as ImageIcon } from "lucide-react";
 import { toast } from "sonner";
 import { uploadAssetAdmin } from "@/lib/uploads.functions";
 import { useLocale } from "@/lib/i18n";
+import { resizeImage } from "@/lib/image-resize";
+
 
 interface Props {
   value?: string | null;
