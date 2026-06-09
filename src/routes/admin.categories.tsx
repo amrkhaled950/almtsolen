@@ -246,11 +246,14 @@ function CategoriesPage() {
                 className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary" />
             </div>
 
-            <div>
-              <label className="text-sm font-semibold mb-1 block">Slug *</label>
-              <input value={slug} onChange={(e) => setSlug(e.target.value.toLowerCase().replace(/\s+/g,"-"))} placeholder="e.g. literature"
-                className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary" />
-            </div>
+            {editTarget && (
+              <div>
+                <label className="text-sm font-semibold mb-1 block">Slug {isAr ? "(يُولّد تلقائياً)" : "(auto)"}</label>
+                <input value={slug} readOnly
+                  className="w-full h-10 px-3 rounded-lg border border-input bg-muted/40 text-sm text-muted-foreground" />
+              </div>
+            )}
+
 
             <div>
               <label className="text-sm font-semibold mb-1 block">{isAr ? "الترتيب في القائمة" : "Nav order"}</label>
