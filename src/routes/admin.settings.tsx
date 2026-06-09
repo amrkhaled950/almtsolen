@@ -29,6 +29,7 @@ function SettingsPage() {
   const tabs: { id: Tab; label: { ar: string; en: string }; icon: any }[] = [
     { id: "branding",      label: { ar: "العلامة التجارية", en: "Branding" },      icon: Palette },
     { id: "hero",          label: { ar: "البانر الرئيسي",   en: "Hero" },          icon: ImageIcon },
+    { id: "home",          label: { ar: "أقسام الرئيسية",   en: "Home Sections" }, icon: LayoutGrid },
     { id: "promo",         label: { ar: "العروض والإعلانات", en: "Promo & Banner" }, icon: Megaphone },
     { id: "social",        label: { ar: "التواصل والسوشيال", en: "Contact & Social" }, icon: Share2 },
     { id: "footer",        label: { ar: "الفوتر",          en: "Footer" },        icon: FileText },
