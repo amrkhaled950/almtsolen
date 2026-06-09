@@ -14,12 +14,18 @@ import { parseHomeSections } from "../lib/home-sections";
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "المتسولين | مكتبتك العربية المفضلة" },
-      { name: "description", content: "متجر المتسولين للكتب — توصيل لكل مصر." },
+      { title: "مكتبة المتسولين | أفضل متجر كتب عربية في مصر" },
+      { name: "description", content: "اشترِ كتبك المفضلة من مكتبة المتسولين. آلاف العناوين العربية والمترجمة، أسعار مميزة، توصيل لكل محافظات مصر، والدفع عند الاستلام." },
+      { property: "og:title", content: "مكتبة المتسولين | كتبك العربية المفضلة" },
+      { property: "og:description", content: "آلاف العناوين العربية بأسعار مميزة وتوصيل لكل مصر مع الدفع عند الاستلام." },
+      { property: "og:url", content: "https://www.almotasolen.com/" },
+      { property: "og:type", content: "website" },
     ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/" }],
   }),
   component: Home,
 });
+
 
 function Home() {
   const locale = useLocale((s) => s.locale);
