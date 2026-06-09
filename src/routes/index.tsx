@@ -6,8 +6,10 @@ import { useEffect, useState } from "react";
 import { ArrowLeft, Sparkles, TrendingUp, Loader2, ChevronRight } from "lucide-react";
 import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
+import { ProductCarousel } from "../components/home/ProductCarousel";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
+import { parseHomeSections } from "../lib/home-sections";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -42,13 +44,33 @@ function Home() {
   const newArrivals = newData?.products  ?? [];
   const latest      = latestData?.products ?? [];
 
-  // Fetch products for each root category
+  // Custom home-page carousels from settings
+  const homeSections = parseHomeSections(settings).filter((sec) => sec.enabled);
+  const hasCustomSections = homeSections.length > 0;
+
+  const carouselQueries = useQueries({
+    queries: homeSections.map((sec) => ({
+      queryKey: ["products", "home-sec", sec.source, sec.category_slug, sec.limit],
+      queryFn: () => fetchProducts({
+        data: {
+          ...(sec.source === "category"     ? { category_slug: sec.category_slug } : {}),
+          ...(sec.source === "bestsellers"  ? { bestseller: true }                 : {}),
+          ...(sec.source === "new_arrivals" ? { new_arrival: true }                : {}),
+          ...(sec.source === "featured"     ? { featured: true }                   : {}),
+          limit: sec.limit,
+        },
+      }),
+      enabled: sec.source !== "category" || !!sec.category_slug,
+    })),
+  });
+
+  // Fetch products for each root category (fallback when no custom sections set)
   const catSlugs = rootCats.map((c: any) => c.slug);
   const catProductQueries = useQueries({
     queries: catSlugs.map((slug: string) => ({
       queryKey: ["products", "cat", slug],
       queryFn: () => fetchProducts({ data: { category_slug: slug, limit: 8 } }),
-      enabled: !!slug,
+      enabled: !!slug && !hasCustomSections,
     })),
   });
 
@@ -145,8 +167,28 @@ function Home() {
         </section>
       )}
 
-      {/* ── Per-category sections ────────────────────────────── */}
-      {rootCats.map((cat: any, i: number) => {
+      {/* ── Custom home carousels (managed from dashboard) ───── */}
+      {homeSections.map((sec, i) => {
+        const q = carouselQueries[i];
+        const products = q?.data?.products ?? [];
+        const loading  = q?.isLoading;
+        const title = (isAr ? sec.title_ar : sec.title_en) || (isAr ? sec.title_en : sec.title_ar) || "";
+        const viewAllSearch = sec.source === "category" && sec.category_slug ? { category: sec.category_slug } : undefined;
+        return (
+          <ProductCarousel
+            key={sec.id}
+            title={title}
+            products={products}
+            loading={loading}
+            isAr={isAr}
+            viewAllHref="/shop"
+            viewAllSearch={viewAllSearch}
+          />
+        );
+      })}
+
+      {/* ── Per-category sections (auto fallback if no custom carousels) ── */}
+      {!hasCustomSections && rootCats.map((cat: any, i: number) => {
         const subs = subCatsOf(cat.id);
         const products = catProductQueries[i]?.data?.products ?? [];
         const loading  = catProductQueries[i]?.isLoading;

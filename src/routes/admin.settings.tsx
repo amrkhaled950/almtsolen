@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import {
   Palette, Image as ImageIcon, Share2, FileText, Truck, CreditCard, Bell,
   Loader2, Check, Plus, Trash2, ArrowUp, ArrowDown, ExternalLink, Megaphone,
+  LayoutGrid,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -10,13 +11,15 @@ import { toast } from "sonner";
 import { useLocale } from "@/lib/i18n";
 import { getShippingRates, upsertShippingRates, type GovernorateShipping } from "@/lib/shipping.functions";
 import { getSiteSettings, updateSiteSettings, type SiteSettings } from "@/lib/site-settings.functions";
+import { listCategoriesPublic } from "@/lib/catalog.functions";
+import { parseHomeSections, serializeHomeSections, type HomeSection } from "@/lib/home-sections";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export const Route = createFileRoute("/admin/settings")({
   component: SettingsPage,
 });
 
-type Tab = "branding" | "hero" | "promo" | "social" | "footer" | "legal" | "shipping" | "payment" | "notifications";
+type Tab = "branding" | "hero" | "home" | "promo" | "social" | "footer" | "legal" | "shipping" | "payment" | "notifications";
 
 function SettingsPage() {
   const locale = useLocale((s) => s.locale);
@@ -26,6 +29,7 @@ function SettingsPage() {
   const tabs: { id: Tab; label: { ar: string; en: string }; icon: any }[] = [
     { id: "branding",      label: { ar: "العلامة التجارية", en: "Branding" },      icon: Palette },
     { id: "hero",          label: { ar: "البانر الرئيسي",   en: "Hero" },          icon: ImageIcon },
+    { id: "home",          label: { ar: "أقسام الرئيسية",   en: "Home Sections" }, icon: LayoutGrid },
     { id: "promo",         label: { ar: "العروض والإعلانات", en: "Promo & Banner" }, icon: Megaphone },
     { id: "social",        label: { ar: "التواصل والسوشيال", en: "Contact & Social" }, icon: Share2 },
     { id: "footer",        label: { ar: "الفوتر",          en: "Footer" },        icon: FileText },
@@ -62,6 +66,7 @@ function SettingsPage() {
 
       {tab === "branding"      && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <BrandingTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "hero"          && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <HeroTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
+      {tab === "home"          && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <HomeSectionsTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "promo"         && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <PromoTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "social"        && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <SocialTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "footer"        && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <FooterTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
@@ -599,6 +604,143 @@ function PromoTab({ isAr, s, set, save, saving }: { isAr: boolean; s: FormState;
           </Field>
         </div>
       </div>
+
+      <SaveBar onSave={save} saving={saving} isAr={isAr} />
+    </div>
+  );
+}
+
+/* ── Home Sections Tab (product carousels per category) ─── */
+function HomeSectionsTab({ isAr, s, set, save, saving }: { isAr: boolean; s: FormState; set: any; save: () => void; saving: boolean }) {
+  const sections = parseHomeSections(s);
+  const fetchCats = useServerFn(listCategoriesPublic);
+  const { data: catData } = useQuery({ queryKey: ["categories"], queryFn: () => fetchCats() });
+  const cats = (catData?.categories ?? []) as any[];
+
+  const update = (next: HomeSection[]) => {
+    set("custom_strings", serializeHomeSections(next, s.custom_strings));
+  };
+  const patch = (i: number, p: Partial<HomeSection>) =>
+    update(sections.map((sec, idx) => (idx === i ? { ...sec, ...p } : sec)));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= sections.length) return;
+    const next = [...sections];
+    [next[i], next[j]] = [next[j], next[i]];
+    update(next);
+  };
+  const add = () =>
+    update([
+      ...sections,
+      {
+        id: Math.random().toString(36).slice(2, 10),
+        title_ar: "",
+        title_en: "",
+        category_slug: cats[0]?.slug ?? "",
+        source: "category",
+        limit: 8,
+        enabled: true,
+      },
+    ]);
+  const remove = (i: number) => update(sections.filter((_, idx) => idx !== i));
+
+  const sources: { value: HomeSection["source"]; label: { ar: string; en: string } }[] = [
+    { value: "category",    label: { ar: "تصنيف معين",       en: "Specific category" } },
+    { value: "bestsellers", label: { ar: "الأكثر مبيعاً",     en: "Bestsellers" } },
+    { value: "new_arrivals",label: { ar: "وصل حديثاً",        en: "New arrivals" } },
+    { value: "featured",    label: { ar: "المميزة",          en: "Featured" } },
+  ];
+
+  return (
+    <div className="space-y-4">
+      <div className="rounded-2xl border border-border bg-card shadow-card-soft p-6 space-y-2">
+        <div className="flex items-center justify-between">
+          <div>
+            <h3 className="font-bold">{isAr ? "كاروسيلات الصفحة الرئيسية" : "Home page carousels"}</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {isAr
+                ? "أضف كاروسيلات منتجات تظهر في الصفحة الرئيسية بعد التصنيفات. كل كاروسيل بيعرض منتجات من تصنيف معين أو مصدر خاص."
+                : "Add product carousels shown on the home page below the categories row."}
+            </p>
+          </div>
+          <button
+            onClick={add}
+            className="h-9 px-3 rounded-lg bg-primary/10 text-primary text-sm font-semibold hover:bg-primary/20 flex items-center gap-1.5 shrink-0"
+          >
+            <Plus className="h-4 w-4" />
+            {isAr ? "إضافة كاروسيل" : "Add carousel"}
+          </button>
+        </div>
+      </div>
+
+      {sections.length === 0 && (
+        <div className="rounded-2xl border border-dashed border-border bg-card/50 p-8 text-center text-sm text-muted-foreground">
+          {isAr ? "لا يوجد كاروسيلات بعد. اضغط على ”إضافة كاروسيل“." : "No carousels yet. Click \"Add carousel\"."}
+        </div>
+      )}
+
+      {sections.map((sec, i) => (
+        <div key={sec.id} className="rounded-2xl border border-border bg-card shadow-card-soft p-5 space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
+              <button
+                type="button"
+                onClick={() => patch(i, { enabled: !sec.enabled })}
+                className={`relative h-6 w-11 rounded-full transition-colors ${sec.enabled ? "bg-primary" : "bg-muted"}`}
+                aria-label="toggle"
+              >
+                <span className={`absolute top-0.5 ${sec.enabled ? "end-0.5" : "start-0.5"} h-5 w-5 rounded-full bg-white shadow transition-all`} />
+              </button>
+              <span className="text-xs text-muted-foreground">
+                {sec.enabled ? (isAr ? "مفعّل" : "Enabled") : (isAr ? "معطّل" : "Disabled")}
+              </span>
+            </div>
+            <div className="flex items-center gap-1">
+              <button onClick={() => move(i, -1)} disabled={i === 0} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+              <button onClick={() => move(i, 1)} disabled={i === sections.length - 1} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+              <button onClick={() => remove(i)} className="p-1.5 rounded text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
+            </div>
+          </div>
+
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Field label={isAr ? "العنوان (عربي)" : "Title (Arabic)"}>
+              <TextInput value={sec.title_ar} onChange={(v) => patch(i, { title_ar: v })} placeholder="🔥 الأكثر مبيعاً" />
+            </Field>
+            <Field label={isAr ? "العنوان (إنجليزي)" : "Title (English)"}>
+              <TextInput value={sec.title_en} onChange={(v) => patch(i, { title_en: v })} placeholder="🔥 Bestsellers" />
+            </Field>
+            <Field label={isAr ? "المصدر" : "Source"}>
+              <select
+                value={sec.source}
+                onChange={(e) => patch(i, { source: e.target.value as HomeSection["source"] })}
+                className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary"
+              >
+                {sources.map((opt) => (
+                  <option key={opt.value} value={opt.value}>{isAr ? opt.label.ar : opt.label.en}</option>
+                ))}
+              </select>
+            </Field>
+            {sec.source === "category" && (
+              <Field label={isAr ? "التصنيف" : "Category"}>
+                <select
+                  value={sec.category_slug}
+                  onChange={(e) => patch(i, { category_slug: e.target.value })}
+                  className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="">{isAr ? "اختر تصنيف…" : "Select category…"}</option>
+                  {cats.map((c) => (
+                    <option key={c.id} value={c.slug}>{isAr ? c.name_ar : c.name_en}</option>
+                  ))}
+                </select>
+              </Field>
+            )}
+            <Field label={isAr ? "عدد المنتجات" : "Products limit"}>
+              <TextInput type="number" value={sec.limit} onChange={(v) => patch(i, { limit: Math.max(2, Math.min(24, Number(v) || 8)) })} />
+            </Field>
+          </div>
+        </div>
+      ))}
 
       <SaveBar onSave={save} saving={saving} isAr={isAr} />
     </div>
