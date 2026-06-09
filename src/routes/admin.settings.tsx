@@ -66,6 +66,7 @@ function SettingsPage() {
 
       {tab === "branding"      && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <BrandingTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "hero"          && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <HeroTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
+      {tab === "home"          && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <HomeSectionsTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "promo"         && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <PromoTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "social"        && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <SocialTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
       {tab === "footer"        && <SettingsForm isAr={isAr} render={(s, set, save, saving) => <FooterTab isAr={isAr} s={s} set={set} save={save} saving={saving} />} />}
