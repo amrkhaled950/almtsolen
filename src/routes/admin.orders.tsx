@@ -139,6 +139,14 @@ function OrdersPage() {
               : isAr ? `${orders.length} طلب إجمالاً` : `${orders.length} total orders`}
           </p>
         </div>
+        <button
+          onClick={() => exportMut.mutate({ status: statusFilter === "all" ? undefined : statusFilter })}
+          disabled={exportMut.isPending || orders.length === 0}
+          className="h-10 px-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover flex items-center gap-2 disabled:opacity-50"
+        >
+          {exportMut.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4" />}
+          {isAr ? "تصدير CSV" : "Export CSV"}
+        </button>
       </div>
 
       {/* Status tabs */}
