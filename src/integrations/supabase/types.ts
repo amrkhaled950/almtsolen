@@ -68,11 +68,15 @@ export type Database = {
           description_ar: string | null
           description_en: string | null
           display_order: number
+          icon: string | null
           id: string
           image_url: string | null
           is_active: boolean
           name_ar: string
           name_en: string
+          nav_order: number
+          parent_id: string | null
+          show_in_nav: boolean
           slug: string
           updated_at: string
         }
@@ -81,11 +85,15 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           display_order?: number
+          icon?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
           name_ar: string
           name_en: string
+          nav_order?: number
+          parent_id?: string | null
+          show_in_nav?: boolean
           slug: string
           updated_at?: string
         }
@@ -94,15 +102,27 @@ export type Database = {
           description_ar?: string | null
           description_en?: string | null
           display_order?: number
+          icon?: string | null
           id?: string
           image_url?: string | null
           is_active?: boolean
           name_ar?: string
           name_en?: string
+          nav_order?: number
+          parent_id?: string | null
+          show_in_nav?: boolean
           slug?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       marketing_costs: {
         Row: {
@@ -391,6 +411,33 @@ export type Database = {
           id?: string
           phone?: string | null
           updated_at?: string
+        }
+        Relationships: []
+      }
+      shipping_rates: {
+        Row: {
+          enabled: boolean
+          governorate_ar: string
+          governorate_en: string
+          id: number
+          price: number
+          updated_at: string | null
+        }
+        Insert: {
+          enabled?: boolean
+          governorate_ar: string
+          governorate_en: string
+          id?: never
+          price?: number
+          updated_at?: string | null
+        }
+        Update: {
+          enabled?: boolean
+          governorate_ar?: string
+          governorate_en?: string
+          id?: never
+          price?: number
+          updated_at?: string | null
         }
         Relationships: []
       }
