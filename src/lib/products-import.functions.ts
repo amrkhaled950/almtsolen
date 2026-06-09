@@ -71,7 +71,7 @@ function normalizeItem(item: any) {
     pick(item, ["title_en", "name_en", "english_name"]) || String(title_ar);
   const author_ar = pick(item, ["author_ar", "author", "writer", "writer_ar"]) || "—";
   const author_en = pick(item, ["author_en", "author"]) || String(author_ar);
-  const description = pick(item, ["description", "description_ar", "details", "body", "content"]) || "";
+  const description = stripHtml(pick(item, ["description", "description_ar", "details", "body", "content"]) || "");
   const slug =
     pick(item, ["slug", "handle", "permalink", "url_slug"]) ||
     slugify(pick(item, ["sku", "code", "id"]) ? String(pick(item, ["sku", "code", "id"])) : String(title_en));
