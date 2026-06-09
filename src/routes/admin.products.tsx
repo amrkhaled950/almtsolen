@@ -12,6 +12,7 @@ import {
 } from "@/lib/admin-catalog.functions";
 import { importProductsJson } from "@/lib/products-import.functions";
 import { useLocale, formatPrice } from "@/lib/i18n";
+import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export const Route = createFileRoute("/admin/products")({
   component: ProductsPage,
@@ -316,7 +317,9 @@ function ProductFormDialog({
             <Field label={isAr ? "الناشر (عربي)" : "Publisher AR"}><input className="input" value={form.publisher_ar} onChange={(e) => set("publisher_ar", e.target.value)} /></Field>
             <Field label={isAr ? "الناشر (إنجليزي)" : "Publisher EN"}><input className="input" value={form.publisher_en} onChange={(e) => set("publisher_en", e.target.value)} /></Field>
           </div>
-          <Field label={isAr ? "رابط صورة الغلاف" : "Cover URL"}><input className="input" value={form.cover_url} onChange={(e) => set("cover_url", e.target.value)} placeholder="https://..." /></Field>
+          <Field label={isAr ? "صورة الغلاف" : "Cover image"}>
+            <ImageUpload value={form.cover_url} onChange={(v) => set("cover_url", v)} folder="products" size={120} />
+          </Field>
           <Field label={isAr ? "التصنيف" : "Category"}>
             <select className="input" value={form.category_id || ""} onChange={(e) => set("category_id", e.target.value || null)}>
               <option value="">—</option>
