@@ -7,6 +7,7 @@ import { useLocale, t } from "../../lib/i18n";
 import { useCart } from "../../lib/cart-store";
 import { cn } from "../../lib/utils";
 import { listCategoriesPublic } from "../../lib/catalog.functions";
+import { useSiteSettings } from "../../lib/use-site-settings";
 import { PromoModal } from "./PromoModal";
 
 export function SiteHeader() {
@@ -17,6 +18,9 @@ export function SiteHeader() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const catRef = useRef<HTMLDivElement>(null);
+  const { settings } = useSiteSettings();
+  const siteName = (locale === "ar" ? settings?.site_name_ar : settings?.site_name_en) || "مكتبة المتسولين";
+  const logoUrl = settings?.logo_url || "/logo.png";
 
   const fetchCats = useServerFn(listCategoriesPublic);
   const { data: catData } = useQuery({ queryKey: ["categories-nav"], queryFn: () => fetchCats() });
