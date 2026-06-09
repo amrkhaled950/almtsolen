@@ -1,7 +1,7 @@
 import { Link } from "@tanstack/react-router";
 import { Facebook, Instagram, Youtube, Twitter, Send, ShieldCheck, Truck, CreditCard, Headphones } from "lucide-react";
 import { useLocale, t } from "../../lib/i18n";
-import logoAsset from "../../assets/logo.png.asset.json";
+
 
 export function SiteFooter() {
   const locale = useLocale((s) => s.locale);
