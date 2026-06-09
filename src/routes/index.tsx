@@ -24,6 +24,7 @@ function Home() {
   const isAr = locale === "ar";
   const fetchCats = useServerFn(listCategoriesPublic);
   const fetchProducts = useServerFn(listProductsPublic);
+  const { settings } = useSiteSettings();
 
   const { data: catData } = useQuery({ queryKey: ["categories"], queryFn: () => fetchCats() });
   const { data: bestData } = useQuery({ queryKey: ["products","bestsellers"], queryFn: () => fetchProducts({ data: { bestseller: true, limit: 8 } }) });
