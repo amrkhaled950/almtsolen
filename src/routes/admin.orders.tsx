@@ -358,6 +358,17 @@ function OrdersPage() {
                     </button>
                   </section>
 
+                  {/* Print waybill */}
+                  <section>
+                    <button
+                      onClick={() => printWaybill(detail.order, detail.items, locale)}
+                      className="w-full h-10 rounded-lg bg-foreground text-background text-sm font-semibold hover:opacity-90 flex items-center justify-center gap-2"
+                    >
+                      <Printer className="h-4 w-4" />
+                      {isAr ? "طباعة بوليصة الشحن" : "Print waybill"}
+                    </button>
+                  </section>
+
                   {/* Delete */}
                   <section className="pt-2 border-t border-border">
                     <button
