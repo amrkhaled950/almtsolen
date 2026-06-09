@@ -21,9 +21,11 @@ const categoryInput = z.object({
   slug: z
     .string()
     .trim()
-    .min(2)
     .max(80)
-    .regex(/^[a-z0-9-]+$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -"),
+    .regex(/^[a-z0-9-]*$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -")
+    .optional()
+    .or(z.literal("")),
+
   name_ar: z.string().trim().min(1).max(120),
   name_en: z.string().trim().min(1).max(120),
   description_ar: z.string().trim().max(500).optional().or(z.literal("")),
