@@ -54,8 +54,11 @@ export const upsertCategoryAdmin = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const finalSlug = data.slug && data.slug.length >= 2
+      ? data.slug
+      : await ensureUniqueSlug(supabaseAdmin, "categories", data.name_en || data.name_ar, data.id);
     const payload = {
-      slug: data.slug,
+      slug: finalSlug,
       name_ar: data.name_ar,
       name_en: data.name_en,
       description_ar: data.description_ar || null,
@@ -72,6 +75,7 @@ export const upsertCategoryAdmin = createServerFn({ method: "POST" })
       if (error) throw new Error(error.message);
     }
     return { ok: true };
+
   });
 
 export const deleteCategoryAdmin = createServerFn({ method: "POST" })
