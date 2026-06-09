@@ -5,11 +5,12 @@ import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Flame } from "
 import { useState } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
 import { useCart, useWishlist } from "../lib/cart-store";
-import { getProductPublic } from "../lib/catalog.functions";
+import { getProductPublic, listRelatedProductsPublic } from "../lib/catalog.functions";
 import { toast } from "sonner";
 import { cn } from "../lib/utils";
 import { ProductPageSkeleton } from "../components/ui/skeletons";
 import { ShareButtons } from "../components/product/ShareButtons";
+import { ProductCard } from "../components/product/ProductCard";
 
 
 const productQueryOptions = (slug: string) =>
