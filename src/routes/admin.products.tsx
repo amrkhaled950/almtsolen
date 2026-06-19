@@ -229,8 +229,8 @@ function ProductsPage() {
               const res: any = await importFn({ data: { payload, default_category_id, upsert } });
               toast.success(
                 isAr
-                  ? `تم استيراد ${res.processed} منتج (${res.skipped_invalid} متجاهل)`
-                  : `Imported ${res.processed} products (${res.skipped_invalid} skipped)`,
+                  ? `تم استيراد ${res.processed} منتج، وإنشاء ${res.categories_created ?? 0} تصنيف جديد (${res.skipped_invalid} متجاهل)`
+                  : `Imported ${res.processed} products, ${res.categories_created ?? 0} new categories (${res.skipped_invalid} skipped)`,
               );
               qc.invalidateQueries({ queryKey: ["admin", "products"] });
               setShowImport(false);
