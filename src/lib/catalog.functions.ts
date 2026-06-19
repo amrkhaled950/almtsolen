@@ -44,16 +44,26 @@ export type UICategory = {
 const PRODUCT_COLS =
   "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured";
 
+// Public (anon) credentials — safe to hardcode as fallback so the catalog
+// works on any host even when server env vars are not configured.
+const FALLBACK_SUPABASE_URL = "https://hiaewjagcvycyuxweiwj.supabase.co";
+const FALLBACK_SUPABASE_PUBLISHABLE_KEY =
+  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpYWV3amFnY3Z5Y3l1eHdlaXdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTMzODcsImV4cCI6MjA5NTk2OTM4N30.EMCWia7PoTDUhCljG2Oa8YBuQPnbuyC80E0Ss_iDA6Y";
+
 function getPublicClient() {
-  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
-  const key =
+  const url =
+    process.env.SUPABASE_URL ??
+    process.env.VITE_SUPABASE_URL ??
+    FALLBACK_SUPABASE_URL;
+  let key =
     process.env.SUPABASE_PUBLISHABLE_KEY ??
     process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-    process.env.SUPABASE_ANON_KEY;
-  if (!url || !key) {
-    throw new Error(
-      "Supabase public credentials missing (SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY).",
-    );
+    process.env.SUPABASE_ANON_KEY ??
+    FALLBACK_SUPABASE_PUBLISHABLE_KEY;
+  // Guard against sb_secret_* / service-role keys being injected here —
+  // PostgREST rejects non-JWT keys with "Invalid API key".
+  if (!key.startsWith("eyJ")) {
+    key = FALLBACK_SUPABASE_PUBLISHABLE_KEY;
   }
   return createClient<Database>(url, key, {
     auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
