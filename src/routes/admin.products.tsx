@@ -20,6 +20,20 @@ export const Route = createFileRoute("/admin/products")({
 
 type ProductRow = any;
 
+function parseImportPayload(text: string): { items: any[]; wrap: (items: any[]) => any } {
+  let raw: any;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error("الملف ليس JSON صحيح");
+  }
+  if (Array.isArray(raw)) return { items: raw, wrap: (items) => items };
+  if (Array.isArray(raw?.products)) return { items: raw.products, wrap: (items) => ({ products: items }) };
+  if (Array.isArray(raw?.data)) return { items: raw.data, wrap: (items) => ({ data: items }) };
+  if (Array.isArray(raw?.items)) return { items: raw.items, wrap: (items) => ({ items }) };
+  throw new Error("بنية JSON غير مدعومة - يجب أن تكون مصفوفة منتجات");
+}
+
 function ProductsPage() {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
