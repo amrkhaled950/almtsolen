@@ -39,6 +39,9 @@ export type UICategory = {
   is_active: boolean;
 };
 
+const PRODUCT_COLS =
+  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured";
+
 export const listCategoriesPublic = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ categories: UICategory[] }> => {
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -78,22 +81,35 @@ export const listProductsPublic = createServerFn({ method: "GET" })
       categoryId = cat?.id ?? null;
       if (!categoryId) return { products: [] };
     }
-    let q = supabaseAdmin
-      .from("products")
-      .select(
-        "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured",
-      )
-      .eq("is_active", true)
-      .order("created_at", { ascending: false });
-    if (categoryId) q = q.eq("category_id", categoryId);
-    if (data.featured) q = q.eq("is_featured", true);
-    if (data.bestseller) q = q.eq("is_bestseller", true);
-    if (data.new_arrival) q = q.eq("is_new_arrival", true);
-    if (data.limit) q = q.limit(data.limit);
+    const buildQuery = () => {
+      let q = supabaseAdmin
+        .from("products")
+        .select(PRODUCT_COLS)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false });
+      if (categoryId) q = q.eq("category_id", categoryId);
+      if (data.featured) q = q.eq("is_featured", true);
+      if (data.bestseller) q = q.eq("is_bestseller", true);
+      if (data.new_arrival) q = q.eq("is_new_arrival", true);
+      return q;
+    };
 
-    const { data: rows, error } = await q;
-    if (error) throw new Error(error.message);
-    return { products: (rows ?? []) as UIProduct[] };
+    if (data.limit) {
+      const { data: rows, error } = await buildQuery().limit(data.limit);
+      if (error) throw new Error(error.message);
+      return { products: (rows ?? []) as UIProduct[] };
+    }
+
+    const PAGE = 500;
+    const all: UIProduct[] = [];
+    for (let from = 0; from < 20000; from += PAGE) {
+      const { data: rows, error } = await buildQuery().range(from, from + PAGE - 1);
+      if (error) throw new Error(error.message);
+      if (!rows?.length) break;
+      all.push(...(rows as UIProduct[]));
+      if (rows.length < PAGE) break;
+    }
+    return { products: all };
   });
 
 export const getProductPublic = createServerFn({ method: "GET" })
@@ -111,9 +127,6 @@ export const getProductPublic = createServerFn({ method: "GET" })
     if (error) throw new Error(error.message);
     return { product: (row as UIProduct | null) ?? null };
   });
-
-const PRODUCT_COLS =
-  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured";
 
 function escapeIlike(s: string) {
   return s.replace(/[\\%_,()]/g, (m) => "\\" + m);
