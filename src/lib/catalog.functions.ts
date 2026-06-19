@@ -1,5 +1,7 @@
 import { createServerFn } from "@tanstack/react-start";
+import { createClient } from "@supabase/supabase-js";
 import { z } from "zod";
+import type { Database } from "@/integrations/supabase/types";
 
 export type UIProduct = {
   id: string;
@@ -42,10 +44,26 @@ export type UICategory = {
 const PRODUCT_COLS =
   "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured";
 
+function getPublicClient() {
+  const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL;
+  const key =
+    process.env.SUPABASE_PUBLISHABLE_KEY ??
+    process.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
+    process.env.SUPABASE_ANON_KEY;
+  if (!url || !key) {
+    throw new Error(
+      "Supabase public credentials missing (SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY).",
+    );
+  }
+  return createClient<Database>(url, key, {
+    auth: { storage: undefined, persistSession: false, autoRefreshToken: false },
+  });
+}
+
 export const listCategoriesPublic = createServerFn({ method: "GET" }).handler(
   async (): Promise<{ categories: UICategory[] }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
+    const supabase = getPublicClient();
+    const { data, error } = await supabase
       .from("categories")
       .select(
         "id, slug, name_ar, name_en, description_ar, description_en, image_url, display_order, is_active",
@@ -70,10 +88,10 @@ export const listProductsPublic = createServerFn({ method: "GET" })
       .parse(input ?? {}),
   )
   .handler(async ({ data }): Promise<{ products: UIProduct[] }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = getPublicClient();
     let categoryId: string | null = null;
     if (data.category_slug) {
-      const { data: cat } = await supabaseAdmin
+      const { data: cat } = await supabase
         .from("categories")
         .select("id")
         .eq("slug", data.category_slug)
@@ -82,7 +100,7 @@ export const listProductsPublic = createServerFn({ method: "GET" })
       if (!categoryId) return { products: [] };
     }
     const buildQuery = () => {
-      let q = supabaseAdmin
+      let q = supabase
         .from("products")
         .select(PRODUCT_COLS)
         .eq("is_active", true);
@@ -121,8 +139,8 @@ export const listProductsPublic = createServerFn({ method: "GET" })
 export const getProductPublic = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(200) }).parse(input))
   .handler(async ({ data }): Promise<{ product: UIProduct | null }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: row, error } = await supabaseAdmin
+    const supabase = getPublicClient();
+    const { data: row, error } = await supabase
       .from("products")
       .select(
         "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured",
@@ -154,11 +172,11 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
       .parse(input ?? {}),
   )
   .handler(async ({ data }): Promise<{ products: UIProduct[]; total: number }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabase = getPublicClient();
 
     let categoryId: string | null = null;
     if (data.category_slug) {
-      const { data: cat } = await supabaseAdmin
+      const { data: cat } = await supabase
         .from("categories")
         .select("id")
         .eq("slug", data.category_slug)
@@ -167,7 +185,7 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
       if (!categoryId) return { products: [], total: 0 };
     }
 
-    let q = supabaseAdmin
+    let q = supabase
       .from("products")
       .select(PRODUCT_COLS, { count: "exact" })
       .eq("is_active", true);
@@ -217,15 +235,15 @@ export const listRelatedProductsPublic = createServerFn({ method: "GET" })
       .parse(input),
   )
   .handler(async ({ data }): Promise<{ products: UIProduct[] }> => {
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data: base } = await supabaseAdmin
+    const supabase = getPublicClient();
+    const { data: base } = await supabase
       .from("products")
       .select("category_id")
       .eq("id", data.product_id)
       .maybeSingle();
 
     const limit = data.limit ?? 8;
-    let q = supabaseAdmin
+    let q = supabase
       .from("products")
       .select(PRODUCT_COLS)
       .eq("is_active", true)
