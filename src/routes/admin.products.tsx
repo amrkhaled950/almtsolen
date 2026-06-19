@@ -156,10 +156,40 @@ function ProductsPage() {
           </div>
         </div>
 
+        {selected.size > 0 && (
+          <div className="px-4 py-2 border-b border-border bg-primary/5 flex items-center gap-3 text-sm">
+            <span className="font-semibold">
+              {isAr ? `محدد: ${selected.size}` : `Selected: ${selected.size}`}
+            </span>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-xs underline text-muted-foreground hover:text-foreground"
+            >
+              {isAr ? "إلغاء التحديد" : "Clear"}
+            </button>
+            <button
+              onClick={bulkDelete}
+              disabled={bulkDeleting}
+              className="ms-auto h-8 px-3 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-60 flex items-center gap-1.5"
+            >
+              {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              {isAr ? "حذف المحدد" : "Delete selected"}
+            </button>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
               <tr>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleAll}
+                    className="h-4 w-4 rounded border-input cursor-pointer"
+                  />
+                </th>
                 <th className="text-start px-4 py-3 font-semibold">{isAr ? "المنتج" : "Product"}</th>
                 <th className="text-start px-4 py-3 font-semibold">{isAr ? "البيع" : "Price"}</th>
                 <th className="text-start px-4 py-3 font-semibold">{isAr ? "التكلفة" : "Cost"}</th>
