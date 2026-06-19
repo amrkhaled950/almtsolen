@@ -45,6 +45,11 @@ function ProductsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
+  const refreshCatalog = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    qc.invalidateQueries({ queryKey: ["admin", "categories"] });
+  };
+
   const filtered = useMemo(() => {
     return products.filter((p) => {
       const matchQ = q
@@ -301,22 +306,9 @@ function ProductsPage() {
           categories={categories}
           onClose={() => setShowImport(false)}
           onImport={async (payload, default_category_id, upsert) => {
-            try {
-              const res: any = await importFn({ data: { payload, default_category_id, upsert } });
-              toast.success(
-                isAr
-                  ? `تم استيراد ${res.processed} منتج، وربط ${res.categorized ?? 0} بالتصنيفات، وإنشاء ${res.categories_created ?? 0} تصنيف جديد (${res.skipped_invalid} متجاهل)`
-                  : `Imported ${res.processed} products, linked ${res.categorized ?? 0} to categories, ${res.categories_created ?? 0} new categories (${res.skipped_invalid} skipped)`,
-              );
-              qc.invalidateQueries({ queryKey: ["admin", "products"] });
-              qc.invalidateQueries({ queryKey: ["admin", "categories"] });
-              setShowImport(false);
-              return res;
-            } catch (e: any) {
-              toast.error(e?.message || "Import failed");
-              throw e;
-            }
+            return importFn({ data: { payload, default_category_id, upsert } });
           }}
+          onComplete={refreshCatalog}
         />
       )}
     </div>
