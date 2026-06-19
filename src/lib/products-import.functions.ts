@@ -327,6 +327,7 @@ export const importProductsJson = createServerFn({ method: "POST" })
       processed: rows.length,
       inserted: data.upsert ? updated : inserted,
       categories_created,
+      categorized,
       skipped_invalid: errors.length,
       errors: errors.slice(0, 20),
     };
