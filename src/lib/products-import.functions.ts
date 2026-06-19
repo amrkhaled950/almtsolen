@@ -106,6 +106,16 @@ function normalizeItem(item: any) {
     slugify(pick(item, ["sku", "code", "id"]) ? String(pick(item, ["sku", "code", "id"])) : String(title_en));
   const price = toNumber(pick(item, ["price", "selling_price", "sale_price", "unit_price"]));
   const compare = pick(item, ["compare_at_price", "old_price", "original_price", "list_price"]);
+  const category_name =
+    pick(item, [
+      "category",
+      "category_name",
+      "category_ar",
+      "category_en",
+      "categoryName",
+      "cat",
+      "section",
+    ]) ?? null;
   return {
     slug: String(slug).slice(0, 120),
     title_ar: String(title_ar).slice(0, 200),
@@ -126,6 +136,7 @@ function normalizeItem(item: any) {
     isbn: pick(item, ["isbn", "isbn_13", "barcode", "sku", "ean"]) ?? null,
     stock: toInt(pick(item, ["stock", "quantity", "qty", "inventory", "stock_quantity"]), 0),
     is_active: pick(item, ["is_active", "active", "available", "is_available"]) !== false,
+    _category_name: category_name ? String(category_name).trim() : null,
   };
 }
 
