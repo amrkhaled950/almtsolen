@@ -463,11 +463,12 @@ function ProductFormDialog({
 }
 
 function ImportJsonDialog({
-  categories, onClose, onImport,
+  categories, onClose, onImport, onComplete,
 }: {
   categories: any[];
   onClose: () => void;
   onImport: (payload: any, default_category_id: string | null, upsert: boolean) => Promise<any>;
+  onComplete: () => void;
 }) {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
@@ -477,6 +478,7 @@ function ImportJsonDialog({
   const [defaultCat, setDefaultCat] = useState<string>("");
   const [upsert, setUpsert] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<any | null>(null);
 
   return (
