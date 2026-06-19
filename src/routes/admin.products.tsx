@@ -561,6 +561,11 @@ function ImportJsonDialog({
               <div>{isAr ? "متجاهل:" : "Skipped:"} {result.skipped_invalid}</div>
             </div>
           )}
+          {loading && progress > 0 && (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              {isAr ? "جاري الرفع:" : "Uploading:"} {progress}
+            </div>
+          )}
         </div>
         <div className="p-5 border-t border-border flex gap-2">
           <button onClick={onClose} className="h-10 px-4 rounded-lg border border-input bg-background text-sm font-semibold hover:bg-muted">
@@ -570,11 +575,44 @@ function ImportJsonDialog({
             disabled={loading || !text.trim()}
             onClick={async () => {
               setLoading(true);
+              setProgress(0);
               setResult(null);
               try {
-                const r = await onImport(text, defaultCat || null, upsert);
-                setResult(r);
-              } catch { /* toast handled */ }
+                const { items, wrap } = parseImportPayload(text);
+                const CHUNK = 100;
+                const total = {
+                  ok: true,
+                  total: items.length,
+                  processed: 0,
+                  inserted: 0,
+                  categories_created: 0,
+                  categorized: 0,
+                  skipped_invalid: 0,
+                  errors: [] as any[],
+                };
+
+                for (let i = 0; i < items.length; i += CHUNK) {
+                  const part = items.slice(i, i + CHUNK);
+                  const r = await onImport(wrap(part), defaultCat || null, upsert);
+                  total.processed += Number(r?.processed ?? 0);
+                  total.inserted += Number(r?.inserted ?? 0);
+                  total.categories_created += Number(r?.categories_created ?? 0);
+                  total.categorized += Number(r?.categorized ?? 0);
+                  total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
+                  total.errors.push(...(r?.errors ?? []).map((err: any) => ({ ...err, idx: (err.idx ?? 0) + i })));
+                  setProgress(Math.min(i + CHUNK, items.length));
+                }
+
+                setResult(total);
+                onComplete();
+                toast.success(
+                  isAr
+                    ? `تم استيراد ${total.processed} من ${total.total} منتج`
+                    : `Imported ${total.processed} of ${total.total} products`,
+                );
+              } catch (e: any) {
+                toast.error(e?.message || "Import failed");
+              }
               finally { setLoading(false); }
             }}
             className="h-10 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover flex items-center gap-2 disabled:opacity-60"
