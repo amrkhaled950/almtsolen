@@ -52,6 +52,55 @@ function pick(obj: any, keys: string[]): any {
   return undefined;
 }
 
+const GENERIC_CATEGORY_RE = /^(all|كل\s*ال?كتب|كل\s*الكتب|الكل)$/i;
+
+function normalizeCategoryKey(input: string): string {
+  return String(input || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function categoryValueToName(value: any): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed && !/^[0-9a-f-]{30,}$/i.test(trimmed) ? trimmed : null;
+  }
+  if (value && typeof value === "object") {
+    const name = value.name || value.name_ar || value.name_en || value.title || value.label || value.slug;
+    return typeof name === "string" && name.trim() ? name.trim() : null;
+  }
+  return null;
+}
+
+function extractCategoryNames(item: any): string[] {
+  const names: string[] = [];
+  const direct = pick(item, [
+    "category",
+    "category_name",
+    "category_ar",
+    "category_en",
+    "categoryName",
+    "cat",
+    "section",
+  ]);
+  const add = (value: any) => {
+    if (Array.isArray(value)) value.forEach(add);
+    else {
+      const name = categoryValueToName(value);
+      if (name) names.push(name);
+    }
+  };
+
+  add(direct);
+  add(pick(item, ["categories", "parsed_categories", "category_list"]));
+
+  const seen = new Set<string>();
+  return names.filter((name) => {
+    const key = normalizeCategoryKey(name);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function toNumber(v: any, fallback = 0): number {
   if (v === null || v === undefined || v === "") return fallback;
   const n = Number(String(v).replace(/[^\d.\-]/g, ""));
@@ -106,28 +155,7 @@ function normalizeItem(item: any) {
     slugify(pick(item, ["sku", "code", "id"]) ? String(pick(item, ["sku", "code", "id"])) : String(title_en));
   const price = toNumber(pick(item, ["price", "selling_price", "sale_price", "unit_price"]));
   const compare = pick(item, ["compare_at_price", "old_price", "original_price", "list_price"]);
-  let category_name: any =
-    pick(item, [
-      "category",
-      "category_name",
-      "category_ar",
-      "category_en",
-      "categoryName",
-      "cat",
-      "section",
-    ]) ?? null;
-  if (!category_name) {
-    const arr = pick(item, ["categories", "parsed_categories", "category_list"]);
-    if (Array.isArray(arr) && arr.length) {
-      // Prefer a non-generic category name; fall back to the first
-      const names = arr
-        .map((c: any) => (typeof c === "string" ? c : c?.name || c?.name_ar || c?.name_en || c?.title || c?.slug))
-        .filter((n: any) => typeof n === "string" && n.trim().length > 0)
-        .map((n: string) => n.trim());
-      const preferred = names.find((n) => !/^(all|كل\s*ال?كتب|الكل)/i.test(n));
-      category_name = preferred || names[0] || null;
-    }
-  }
+  const category_names = extractCategoryNames(item);
   return {
     slug: String(slug).slice(0, 120),
     title_ar: String(title_ar).slice(0, 200),
@@ -148,7 +176,7 @@ function normalizeItem(item: any) {
     isbn: pick(item, ["isbn", "isbn_13", "barcode", "sku", "ean"]) ?? null,
     stock: toInt(pick(item, ["stock", "quantity", "qty", "inventory", "stock_quantity"]), 0),
     is_active: pick(item, ["is_active", "active", "available", "is_available"]) !== false,
-    _category_name: category_name ? String(category_name).trim() : null,
+    _category_names: category_names,
   };
 }
 
@@ -189,41 +217,35 @@ export const importProductsJson = createServerFn({ method: "POST" })
     const valid = normalized.filter((r) => r.ok).map((r: any) => r.row);
     const errors = normalized.filter((r) => !r.ok).map((r: any) => ({ idx: r.idx, error: r.error }));
 
-    // Resolve / create categories by name from JSON
-    const uniqueCatNames = Array.from(
-      new Set(
-        valid
-          .map((r: any) => (r._category_name ? String(r._category_name).trim() : ""))
-          .filter(Boolean),
-      ),
-    );
+    // Resolve / create every category found in JSON, then use the first non-generic one as product.category_id
+    const categoryNameByKey = new Map<string, string>();
+    for (const row of valid as any[]) {
+      for (const name of row._category_names ?? []) {
+        const key = normalizeCategoryKey(name);
+        if (key && !categoryNameByKey.has(key)) categoryNameByKey.set(key, name);
+      }
+    }
+    const uniqueCatNames = Array.from(categoryNameByKey.values());
     const nameToCatId = new Map<string, string>();
     let categories_created = 0;
     if (uniqueCatNames.length) {
       const wantedSlugs = uniqueCatNames.map((n) => ({ name: n, slug: categorySlug(n) }));
       const { data: existing, error: catFetchErr } = await supabaseAdmin
         .from("categories")
-        .select("id, slug, name_ar, name_en")
-        .or(
-          [
-            `slug.in.(${wantedSlugs.map((w) => `"${w.slug}"`).join(",")})`,
-            `name_ar.in.(${uniqueCatNames.map((n) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`,
-            `name_en.in.(${uniqueCatNames.map((n) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`,
-          ].join(","),
-        );
+        .select("id, slug, name_ar, name_en");
       if (catFetchErr) throw new Error(`فشل جلب التصنيفات: ${catFetchErr.message}`);
       const bySlug = new Map<string, string>();
       const byName = new Map<string, string>();
       for (const c of existing ?? []) {
         bySlug.set(c.slug, c.id);
-        if (c.name_ar) byName.set(c.name_ar.trim().toLowerCase(), c.id);
-        if (c.name_en) byName.set(c.name_en.trim().toLowerCase(), c.id);
+        if (c.name_ar) byName.set(normalizeCategoryKey(c.name_ar), c.id);
+        if (c.name_en) byName.set(normalizeCategoryKey(c.name_en), c.id);
       }
       const toCreate: any[] = [];
       for (const { name, slug } of wantedSlugs) {
-        const found = byName.get(name.toLowerCase()) || bySlug.get(slug);
+        const found = byName.get(normalizeCategoryKey(name)) || bySlug.get(slug);
         if (found) {
-          nameToCatId.set(name, found);
+          nameToCatId.set(normalizeCategoryKey(name), found);
         } else {
           toCreate.push({
             slug,
@@ -243,20 +265,25 @@ export const importProductsJson = createServerFn({ method: "POST" })
           .select("id, slug, name_ar");
         if (catCreateErr) throw new Error(`فشل إنشاء التصنيفات: ${catCreateErr.message}`);
         for (const c of created ?? []) {
-          if (c.name_ar) nameToCatId.set(c.name_ar, c.id);
+          if (c.name_ar) nameToCatId.set(normalizeCategoryKey(c.name_ar), c.id);
         }
         categories_created = toCreate.length;
       }
     }
 
     // Assign category_id to each row
+    let categorized = 0;
     for (const row of valid as any[]) {
-      const catName = row._category_name;
-      delete row._category_name;
-      if (catName && nameToCatId.has(catName)) {
-        row.category_id = nameToCatId.get(catName);
+      const names = (row._category_names ?? []) as string[];
+      delete row._category_names;
+      const catName = names.find((name) => !GENERIC_CATEGORY_RE.test(name.trim())) || names[0];
+      const catId = catName ? nameToCatId.get(normalizeCategoryKey(catName)) : null;
+      if (catId) {
+        row.category_id = catId;
+        categorized += 1;
       } else if (data.default_category_id) {
         row.category_id = data.default_category_id;
+        categorized += 1;
       }
     }
 
@@ -300,6 +327,7 @@ export const importProductsJson = createServerFn({ method: "POST" })
       processed: rows.length,
       inserted: data.upsert ? updated : inserted,
       categories_created,
+      categorized,
       skipped_invalid: errors.length,
       errors: errors.slice(0, 20),
     };

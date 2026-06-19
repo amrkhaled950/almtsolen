@@ -305,10 +305,11 @@ function ProductsPage() {
               const res: any = await importFn({ data: { payload, default_category_id, upsert } });
               toast.success(
                 isAr
-                  ? `تم استيراد ${res.processed} منتج، وإنشاء ${res.categories_created ?? 0} تصنيف جديد (${res.skipped_invalid} متجاهل)`
-                  : `Imported ${res.processed} products, ${res.categories_created ?? 0} new categories (${res.skipped_invalid} skipped)`,
+                  ? `تم استيراد ${res.processed} منتج، وربط ${res.categorized ?? 0} بالتصنيفات، وإنشاء ${res.categories_created ?? 0} تصنيف جديد (${res.skipped_invalid} متجاهل)`
+                  : `Imported ${res.processed} products, linked ${res.categorized ?? 0} to categories, ${res.categories_created ?? 0} new categories (${res.skipped_invalid} skipped)`,
               );
               qc.invalidateQueries({ queryKey: ["admin", "products"] });
+              qc.invalidateQueries({ queryKey: ["admin", "categories"] });
               setShowImport(false);
               return res;
             } catch (e: any) {
@@ -548,6 +549,7 @@ function ImportJsonDialog({
               <div className="font-bold text-emerald-700 dark:text-emerald-300">{isAr ? "تم!" : "Done!"}</div>
               <div>{isAr ? "إجمالي:" : "Total:"} {result.total}</div>
               <div>{isAr ? "تم استيراده:" : "Imported:"} {result.processed}</div>
+              <div>{isAr ? "اتربط بتصنيف:" : "Categorized:"} {result.categorized ?? 0}</div>
               <div>{isAr ? "متجاهل:" : "Skipped:"} {result.skipped_invalid}</div>
             </div>
           )}
