@@ -42,6 +42,8 @@ function ProductsPage() {
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -55,6 +57,23 @@ function ProductsPage() {
     });
   }, [products, q, cat]);
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const toggleAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filtered.forEach((p) => next.delete(p.id));
+      else filtered.forEach((p) => next.add(p.id));
+      return next;
+    });
+  };
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   const deleteMut = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
     onSuccess: () => {
@@ -63,6 +82,25 @@ function ProductsPage() {
     },
     onError: (e: any) => toast.error(e?.message || "Error"),
   });
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(isAr ? `حذف ${ids.length} منتج؟ لا يمكن التراجع.` : `Delete ${ids.length} products? Cannot be undone.`)) return;
+    setBulkDeleting(true);
+    let ok = 0, fail = 0;
+    const CONC = 8;
+    for (let i = 0; i < ids.length; i += CONC) {
+      const slice = ids.slice(i, i + CONC);
+      const results = await Promise.allSettled(slice.map((id) => deleteFn({ data: { id } })));
+      results.forEach((r) => (r.status === "fulfilled" ? ok++ : fail++));
+    }
+    setBulkDeleting(false);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    if (fail === 0) toast.success(isAr ? `تم حذف ${ok}` : `Deleted ${ok}`);
+    else toast.error(isAr ? `تم ${ok}، فشل ${fail}` : `${ok} deleted, ${fail} failed`);
+  };
 
   return (
     <div className="space-y-5 max-w-[1600px] mx-auto">
@@ -118,10 +156,40 @@ function ProductsPage() {
           </div>
         </div>
 
+        {selected.size > 0 && (
+          <div className="px-4 py-2 border-b border-border bg-primary/5 flex items-center gap-3 text-sm">
+            <span className="font-semibold">
+              {isAr ? `محدد: ${selected.size}` : `Selected: ${selected.size}`}
+            </span>
+            <button
+              onClick={() => setSelected(new Set())}
+              className="text-xs underline text-muted-foreground hover:text-foreground"
+            >
+              {isAr ? "إلغاء التحديد" : "Clear"}
+            </button>
+            <button
+              onClick={bulkDelete}
+              disabled={bulkDeleting}
+              className="ms-auto h-8 px-3 rounded-lg bg-rose-600 text-white text-xs font-semibold hover:bg-rose-700 disabled:opacity-60 flex items-center gap-1.5"
+            >
+              {bulkDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+              {isAr ? "حذف المحدد" : "Delete selected"}
+            </button>
+          </div>
+        )}
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50 text-muted-foreground text-xs uppercase">
               <tr>
+                <th className="px-4 py-3 w-10">
+                  <input
+                    type="checkbox"
+                    checked={allFilteredSelected}
+                    onChange={toggleAll}
+                    className="h-4 w-4 rounded border-input cursor-pointer"
+                  />
+                </th>
                 <th className="text-start px-4 py-3 font-semibold">{isAr ? "المنتج" : "Product"}</th>
                 <th className="text-start px-4 py-3 font-semibold">{isAr ? "البيع" : "Price"}</th>
                 <th className="text-start px-4 py-3 font-semibold">{isAr ? "التكلفة" : "Cost"}</th>
@@ -134,7 +202,15 @@ function ProductsPage() {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-t border-border hover:bg-muted/30">
+                <tr key={p.id} className={`border-t border-border hover:bg-muted/30 ${selected.has(p.id) ? "bg-primary/5" : ""}`}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(p.id)}
+                      onChange={() => toggleOne(p.id)}
+                      className="h-4 w-4 rounded border-input cursor-pointer"
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {p.cover_url ? (
@@ -188,13 +264,13 @@ function ProductsPage() {
               ))}
               {!productsQ.isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-muted-foreground">
+                  <td colSpan={9} className="text-center py-16 text-muted-foreground">
                     {isAr ? "لا توجد منتجات" : "No products"}
                   </td>
                 </tr>
               )}
               {productsQ.isLoading && (
-                <tr><td colSpan={8} className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={9} className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></td></tr>
               )}
             </tbody>
           </table>
