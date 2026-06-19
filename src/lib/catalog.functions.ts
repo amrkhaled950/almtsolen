@@ -85,8 +85,7 @@ export const listProductsPublic = createServerFn({ method: "GET" })
       let q = supabaseAdmin
         .from("products")
         .select(PRODUCT_COLS)
-        .eq("is_active", true)
-        .order("created_at", { ascending: false });
+        .eq("is_active", true);
       if (categoryId) q = q.eq("category_id", categoryId);
       if (data.featured) q = q.eq("is_featured", true);
       if (data.bestseller) q = q.eq("is_bestseller", true);
@@ -95,19 +94,26 @@ export const listProductsPublic = createServerFn({ method: "GET" })
     };
 
     if (data.limit) {
-      const { data: rows, error } = await buildQuery().limit(data.limit);
+      const { data: rows, error } = await buildQuery()
+        .order("created_at", { ascending: false })
+        .limit(data.limit);
       if (error) throw new Error(error.message);
       return { products: (rows ?? []) as UIProduct[] };
     }
 
+    // Keyset pagination by id to bypass PostgREST db-max-rows cap on range/offset.
     const PAGE = 500;
     const all: UIProduct[] = [];
-    for (let from = 0; from < 20000; from += PAGE) {
-      const { data: rows, error } = await buildQuery().range(from, from + PAGE - 1);
+    let cursor: string | null = null;
+    for (let i = 0; i < 50; i++) {
+      let q = buildQuery().order("id", { ascending: true }).limit(PAGE);
+      if (cursor) q = q.gt("id", cursor);
+      const { data: rows, error } = await q;
       if (error) throw new Error(error.message);
       if (!rows?.length) break;
       all.push(...(rows as UIProduct[]));
       if (rows.length < PAGE) break;
+      cursor = (rows[rows.length - 1] as UIProduct).id;
     }
     return { products: all };
   });
