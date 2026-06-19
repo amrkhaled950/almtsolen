@@ -106,7 +106,7 @@ function normalizeItem(item: any) {
     slugify(pick(item, ["sku", "code", "id"]) ? String(pick(item, ["sku", "code", "id"])) : String(title_en));
   const price = toNumber(pick(item, ["price", "selling_price", "sale_price", "unit_price"]));
   const compare = pick(item, ["compare_at_price", "old_price", "original_price", "list_price"]);
-  const category_name =
+  let category_name: any =
     pick(item, [
       "category",
       "category_name",
@@ -116,6 +116,18 @@ function normalizeItem(item: any) {
       "cat",
       "section",
     ]) ?? null;
+  if (!category_name) {
+    const arr = pick(item, ["categories", "parsed_categories", "category_list"]);
+    if (Array.isArray(arr) && arr.length) {
+      // Prefer a non-generic category name; fall back to the first
+      const names = arr
+        .map((c: any) => (typeof c === "string" ? c : c?.name || c?.name_ar || c?.name_en || c?.title || c?.slug))
+        .filter((n: any) => typeof n === "string" && n.trim().length > 0)
+        .map((n: string) => n.trim());
+      const preferred = names.find((n) => !/^(all|كل\s*ال?كتب|الكل)/i.test(n));
+      category_name = preferred || names[0] || null;
+    }
+  }
   return {
     slug: String(slug).slice(0, 120),
     title_ar: String(title_ar).slice(0, 200),
