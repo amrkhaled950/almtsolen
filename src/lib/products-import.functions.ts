@@ -302,6 +302,17 @@ export const importProductsJson = createServerFn({ method: "POST" })
     }
     const rows = Array.from(bySlug.values());
 
+    const existingSlugs = new Set<string>();
+    for (let i = 0; i < rows.length; i += 500) {
+      const slugs = rows.slice(i, i + 500).map((row) => row.slug);
+      const { data: existing, error: existingErr } = await supabaseAdmin
+        .from("products")
+        .select("slug")
+        .in("slug", slugs);
+      if (existingErr) throw new Error(`فشل فحص المنتجات الموجودة: ${existingErr.message}`);
+      for (const row of existing ?? []) existingSlugs.add(row.slug);
+    }
+
     // Chunked upsert — keep going if one batch fails, then retry that batch row-by-row
     const CHUNK = 25;
     let inserted = 0;
@@ -315,7 +326,9 @@ export const importProductsJson = createServerFn({ method: "POST" })
             .from("products")
             .upsert(slice, { onConflict: "slug", count: "exact" });
           if (error) throw error;
-          updated += count ?? slice.length;
+          const existingInSlice = slice.filter((row) => existingSlugs.has(row.slug)).length;
+          updated += existingInSlice;
+          inserted += (count ?? slice.length) - existingInSlice;
         } else {
           const { error } = await supabaseAdmin.from("products").insert(slice);
           if (error) throw error;
@@ -331,7 +344,8 @@ export const importProductsJson = createServerFn({ method: "POST" })
                 .from("products")
                 .upsert([single], { onConflict: "slug" });
               if (error) throw error;
-              updated += 1;
+              if (existingSlugs.has(single.slug)) updated += 1;
+              else inserted += 1;
             } else {
               const { error } = await supabaseAdmin.from("products").insert([single]);
               if (error) throw error;
@@ -351,8 +365,9 @@ export const importProductsJson = createServerFn({ method: "POST" })
     return {
       ok: true,
       total: items.length,
-      processed: data.upsert ? updated : inserted,
-      inserted: data.upsert ? updated : inserted,
+      processed: inserted + updated,
+      inserted,
+      updated,
       categories_created,
       categorized,
       skipped_invalid: errors.length,
