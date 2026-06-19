@@ -264,13 +264,13 @@ function ProductsPage() {
               ))}
               {!productsQ.isLoading && filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="text-center py-16 text-muted-foreground">
+                  <td colSpan={9} className="text-center py-16 text-muted-foreground">
                     {isAr ? "لا توجد منتجات" : "No products"}
                   </td>
                 </tr>
               )}
               {productsQ.isLoading && (
-                <tr><td colSpan={8} className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></td></tr>
+                <tr><td colSpan={9} className="text-center py-16"><Loader2 className="h-6 w-6 animate-spin mx-auto text-primary" /></td></tr>
               )}
             </tbody>
           </table>
