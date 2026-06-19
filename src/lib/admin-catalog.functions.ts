@@ -126,13 +126,20 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
     const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("products")
-      .select("*")
-      .order("created_at", { ascending: false })
-      .limit(500);
-    if (error) throw new Error(error.message);
-    return { products: data ?? [] };
+    const PAGE = 1000;
+    const all: any[] = [];
+    for (let from = 0; from < 50000; from += PAGE) {
+      const { data, error } = await supabaseAdmin
+        .from("products")
+        .select("*")
+        .order("created_at", { ascending: false })
+        .range(from, from + PAGE - 1);
+      if (error) throw new Error(error.message);
+      if (!data || data.length === 0) break;
+      all.push(...data);
+      if (data.length < PAGE) break;
+    }
+    return { products: all };
   });
 
 export const upsertProductAdmin = createServerFn({ method: "POST" })
