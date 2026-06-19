@@ -302,24 +302,51 @@ export const importProductsJson = createServerFn({ method: "POST" })
     }
     const rows = Array.from(bySlug.values());
 
-    // Chunked upsert
-    const CHUNK = 200;
+    // Chunked upsert — keep going if one batch fails, then retry that batch row-by-row
+    const CHUNK = 50;
     let inserted = 0;
     let updated = 0;
+    const batchErrors: { idx: number; error: string }[] = [];
     for (let i = 0; i < rows.length; i += CHUNK) {
       const slice = rows.slice(i, i + CHUNK);
-      if (data.upsert) {
-        const { error, count } = await supabaseAdmin
-          .from("products")
-          .upsert(slice, { onConflict: "slug", count: "exact" });
-        if (error) throw new Error(`فشل عند الدفعة ${i / CHUNK + 1}: ${error.message}`);
-        updated += count ?? 0;
-      } else {
-        const { error } = await supabaseAdmin.from("products").insert(slice);
-        if (error) throw new Error(`فشل عند الدفعة ${i / CHUNK + 1}: ${error.message}`);
-        inserted += slice.length;
+      try {
+        if (data.upsert) {
+          const { error, count } = await supabaseAdmin
+            .from("products")
+            .upsert(slice, { onConflict: "slug", count: "exact" });
+          if (error) throw error;
+          updated += count ?? slice.length;
+        } else {
+          const { error } = await supabaseAdmin.from("products").insert(slice);
+          if (error) throw error;
+          inserted += slice.length;
+        }
+      } catch (batchErr: any) {
+        // Fallback: try each row alone so one bad row doesn't kill the whole batch
+        for (let j = 0; j < slice.length; j++) {
+          const single = slice[j];
+          try {
+            if (data.upsert) {
+              const { error } = await supabaseAdmin
+                .from("products")
+                .upsert([single], { onConflict: "slug" });
+              if (error) throw error;
+              updated += 1;
+            } else {
+              const { error } = await supabaseAdmin.from("products").insert([single]);
+              if (error) throw error;
+              inserted += 1;
+            }
+          } catch (rowErr: any) {
+            batchErrors.push({
+              idx: i + j,
+              error: `${single?.slug ?? ""}: ${rowErr?.message || batchErr?.message || "خطأ"}`,
+            });
+          }
+        }
       }
     }
+    errors.push(...batchErrors);
 
     return {
       ok: true,
