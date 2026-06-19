@@ -229,8 +229,8 @@ function ProductsPage() {
               const res: any = await importFn({ data: { payload, default_category_id, upsert } });
               toast.success(
                 isAr
-                  ? `تم استيراد ${res.processed} منتج (${res.skipped_invalid} متجاهل)`
-                  : `Imported ${res.processed} products (${res.skipped_invalid} skipped)`,
+                  ? `تم استيراد ${res.processed} منتج، وإنشاء ${res.categories_created ?? 0} تصنيف جديد (${res.skipped_invalid} متجاهل)`
+                  : `Imported ${res.processed} products, ${res.categories_created ?? 0} new categories (${res.skipped_invalid} skipped)`,
               );
               qc.invalidateQueries({ queryKey: ["admin", "products"] });
               setShowImport(false);
@@ -409,7 +409,8 @@ function ImportJsonDialog({
             <div className="font-semibold text-foreground">{isAr ? "تنسيقات مدعومة:" : "Supported shapes:"}</div>
             <div>• <code>[ {"{...}"}, {"{...}"} ]</code></div>
             <div>• <code>{"{ products: [...] }"}</code> / <code>{"{ data: [...] }"}</code> / <code>{"{ items: [...] }"}</code></div>
-            <div className="pt-1">{isAr ? "حقول معروفة: title/name, price, image/images, sku, stock/quantity, description, author, publisher, cost_price, marketing_cost, misc_expenses." : "Recognized: title/name, price, image/images, sku, stock, description, author, publisher, cost_price, marketing_cost, misc_expenses."}</div>
+            <div className="pt-1">{isAr ? "حقول معروفة: title/name, price, image/images, sku, stock/quantity, description, author, publisher, category, cost_price, marketing_cost, misc_expenses." : "Recognized: title/name, price, image/images, sku, stock, description, author, publisher, category, cost_price, marketing_cost, misc_expenses."}</div>
+            <div>{isAr ? "لو فيه حقل category باسم تصنيف مش موجود هيتعمل تلقائي. الحد الأقصى 20,000 منتج." : "If category name doesn't exist it will be created automatically. Max 20,000 products."}</div>
             <div>{isAr ? "EasyOrders/Shopify/WooCommerce بيشتغلوا تلقائي." : "EasyOrders/Shopify/Woo work automatically."}</div>
           </div>
 

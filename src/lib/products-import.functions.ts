@@ -31,6 +31,18 @@ function slugify(input: string): string {
     .slice(0, 100) || `item-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function categorySlug(input: string): string {
+  const s = (input || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\p{L}\p{N}\-]+/gu, "")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
+  return s || `cat-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function pick(obj: any, keys: string[]): any {
   for (const k of keys) {
     if (obj == null) continue;
@@ -94,6 +106,16 @@ function normalizeItem(item: any) {
     slugify(pick(item, ["sku", "code", "id"]) ? String(pick(item, ["sku", "code", "id"])) : String(title_en));
   const price = toNumber(pick(item, ["price", "selling_price", "sale_price", "unit_price"]));
   const compare = pick(item, ["compare_at_price", "old_price", "original_price", "list_price"]);
+  const category_name =
+    pick(item, [
+      "category",
+      "category_name",
+      "category_ar",
+      "category_en",
+      "categoryName",
+      "cat",
+      "section",
+    ]) ?? null;
   return {
     slug: String(slug).slice(0, 120),
     title_ar: String(title_ar).slice(0, 200),
@@ -114,6 +136,7 @@ function normalizeItem(item: any) {
     isbn: pick(item, ["isbn", "isbn_13", "barcode", "sku", "ean"]) ?? null,
     stock: toInt(pick(item, ["stock", "quantity", "qty", "inventory", "stock_quantity"]), 0),
     is_active: pick(item, ["is_active", "active", "available", "is_available"]) !== false,
+    _category_name: category_name ? String(category_name).trim() : null,
   };
 }
 
@@ -140,12 +163,11 @@ export const importProductsJson = createServerFn({ method: "POST" })
     else throw new Error("بنية JSON غير مدعومة - يجب أن تكون مصفوفة منتجات");
 
     if (items.length === 0) throw new Error("الملف فارغ");
-    if (items.length > 5000) throw new Error("الحد الأقصى 5000 منتج في المرة الواحدة");
+    if (items.length > 20000) throw new Error("الحد الأقصى 20000 منتج في المرة الواحدة");
 
     const normalized = items.map((it, idx) => {
       try {
         const n = normalizeItem(it);
-        if (data.default_category_id) (n as any).category_id = data.default_category_id;
         return { ok: true, row: n, idx };
       } catch (e: any) {
         return { ok: false, idx, error: e?.message || "خطأ في التطبيع" };
@@ -154,6 +176,77 @@ export const importProductsJson = createServerFn({ method: "POST" })
 
     const valid = normalized.filter((r) => r.ok).map((r: any) => r.row);
     const errors = normalized.filter((r) => !r.ok).map((r: any) => ({ idx: r.idx, error: r.error }));
+
+    // Resolve / create categories by name from JSON
+    const uniqueCatNames = Array.from(
+      new Set(
+        valid
+          .map((r: any) => (r._category_name ? String(r._category_name).trim() : ""))
+          .filter(Boolean),
+      ),
+    );
+    const nameToCatId = new Map<string, string>();
+    let categories_created = 0;
+    if (uniqueCatNames.length) {
+      const wantedSlugs = uniqueCatNames.map((n) => ({ name: n, slug: categorySlug(n) }));
+      const { data: existing, error: catFetchErr } = await supabaseAdmin
+        .from("categories")
+        .select("id, slug, name_ar, name_en")
+        .or(
+          [
+            `slug.in.(${wantedSlugs.map((w) => `"${w.slug}"`).join(",")})`,
+            `name_ar.in.(${uniqueCatNames.map((n) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`,
+            `name_en.in.(${uniqueCatNames.map((n) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`,
+          ].join(","),
+        );
+      if (catFetchErr) throw new Error(`فشل جلب التصنيفات: ${catFetchErr.message}`);
+      const bySlug = new Map<string, string>();
+      const byName = new Map<string, string>();
+      for (const c of existing ?? []) {
+        bySlug.set(c.slug, c.id);
+        if (c.name_ar) byName.set(c.name_ar.trim().toLowerCase(), c.id);
+        if (c.name_en) byName.set(c.name_en.trim().toLowerCase(), c.id);
+      }
+      const toCreate: any[] = [];
+      for (const { name, slug } of wantedSlugs) {
+        const found = byName.get(name.toLowerCase()) || bySlug.get(slug);
+        if (found) {
+          nameToCatId.set(name, found);
+        } else {
+          toCreate.push({
+            slug,
+            name_ar: name,
+            name_en: name,
+            display_order: 0,
+            is_active: true,
+            show_in_nav: true,
+            nav_order: 0,
+          });
+        }
+      }
+      if (toCreate.length) {
+        const { data: created, error: catCreateErr } = await supabaseAdmin
+          .from("categories")
+          .upsert(toCreate, { onConflict: "slug" })
+          .select("id, slug, name_ar");
+        if (catCreateErr) throw new Error(`فشل إنشاء التصنيفات: ${catCreateErr.message}`);
+        for (const c of created ?? []) {
+          if (c.name_ar) nameToCatId.set(c.name_ar, c.id);
+        }
+        categories_created = toCreate.length;
+      }
+    }
+
+    // Assign category_id to each row
+    for (const row of valid as any[]) {
+      const catName = row._category_name;
+      delete row._category_name;
+      if (catName && nameToCatId.has(catName)) {
+        row.category_id = nameToCatId.get(catName);
+      } else if (data.default_category_id) {
+        row.category_id = data.default_category_id;
+      }
+    }
 
     // De-duplicate by slug (last wins)
     const bySlug = new Map<string, any>();
@@ -194,6 +287,7 @@ export const importProductsJson = createServerFn({ method: "POST" })
       total: items.length,
       processed: rows.length,
       inserted: data.upsert ? updated : inserted,
+      categories_created,
       skipped_invalid: errors.length,
       errors: errors.slice(0, 20),
     };
