@@ -42,6 +42,8 @@ function ProductsPage() {
   const [editing, setEditing] = useState<ProductRow | null>(null);
   const [showForm, setShowForm] = useState(false);
   const [showImport, setShowImport] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkDeleting, setBulkDeleting] = useState(false);
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -55,6 +57,23 @@ function ProductsPage() {
     });
   }, [products, q, cat]);
 
+  const allFilteredSelected = filtered.length > 0 && filtered.every((p) => selected.has(p.id));
+  const toggleAll = () => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (allFilteredSelected) filtered.forEach((p) => next.delete(p.id));
+      else filtered.forEach((p) => next.add(p.id));
+      return next;
+    });
+  };
+  const toggleOne = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      next.has(id) ? next.delete(id) : next.add(id);
+      return next;
+    });
+  };
+
   const deleteMut = useMutation({
     mutationFn: (id: string) => deleteFn({ data: { id } }),
     onSuccess: () => {
@@ -63,6 +82,25 @@ function ProductsPage() {
     },
     onError: (e: any) => toast.error(e?.message || "Error"),
   });
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (!ids.length) return;
+    if (!confirm(isAr ? `حذف ${ids.length} منتج؟ لا يمكن التراجع.` : `Delete ${ids.length} products? Cannot be undone.`)) return;
+    setBulkDeleting(true);
+    let ok = 0, fail = 0;
+    const CONC = 8;
+    for (let i = 0; i < ids.length; i += CONC) {
+      const slice = ids.slice(i, i + CONC);
+      const results = await Promise.allSettled(slice.map((id) => deleteFn({ data: { id } })));
+      results.forEach((r) => (r.status === "fulfilled" ? ok++ : fail++));
+    }
+    setBulkDeleting(false);
+    setSelected(new Set());
+    qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    if (fail === 0) toast.success(isAr ? `تم حذف ${ok}` : `Deleted ${ok}`);
+    else toast.error(isAr ? `تم ${ok}، فشل ${fail}` : `${ok} deleted, ${fail} failed`);
+  };
 
   return (
     <div className="space-y-5 max-w-[1600px] mx-auto">
