@@ -303,7 +303,7 @@ export const importProductsJson = createServerFn({ method: "POST" })
     const rows = Array.from(bySlug.values());
 
     // Chunked upsert — keep going if one batch fails, then retry that batch row-by-row
-    const CHUNK = 50;
+    const CHUNK = 25;
     let inserted = 0;
     let updated = 0;
     const batchErrors: { idx: number; error: string }[] = [];
@@ -351,7 +351,7 @@ export const importProductsJson = createServerFn({ method: "POST" })
     return {
       ok: true,
       total: items.length,
-      processed: rows.length,
+      processed: data.upsert ? updated : inserted,
       inserted: data.upsert ? updated : inserted,
       categories_created,
       categorized,

@@ -20,6 +20,20 @@ export const Route = createFileRoute("/admin/products")({
 
 type ProductRow = any;
 
+function parseImportPayload(text: string): { items: any[]; wrap: (items: any[]) => any } {
+  let raw: any;
+  try {
+    raw = JSON.parse(text);
+  } catch {
+    throw new Error("الملف ليس JSON صحيح");
+  }
+  if (Array.isArray(raw)) return { items: raw, wrap: (items) => items };
+  if (Array.isArray(raw?.products)) return { items: raw.products, wrap: (items) => ({ products: items }) };
+  if (Array.isArray(raw?.data)) return { items: raw.data, wrap: (items) => ({ data: items }) };
+  if (Array.isArray(raw?.items)) return { items: raw.items, wrap: (items) => ({ items }) };
+  throw new Error("بنية JSON غير مدعومة - يجب أن تكون مصفوفة منتجات");
+}
+
 function ProductsPage() {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
@@ -44,6 +58,11 @@ function ProductsPage() {
   const [showImport, setShowImport] = useState(false);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
+
+  const refreshCatalog = () => {
+    qc.invalidateQueries({ queryKey: ["admin", "products"] });
+    qc.invalidateQueries({ queryKey: ["admin", "categories"] });
+  };
 
   const filtered = useMemo(() => {
     return products.filter((p) => {
@@ -301,22 +320,9 @@ function ProductsPage() {
           categories={categories}
           onClose={() => setShowImport(false)}
           onImport={async (payload, default_category_id, upsert) => {
-            try {
-              const res: any = await importFn({ data: { payload, default_category_id, upsert } });
-              toast.success(
-                isAr
-                  ? `تم استيراد ${res.processed} منتج، وربط ${res.categorized ?? 0} بالتصنيفات، وإنشاء ${res.categories_created ?? 0} تصنيف جديد (${res.skipped_invalid} متجاهل)`
-                  : `Imported ${res.processed} products, linked ${res.categorized ?? 0} to categories, ${res.categories_created ?? 0} new categories (${res.skipped_invalid} skipped)`,
-              );
-              qc.invalidateQueries({ queryKey: ["admin", "products"] });
-              qc.invalidateQueries({ queryKey: ["admin", "categories"] });
-              setShowImport(false);
-              return res;
-            } catch (e: any) {
-              toast.error(e?.message || "Import failed");
-              throw e;
-            }
+            return importFn({ data: { payload, default_category_id, upsert } });
           }}
+          onComplete={refreshCatalog}
         />
       )}
     </div>
@@ -457,11 +463,12 @@ function ProductFormDialog({
 }
 
 function ImportJsonDialog({
-  categories, onClose, onImport,
+  categories, onClose, onImport, onComplete,
 }: {
   categories: any[];
   onClose: () => void;
   onImport: (payload: any, default_category_id: string | null, upsert: boolean) => Promise<any>;
+  onComplete: () => void;
 }) {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
@@ -471,6 +478,7 @@ function ImportJsonDialog({
   const [defaultCat, setDefaultCat] = useState<string>("");
   const [upsert, setUpsert] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<any | null>(null);
 
   return (
@@ -553,6 +561,11 @@ function ImportJsonDialog({
               <div>{isAr ? "متجاهل:" : "Skipped:"} {result.skipped_invalid}</div>
             </div>
           )}
+          {loading && progress > 0 && (
+            <div className="rounded-lg border border-border bg-muted/40 p-3 text-xs text-muted-foreground">
+              {isAr ? "جاري الرفع:" : "Uploading:"} {progress}
+            </div>
+          )}
         </div>
         <div className="p-5 border-t border-border flex gap-2">
           <button onClick={onClose} className="h-10 px-4 rounded-lg border border-input bg-background text-sm font-semibold hover:bg-muted">
@@ -562,11 +575,44 @@ function ImportJsonDialog({
             disabled={loading || !text.trim()}
             onClick={async () => {
               setLoading(true);
+              setProgress(0);
               setResult(null);
               try {
-                const r = await onImport(text, defaultCat || null, upsert);
-                setResult(r);
-              } catch { /* toast handled */ }
+                const { items, wrap } = parseImportPayload(text);
+                const CHUNK = 100;
+                const total = {
+                  ok: true,
+                  total: items.length,
+                  processed: 0,
+                  inserted: 0,
+                  categories_created: 0,
+                  categorized: 0,
+                  skipped_invalid: 0,
+                  errors: [] as any[],
+                };
+
+                for (let i = 0; i < items.length; i += CHUNK) {
+                  const part = items.slice(i, i + CHUNK);
+                  const r = await onImport(wrap(part), defaultCat || null, upsert);
+                  total.processed += Number(r?.processed ?? 0);
+                  total.inserted += Number(r?.inserted ?? 0);
+                  total.categories_created += Number(r?.categories_created ?? 0);
+                  total.categorized += Number(r?.categorized ?? 0);
+                  total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
+                  total.errors.push(...(r?.errors ?? []).map((err: any) => ({ ...err, idx: (err.idx ?? 0) + i })));
+                  setProgress(Math.min(i + CHUNK, items.length));
+                }
+
+                setResult(total);
+                onComplete();
+                toast.success(
+                  isAr
+                    ? `تم استيراد ${total.processed} من ${total.total} منتج`
+                    : `Imported ${total.processed} of ${total.total} products`,
+                );
+              } catch (e: any) {
+                toast.error(e?.message || "Import failed");
+              }
               finally { setLoading(false); }
             }}
             className="h-10 px-6 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary-hover flex items-center gap-2 disabled:opacity-60"
