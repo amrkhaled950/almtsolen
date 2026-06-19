@@ -217,41 +217,35 @@ export const importProductsJson = createServerFn({ method: "POST" })
     const valid = normalized.filter((r) => r.ok).map((r: any) => r.row);
     const errors = normalized.filter((r) => !r.ok).map((r: any) => ({ idx: r.idx, error: r.error }));
 
-    // Resolve / create categories by name from JSON
-    const uniqueCatNames = Array.from(
-      new Set(
-        valid
-          .map((r: any) => (r._category_name ? String(r._category_name).trim() : ""))
-          .filter(Boolean),
-      ),
-    );
+    // Resolve / create every category found in JSON, then use the first non-generic one as product.category_id
+    const categoryNameByKey = new Map<string, string>();
+    for (const row of valid as any[]) {
+      for (const name of row._category_names ?? []) {
+        const key = normalizeCategoryKey(name);
+        if (key && !categoryNameByKey.has(key)) categoryNameByKey.set(key, name);
+      }
+    }
+    const uniqueCatNames = Array.from(categoryNameByKey.values());
     const nameToCatId = new Map<string, string>();
     let categories_created = 0;
     if (uniqueCatNames.length) {
       const wantedSlugs = uniqueCatNames.map((n) => ({ name: n, slug: categorySlug(n) }));
       const { data: existing, error: catFetchErr } = await supabaseAdmin
         .from("categories")
-        .select("id, slug, name_ar, name_en")
-        .or(
-          [
-            `slug.in.(${wantedSlugs.map((w) => `"${w.slug}"`).join(",")})`,
-            `name_ar.in.(${uniqueCatNames.map((n) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`,
-            `name_en.in.(${uniqueCatNames.map((n) => `"${n.replace(/"/g, '\\"')}"`).join(",")})`,
-          ].join(","),
-        );
+        .select("id, slug, name_ar, name_en");
       if (catFetchErr) throw new Error(`فشل جلب التصنيفات: ${catFetchErr.message}`);
       const bySlug = new Map<string, string>();
       const byName = new Map<string, string>();
       for (const c of existing ?? []) {
         bySlug.set(c.slug, c.id);
-        if (c.name_ar) byName.set(c.name_ar.trim().toLowerCase(), c.id);
-        if (c.name_en) byName.set(c.name_en.trim().toLowerCase(), c.id);
+        if (c.name_ar) byName.set(normalizeCategoryKey(c.name_ar), c.id);
+        if (c.name_en) byName.set(normalizeCategoryKey(c.name_en), c.id);
       }
       const toCreate: any[] = [];
       for (const { name, slug } of wantedSlugs) {
-        const found = byName.get(name.toLowerCase()) || bySlug.get(slug);
+        const found = byName.get(normalizeCategoryKey(name)) || bySlug.get(slug);
         if (found) {
-          nameToCatId.set(name, found);
+          nameToCatId.set(normalizeCategoryKey(name), found);
         } else {
           toCreate.push({
             slug,
@@ -271,20 +265,25 @@ export const importProductsJson = createServerFn({ method: "POST" })
           .select("id, slug, name_ar");
         if (catCreateErr) throw new Error(`فشل إنشاء التصنيفات: ${catCreateErr.message}`);
         for (const c of created ?? []) {
-          if (c.name_ar) nameToCatId.set(c.name_ar, c.id);
+          if (c.name_ar) nameToCatId.set(normalizeCategoryKey(c.name_ar), c.id);
         }
         categories_created = toCreate.length;
       }
     }
 
     // Assign category_id to each row
+    let categorized = 0;
     for (const row of valid as any[]) {
-      const catName = row._category_name;
-      delete row._category_name;
-      if (catName && nameToCatId.has(catName)) {
-        row.category_id = nameToCatId.get(catName);
+      const names = (row._category_names ?? []) as string[];
+      delete row._category_names;
+      const catName = names.find((name) => !GENERIC_CATEGORY_RE.test(name.trim())) || names[0];
+      const catId = catName ? nameToCatId.get(normalizeCategoryKey(catName)) : null;
+      if (catId) {
+        row.category_id = catId;
+        categorized += 1;
       } else if (data.default_category_id) {
         row.category_id = data.default_category_id;
+        categorized += 1;
       }
     }
 
