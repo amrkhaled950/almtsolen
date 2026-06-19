@@ -52,6 +52,55 @@ function pick(obj: any, keys: string[]): any {
   return undefined;
 }
 
+const GENERIC_CATEGORY_RE = /^(all|كل\s*ال?كتب|كل\s*الكتب|الكل)$/i;
+
+function normalizeCategoryKey(input: string): string {
+  return String(input || "").trim().replace(/\s+/g, " ").toLowerCase();
+}
+
+function categoryValueToName(value: any): string | null {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed && !/^[0-9a-f-]{30,}$/i.test(trimmed) ? trimmed : null;
+  }
+  if (value && typeof value === "object") {
+    const name = value.name || value.name_ar || value.name_en || value.title || value.label || value.slug;
+    return typeof name === "string" && name.trim() ? name.trim() : null;
+  }
+  return null;
+}
+
+function extractCategoryNames(item: any): string[] {
+  const names: string[] = [];
+  const direct = pick(item, [
+    "category",
+    "category_name",
+    "category_ar",
+    "category_en",
+    "categoryName",
+    "cat",
+    "section",
+  ]);
+  const add = (value: any) => {
+    if (Array.isArray(value)) value.forEach(add);
+    else {
+      const name = categoryValueToName(value);
+      if (name) names.push(name);
+    }
+  };
+
+  add(direct);
+  add(pick(item, ["categories", "parsed_categories", "category_list"]));
+
+  const seen = new Set<string>();
+  return names.filter((name) => {
+    const key = normalizeCategoryKey(name);
+    if (!key || seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
+
 function toNumber(v: any, fallback = 0): number {
   if (v === null || v === undefined || v === "") return fallback;
   const n = Number(String(v).replace(/[^\d.\-]/g, ""));
@@ -106,28 +155,7 @@ function normalizeItem(item: any) {
     slugify(pick(item, ["sku", "code", "id"]) ? String(pick(item, ["sku", "code", "id"])) : String(title_en));
   const price = toNumber(pick(item, ["price", "selling_price", "sale_price", "unit_price"]));
   const compare = pick(item, ["compare_at_price", "old_price", "original_price", "list_price"]);
-  let category_name: any =
-    pick(item, [
-      "category",
-      "category_name",
-      "category_ar",
-      "category_en",
-      "categoryName",
-      "cat",
-      "section",
-    ]) ?? null;
-  if (!category_name) {
-    const arr = pick(item, ["categories", "parsed_categories", "category_list"]);
-    if (Array.isArray(arr) && arr.length) {
-      // Prefer a non-generic category name; fall back to the first
-      const names = arr
-        .map((c: any) => (typeof c === "string" ? c : c?.name || c?.name_ar || c?.name_en || c?.title || c?.slug))
-        .filter((n: any) => typeof n === "string" && n.trim().length > 0)
-        .map((n: string) => n.trim());
-      const preferred = names.find((n) => !/^(all|كل\s*ال?كتب|الكل)/i.test(n));
-      category_name = preferred || names[0] || null;
-    }
-  }
+  const category_names = extractCategoryNames(item);
   return {
     slug: String(slug).slice(0, 120),
     title_ar: String(title_ar).slice(0, 200),
@@ -148,7 +176,7 @@ function normalizeItem(item: any) {
     isbn: pick(item, ["isbn", "isbn_13", "barcode", "sku", "ean"]) ?? null,
     stock: toInt(pick(item, ["stock", "quantity", "qty", "inventory", "stock_quantity"]), 0),
     is_active: pick(item, ["is_active", "active", "available", "is_available"]) !== false,
-    _category_name: category_name ? String(category_name).trim() : null,
+    _category_names: category_names,
   };
 }
 
