@@ -557,6 +557,8 @@ function ImportJsonDialog({
               <div className="font-bold text-emerald-700 dark:text-emerald-300">{isAr ? "تم!" : "Done!"}</div>
               <div>{isAr ? "إجمالي:" : "Total:"} {result.total}</div>
               <div>{isAr ? "تم استيراده:" : "Imported:"} {result.processed}</div>
+              <div>{isAr ? "جديد:" : "New:"} {result.inserted ?? 0}</div>
+              <div>{isAr ? "موجود واتحدث:" : "Updated existing:"} {result.updated ?? 0}</div>
               <div>{isAr ? "اتربط بتصنيف:" : "Categorized:"} {result.categorized ?? 0}</div>
               <div>{isAr ? "متجاهل:" : "Skipped:"} {result.skipped_invalid}</div>
             </div>
@@ -585,6 +587,7 @@ function ImportJsonDialog({
                   total: items.length,
                   processed: 0,
                   inserted: 0,
+                  updated: 0,
                   categories_created: 0,
                   categorized: 0,
                   skipped_invalid: 0,
@@ -596,6 +599,7 @@ function ImportJsonDialog({
                   const r = await onImport(wrap(part), defaultCat || null, upsert);
                   total.processed += Number(r?.processed ?? 0);
                   total.inserted += Number(r?.inserted ?? 0);
+                  total.updated += Number(r?.updated ?? 0);
                   total.categories_created += Number(r?.categories_created ?? 0);
                   total.categorized += Number(r?.categorized ?? 0);
                   total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
