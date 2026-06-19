@@ -202,7 +202,15 @@ function ProductsPage() {
             </thead>
             <tbody>
               {filtered.map((p) => (
-                <tr key={p.id} className="border-t border-border hover:bg-muted/30">
+                <tr key={p.id} className={`border-t border-border hover:bg-muted/30 ${selected.has(p.id) ? "bg-primary/5" : ""}`}>
+                  <td className="px-4 py-3">
+                    <input
+                      type="checkbox"
+                      checked={selected.has(p.id)}
+                      onChange={() => toggleOne(p.id)}
+                      className="h-4 w-4 rounded border-input cursor-pointer"
+                    />
+                  </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       {p.cover_url ? (
