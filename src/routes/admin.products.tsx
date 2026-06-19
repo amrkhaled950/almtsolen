@@ -585,6 +585,7 @@ function ImportJsonDialog({
                   total: items.length,
                   processed: 0,
                   inserted: 0,
+                  updated: 0,
                   categories_created: 0,
                   categorized: 0,
                   skipped_invalid: 0,
@@ -596,6 +597,7 @@ function ImportJsonDialog({
                   const r = await onImport(wrap(part), defaultCat || null, upsert);
                   total.processed += Number(r?.processed ?? 0);
                   total.inserted += Number(r?.inserted ?? 0);
+                  total.updated += Number(r?.updated ?? 0);
                   total.categories_created += Number(r?.categories_created ?? 0);
                   total.categorized += Number(r?.categorized ?? 0);
                   total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
