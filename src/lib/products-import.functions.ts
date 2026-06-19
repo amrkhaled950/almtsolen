@@ -31,6 +31,18 @@ function slugify(input: string): string {
     .slice(0, 100) || `item-${Math.random().toString(36).slice(2, 8)}`;
 }
 
+function categorySlug(input: string): string {
+  const s = (input || "")
+    .toString()
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "-")
+    .replace(/[^\p{L}\p{N}\-]+/gu, "")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 100);
+  return s || `cat-${Math.random().toString(36).slice(2, 8)}`;
+}
+
 function pick(obj: any, keys: string[]): any {
   for (const k of keys) {
     if (obj == null) continue;
