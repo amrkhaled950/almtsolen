@@ -557,6 +557,8 @@ function ImportJsonDialog({
               <div className="font-bold text-emerald-700 dark:text-emerald-300">{isAr ? "تم!" : "Done!"}</div>
               <div>{isAr ? "إجمالي:" : "Total:"} {result.total}</div>
               <div>{isAr ? "تم استيراده:" : "Imported:"} {result.processed}</div>
+              <div>{isAr ? "جديد:" : "New:"} {result.inserted ?? 0}</div>
+              <div>{isAr ? "موجود واتحدث:" : "Updated existing:"} {result.updated ?? 0}</div>
               <div>{isAr ? "اتربط بتصنيف:" : "Categorized:"} {result.categorized ?? 0}</div>
               <div>{isAr ? "متجاهل:" : "Skipped:"} {result.skipped_invalid}</div>
             </div>
