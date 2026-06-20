@@ -570,6 +570,13 @@ function ImportJsonDialog({
               <div>{isAr ? "موجود واتحدث:" : "Updated existing:"} {result.updated ?? 0}</div>
               <div>{isAr ? "اتربط بتصنيف:" : "Categorized:"} {result.categorized ?? 0}</div>
               <div>{isAr ? "متجاهل:" : "Skipped:"} {result.skipped_invalid}</div>
+              {result.errors?.length > 0 && (
+                <div className="pt-2 text-xs text-rose-700 dark:text-rose-300">
+                  {result.errors.slice(0, 3).map((err: any, idx: number) => (
+                    <div key={idx}>{err.idx + 1}: {err.error}</div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
           {loading && progress > 0 && (
