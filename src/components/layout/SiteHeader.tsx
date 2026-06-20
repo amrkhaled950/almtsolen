@@ -148,7 +148,7 @@ export function SiteHeader() {
                               onClick={() => setCatOpen(false)}
                               className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted font-semibold text-sm group"
                             >
-                              <span className="text-xl">{cat.icon || cat.image_url || "📖"}</span>
+                              <span className="text-xl">{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
                               <span>{locale === "ar" ? cat.name_ar : cat.name_en}</span>
                             </Link>
                             {subs.map((sub) => (
