@@ -40,7 +40,7 @@ function Home() {
   const { data: catData } = useQuery({ queryKey: ["categories"], queryFn: () => fetchCats() });
   const { data: bestData } = useQuery({ queryKey: ["products","bestsellers"], queryFn: () => fetchProducts({ data: { bestseller: true, limit: 8 } }) });
   const { data: newData }  = useQuery({ queryKey: ["products","new"], queryFn: () => fetchProducts({ data: { new_arrival: true, limit: 8 } }) });
-  const { data: latestData, isLoading: latestLoading } = useQuery({ queryKey: ["products","latest"], queryFn: () => fetchProducts({ data: { limit: 8 } }) });
+  const { data: latestData, isLoading: latestLoading } = useQuery({ queryKey: ["products","latest","all"], queryFn: () => fetchProducts({ data: {} }) });
 
   const allCats  = (catData?.categories ?? []) as any[];
   const rootCats = allCats.filter((c) => !c.parent_id && c.is_active)
