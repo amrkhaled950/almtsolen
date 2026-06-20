@@ -3,6 +3,9 @@ import { useLocale } from "../lib/i18n";
 import { useSiteSettings } from "../lib/use-site-settings";
 import { Mail, Phone, MapPin } from "lucide-react";
 
+const CONTACT_EMAIL_DEFAULT = "info@almatasawilein.com";
+const CONTACT_PHONE_DEFAULT = "+20 100 000 0000";
+
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
@@ -13,6 +16,25 @@ export const Route = createFileRoute("/contact")({
       { property: "og:url", content: "https://www.almotasolen.com/contact" },
     ],
     links: [{ rel: "canonical", href: "https://www.almotasolen.com/contact" }],
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify({
+          "@context": "https://schema.org",
+          "@type": "LocalBusiness",
+          name: "مكتبة المتسولين",
+          alternateName: "Al Motasolen Bookstore",
+          url: "https://www.almotasolen.com",
+          telephone: CONTACT_PHONE_DEFAULT,
+          email: CONTACT_EMAIL_DEFAULT,
+          address: {
+            "@type": "PostalAddress",
+            addressLocality: "Cairo",
+            addressCountry: "EG",
+          },
+        }),
+      },
+    ],
   }),
   component: ContactPage,
 });
@@ -23,8 +45,8 @@ function ContactPage() {
   const isAr = locale === "ar";
   const { settings } = useSiteSettings();
 
-  const email = settings?.contact_email || "info@almatasawilein.com";
-  const phone = settings?.contact_phone || "+20 100 000 0000";
+  const email = settings?.contact_email || CONTACT_EMAIL_DEFAULT;
+  const phone = settings?.contact_phone || CONTACT_PHONE_DEFAULT;
   const address = (isAr ? settings?.contact_address_ar : settings?.contact_address_en)
     || (isAr ? "القاهرة، مصر" : "Cairo, Egypt");
 
@@ -55,9 +77,18 @@ function ContactPage() {
         })}
       </div>
       <form className="bg-card border border-border rounded-2xl p-8 space-y-4">
-        <input className="w-full h-12 px-4 rounded-md border border-input bg-background" placeholder={isAr ? "الاسم" : "Name"} />
-        <input className="w-full h-12 px-4 rounded-md border border-input bg-background" placeholder={isAr ? "البريد" : "Email"} />
-        <textarea className="w-full p-4 rounded-md border border-input bg-background min-h-32" placeholder={isAr ? "رسالتك" : "Message"} />
+        <div>
+          <label htmlFor="contact-name" className="block text-sm font-medium mb-1.5">{isAr ? "الاسم" : "Name"}</label>
+          <input id="contact-name" name="name" className="w-full h-12 px-4 rounded-md border border-input bg-background" placeholder={isAr ? "الاسم" : "Name"} />
+        </div>
+        <div>
+          <label htmlFor="contact-email" className="block text-sm font-medium mb-1.5">{isAr ? "البريد الإلكتروني" : "Email"}</label>
+          <input id="contact-email" name="email" type="email" className="w-full h-12 px-4 rounded-md border border-input bg-background" placeholder={isAr ? "البريد" : "Email"} />
+        </div>
+        <div>
+          <label htmlFor="contact-message" className="block text-sm font-medium mb-1.5">{isAr ? "رسالتك" : "Message"}</label>
+          <textarea id="contact-message" name="message" className="w-full p-4 rounded-md border border-input bg-background min-h-32" placeholder={isAr ? "رسالتك" : "Message"} />
+        </div>
         <button type="submit" className="h-12 px-8 rounded-md bg-primary text-primary-foreground font-bold hover:bg-primary-hover">
           {isAr ? "إرسال" : "Send"}
         </button>

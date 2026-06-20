@@ -4,7 +4,17 @@ import { useLocale } from "@/lib/i18n";
 import { useAuth, ensureAuthInit } from "@/lib/auth-store";
 
 export const Route = createFileRoute("/account")({
-  head: () => ({ meta: [{ title: "حسابي | المتسولين" }] }),
+  head: () => ({
+    meta: [
+      { title: "حسابي | مكتبة المتسولين" },
+      { name: "description", content: "إدارة حسابك في مكتبة المتسولين: تعديل بياناتك الشخصية، عناوين الشحن، ومتابعة حالة طلباتك السابقة والحالية." },
+      { name: "robots", content: "noindex, follow" },
+      { property: "og:title", content: "حسابي | مكتبة المتسولين" },
+      { property: "og:description", content: "تابع طلباتك وعدّل بياناتك من صفحة حسابي في مكتبة المتسولين." },
+      { property: "og:url", content: "https://www.almotasolen.com/account" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/account" }],
+  }),
   component: AccountPage,
 });
 
