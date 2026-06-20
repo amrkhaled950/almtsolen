@@ -54,19 +54,36 @@ async function loadProductsBySlugs(supabaseAdmin: any, slugs: string[]) {
 }
 
 async function insertProductsInBatches(supabaseAdmin: any, rows: any[]) {
+  let inserted = 0;
+  const errors: { idx: number; error: string }[] = [];
   for (let i = 0; i < rows.length; i += 500) {
     const batch = rows.slice(i, i + 500);
     const { error } = await supabaseAdmin.from("products").insert(batch);
-    if (error) throw new Error(`فشل إضافة منتجات جديدة: ${error.message}`);
+    if (!error) {
+      inserted += batch.length;
+      continue;
+    }
+    for (let j = 0; j < batch.length; j++) {
+      const row = batch[j];
+      const { error: rowError } = await supabaseAdmin.from("products").insert([row]);
+      if (rowError) errors.push({ idx: i + j, error: `${row.slug}: ${rowError.message}` });
+      else inserted += 1;
+    }
   }
+  return { inserted, errors };
 }
 
 async function updateProductsIndividually(supabaseAdmin: any, rows: any[]) {
-  for (const row of rows) {
+  let updated = 0;
+  const errors: { idx: number; error: string }[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
     const { slug, ...payload } = row;
     const { error } = await supabaseAdmin.from("products").update(payload).eq("slug", slug);
-    if (error) throw new Error(`فشل تحديث ${slug}: ${error.message}`);
+    if (error) errors.push({ idx: i, error: `${slug}: ${error.message}` });
+    else updated += 1;
   }
+  return { updated, errors };
 }
 
 function slugify(input: string): string {
