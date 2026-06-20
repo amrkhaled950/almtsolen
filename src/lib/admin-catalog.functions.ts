@@ -170,6 +170,7 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       pages: data.pages ?? null,
       isbn: data.isbn || null,
       stock: data.stock,
+      unlimited_stock: data.unlimited_stock ?? false,
       is_active: data.is_active ?? true,
       is_bestseller: data.is_bestseller ?? false,
       is_new_arrival: data.is_new_arrival ?? false,
