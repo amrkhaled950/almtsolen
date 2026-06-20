@@ -19,7 +19,7 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
   const wishlist = useWishlist();
   const inWishlist = wishlist.has(product.id);
 
-  const inStock = product.stock > 0;
+  const inStock = product.unlimited_stock || product.stock > 0;
   const cover = product.cover_url || PLACEHOLDER;
   const title = locale === "ar" ? product.title_ar : product.title_en;
   const author = locale === "ar" ? product.author_ar : product.author_en;
