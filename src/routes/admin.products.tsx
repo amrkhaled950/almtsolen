@@ -259,11 +259,11 @@ function ProductsPage() {
                   <td className="px-4 py-3 font-semibold text-emerald-600">{formatPrice(Number(p.profit_margin || 0), locale)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      p.stock > 0
+                      (p.unlimited_stock || p.stock > 0)
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                         : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
                     }`}>
-                      {p.stock}
+                      {p.unlimited_stock ? "∞" : p.stock}
                     </span>
                   </td>
                   <td className="px-4 py-3">
