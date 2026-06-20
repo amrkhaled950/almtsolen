@@ -78,7 +78,7 @@ export const Route = createFileRoute("/product/$slug")({
               url,
               priceCurrency: "EGP",
               price: p.price,
-              availability: p.stock > 0
+              availability: (p.unlimited_stock || p.stock > 0)
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
               itemCondition: "https://schema.org/NewCondition",
