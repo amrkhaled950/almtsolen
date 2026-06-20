@@ -23,6 +23,7 @@ export type UIProduct = {
   rating: number;
   reviews_count: number;
   stock: number;
+  unlimited_stock: boolean;
   is_active: boolean;
   is_bestseller: boolean;
   is_new_arrival: boolean;
