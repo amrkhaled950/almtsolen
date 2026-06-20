@@ -372,6 +372,7 @@ export type Database = {
           stock: number
           title_ar: string
           title_en: string
+          unlimited_stock: boolean
           updated_at: string
         }
         Insert: {
@@ -406,6 +407,7 @@ export type Database = {
           stock?: number
           title_ar: string
           title_en: string
+          unlimited_stock?: boolean
           updated_at?: string
         }
         Update: {
@@ -440,6 +442,7 @@ export type Database = {
           stock?: number
           title_ar?: string
           title_en?: string
+          unlimited_stock?: boolean
           updated_at?: string
         }
         Relationships: [
