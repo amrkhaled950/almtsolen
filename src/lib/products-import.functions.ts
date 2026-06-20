@@ -20,6 +20,55 @@ const importSchema = z.object({
   upsert: z.boolean().optional().default(true),
 });
 
+const ADMIN_PRODUCT_SELECT =
+  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, category_id, price, compare_at_price, cover_url, images, stock, isbn, pages, language, publication_year, is_featured, is_bestseller, is_new_arrival, is_active, rating, reviews_count, created_at, updated_at, cost_price, marketing_cost, misc_expenses, profit_margin";
+
+async function loadExistingSlugs(supabaseAdmin: any, slugs: string[]) {
+  const existingSlugs = new Set<string>();
+  for (let i = 0; i < slugs.length; i += 250) {
+    const chunk = slugs.slice(i, i + 250);
+    if (!chunk.length) continue;
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("slug")
+      .in("slug", chunk);
+    if (error) throw new Error(`فشل فحص المنتجات الموجودة: ${error.message}`);
+    for (const row of data ?? []) existingSlugs.add(row.slug);
+  }
+  return existingSlugs;
+}
+
+async function loadProductsBySlugs(supabaseAdmin: any, slugs: string[]) {
+  const products: any[] = [];
+  for (let i = 0; i < slugs.length; i += 250) {
+    const chunk = slugs.slice(i, i + 250);
+    if (!chunk.length) continue;
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select(ADMIN_PRODUCT_SELECT)
+      .in("slug", chunk);
+    if (error) throw new Error(`فشل تحميل المنتجات بعد الاستيراد: ${error.message}`);
+    products.push(...(data ?? []));
+  }
+  return products;
+}
+
+async function insertProductsInBatches(supabaseAdmin: any, rows: any[]) {
+  for (let i = 0; i < rows.length; i += 500) {
+    const batch = rows.slice(i, i + 500);
+    const { error } = await supabaseAdmin.from("products").insert(batch);
+    if (error) throw new Error(`فشل إضافة منتجات جديدة: ${error.message}`);
+  }
+}
+
+async function updateProductsIndividually(supabaseAdmin: any, rows: any[]) {
+  for (const row of rows) {
+    const { slug, ...payload } = row;
+    const { error } = await supabaseAdmin.from("products").update(payload).eq("slug", slug);
+    if (error) throw new Error(`فشل تحديث ${slug}: ${error.message}`);
+  }
+}
+
 function slugify(input: string): string {
   return (input || "")
     .toString()
