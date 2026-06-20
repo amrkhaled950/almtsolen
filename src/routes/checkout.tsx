@@ -1,6 +1,6 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useState, useId, cloneElement, isValidElement, type ReactElement } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useLocale, formatPrice } from "../lib/i18n";
@@ -316,10 +316,14 @@ function Checkout() {
 }
 
 function Field({ label, error, children }: { label: string; error?: string; children: React.ReactNode }) {
+  const id = useId();
+  const control = isValidElement(children)
+    ? cloneElement(children as ReactElement<any>, { id, "aria-invalid": !!error || undefined })
+    : children;
   return (
     <div>
-      <label className="block text-sm font-medium mb-1.5">{label}</label>
-      {children}
+      <label htmlFor={id} className="block text-sm font-medium mb-1.5">{label}</label>
+      {control}
       {error && <p className="text-xs text-destructive mt-1">{error}</p>}
     </div>
   );

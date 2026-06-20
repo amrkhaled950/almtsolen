@@ -68,7 +68,7 @@ function Shop() {
       <div className="grid lg:grid-cols-[260px_1fr] gap-8">
         <aside>
           <div className="bg-card border border-border rounded-xl p-5">
-            <h3 className="font-display font-bold mb-4 flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" />{isAr ? "التصنيفات" : "Categories"}</h3>
+            <h2 className="font-display font-bold mb-4 flex items-center gap-2"><SlidersHorizontal className="h-4 w-4" />{isAr ? "التصنيفات" : "Categories"}</h2>
             <button onClick={() => setCat(null)} className={`block w-full text-start px-3 py-2 rounded-md text-sm mb-1 ${!cat ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-muted"}`}>{isAr ? "الكل" : "All"}</button>
             {(catData?.categories ?? []).map((c) => (
               <button key={c.id} onClick={() => setCat(c.slug)} className={`block w-full text-start px-3 py-2 rounded-md text-sm ${cat === c.slug ? "bg-primary text-primary-foreground font-semibold" : "hover:bg-muted"}`}>

@@ -11,7 +11,17 @@ import { ProductCard } from "../components/product/ProductCard";
 import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/wishlist")({
-  head: () => ({ meta: [{ title: "المفضلة | المتسولين" }] }),
+  head: () => ({
+    meta: [
+      { title: "قائمة المفضلة | مكتبة المتسولين" },
+      { name: "description", content: "احفظ كتبك المفضلة في مكتبة المتسولين بمكان واحد لتعود إليها لاحقاً وتشتريها وقتما تريد." },
+      { name: "robots", content: "noindex, follow" },
+      { property: "og:title", content: "قائمة المفضلة | مكتبة المتسولين" },
+      { property: "og:description", content: "كل الكتب اللي حفظتها في قائمة مفضلتك على مكتبة المتسولين." },
+      { property: "og:url", content: "https://www.almotasolen.com/wishlist" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/wishlist" }],
+  }),
   component: WishlistPage,
 });
 

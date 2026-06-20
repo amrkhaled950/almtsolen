@@ -14,7 +14,17 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
-  head: () => ({ meta: [{ title: "تسجيل دخول العملاء | المتسولين" }] }),
+  head: () => ({
+    meta: [
+      { title: "تسجيل الدخول وإنشاء حساب | مكتبة المتسولين" },
+      { name: "description", content: "سجّل دخول حسابك في مكتبة المتسولين أو أنشئ حساباً جديداً لمتابعة طلباتك وحفظ كتبك المفضلة بسهولة." },
+      { name: "robots", content: "noindex, follow" },
+      { property: "og:title", content: "تسجيل الدخول | مكتبة المتسولين" },
+      { property: "og:description", content: "ادخل إلى حسابك أو أنشئ حساباً جديداً في مكتبة المتسولين." },
+      { property: "og:url", content: "https://www.almotasolen.com/auth" },
+    ],
+    links: [{ rel: "canonical", href: "https://www.almotasolen.com/auth" }],
+  }),
   component: AuthPage,
 });
 

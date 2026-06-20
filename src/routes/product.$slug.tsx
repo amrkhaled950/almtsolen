@@ -200,7 +200,13 @@ function ProductPage() {
               >
                 <ShoppingBag className="h-5 w-5" /> {t("product.addToCart", locale)}
               </button>
-              <button onClick={() => wishlist.toggle(product.id)} className={cn("h-12 w-12 grid place-items-center rounded-md border border-border hover:bg-muted", wishlist.has(product.id) && "text-primary border-primary")}>
+              <button
+                type="button"
+                onClick={() => wishlist.toggle(product.id)}
+                aria-label={isAr ? "إضافة إلى المفضلة" : "Add to wishlist"}
+                aria-pressed={wishlist.has(product.id)}
+                className={cn("h-12 w-12 grid place-items-center rounded-md border border-border hover:bg-muted", wishlist.has(product.id) && "text-primary border-primary")}
+              >
                 <Heart className={cn("h-5 w-5", wishlist.has(product.id) && "fill-current")} />
               </button>
             </div>
