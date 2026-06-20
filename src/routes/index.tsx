@@ -271,29 +271,6 @@ function Home() {
         </section>
       )}
 
-      {/* ── All books ────────────────────────────────────────── */}
-      <section className="container-page py-12">
-        <div className="flex items-end justify-between mb-6">
-          <h2 className="font-display font-extrabold text-2xl md:text-3xl">
-            📚 {isAr ? "كل الكتب" : "All books"}
-          </h2>
-          <Link to="/shop" className="text-sm text-primary font-semibold hover:underline flex items-center gap-1">
-            {isAr ? "عرض الكل" : "View all"} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-          </Link>
-        </div>
-        {latestLoading ? (
-          <ProductGridSkeleton count={8} />
-
-        ) : latest.length === 0 ? (
-          <div className="text-center py-16 bg-card rounded-2xl border border-border">
-            <p className="text-muted-foreground">{isAr ? "لا توجد كتب بعد." : "No books yet."}</p>
-          </div>
-        ) : (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            {latest.map((p: any, i: number) => <ProductCard key={p.id} product={p} index={i} />)}
-          </div>
-        )}
-      </section>
     </div>
   );
 }
