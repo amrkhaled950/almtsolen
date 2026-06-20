@@ -9,6 +9,7 @@ import { cn } from "../../lib/utils";
 import { listCategoriesPublic } from "../../lib/catalog.functions";
 import { useSiteSettings } from "../../lib/use-site-settings";
 import { PromoModal } from "./PromoModal";
+import { pickCategoryIcon } from "../../lib/category-icon";
 
 export function SiteHeader() {
   const { locale, setLocale } = useLocale();
