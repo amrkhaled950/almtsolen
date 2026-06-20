@@ -370,6 +370,7 @@ function ProductFormDialog({
     pages: product?.pages || null,
     isbn: product?.isbn || "",
     stock: Number(product?.stock || 0),
+    unlimited_stock: product?.unlimited_stock ?? false,
     is_active: product?.is_active ?? true,
     is_bestseller: product?.is_bestseller ?? false,
     is_new_arrival: product?.is_new_arrival ?? false,
