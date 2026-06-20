@@ -115,6 +115,7 @@ const productInput = z.object({
   pages: z.number().int().min(0).max(20000).optional().nullable(),
   isbn: z.string().trim().max(40).optional().or(z.literal("")),
   stock: z.number().int().min(0).max(100000),
+  unlimited_stock: z.boolean().optional(),
   is_active: z.boolean().optional(),
   is_bestseller: z.boolean().optional(),
   is_new_arrival: z.boolean().optional(),
