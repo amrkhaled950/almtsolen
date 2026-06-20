@@ -373,11 +373,12 @@ export const importProductsJson = createServerFn({ method: "POST" })
     const toUpdate = data.upsert ? rows.filter((row) => existingSlugs.has(row.slug)) : [];
     const toInsert = data.upsert ? rows.filter((row) => !existingSlugs.has(row.slug)) : rows;
 
-    if (toInsert.length) await insertProductsInBatches(supabaseAdmin, toInsert);
-    if (toUpdate.length) await updateProductsIndividually(supabaseAdmin, toUpdate);
+    const insertResult = toInsert.length ? await insertProductsInBatches(supabaseAdmin, toInsert) : { inserted: 0, errors: [] };
+    const updateResult = toUpdate.length ? await updateProductsIndividually(supabaseAdmin, toUpdate) : { updated: 0, errors: [] };
+    errors.push(...insertResult.errors, ...updateResult.errors);
 
-    const inserted = toInsert.length;
-    const updated = toUpdate.length;
+    const inserted = insertResult.inserted;
+    const updated = updateResult.updated;
 
     return {
       ok: true,
