@@ -154,7 +154,7 @@ export const getProductPublic = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("products")
       .select(
-        "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured",
+        PRODUCT_COLS,
       )
       .eq("slug", data.slug)
       .eq("is_active", true)
