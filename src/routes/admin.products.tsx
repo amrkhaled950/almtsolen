@@ -606,15 +606,20 @@ function ImportJsonDialog({
 
                 for (let i = 0; i < items.length; i += CHUNK) {
                   const part = items.slice(i, i + CHUNK);
-                  const r = await onImport(wrap(part), defaultCat || null, upsert);
-                  total.processed += Number(r?.processed ?? 0);
-                  total.inserted += Number(r?.inserted ?? 0);
-                  total.updated += Number(r?.updated ?? 0);
-                  total.categories_created += Number(r?.categories_created ?? 0);
-                  total.categorized += Number(r?.categorized ?? 0);
-                  total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
-                  total.errors.push(...(r?.errors ?? []).map((err: any) => ({ ...err, idx: (err.idx ?? 0) + i })));
-                  importedProducts.push(...(r?.products ?? []));
+                  try {
+                    const r = await onImport(wrap(part), defaultCat || null, upsert);
+                    total.processed += Number(r?.processed ?? 0);
+                    total.inserted += Number(r?.inserted ?? 0);
+                    total.updated += Number(r?.updated ?? 0);
+                    total.categories_created += Number(r?.categories_created ?? 0);
+                    total.categorized += Number(r?.categorized ?? 0);
+                    total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
+                    total.errors.push(...(r?.errors ?? []).map((err: any) => ({ ...err, idx: (err.idx ?? 0) + i })));
+                    importedProducts.push(...(r?.products ?? []));
+                  } catch (chunkError: any) {
+                    total.skipped_invalid += part.length;
+                    total.errors.push({ idx: i, error: chunkError?.message || "فشلت دفعة من المنتجات" });
+                  }
                   setProgress(Math.min(i + CHUNK, items.length));
                 }
 
