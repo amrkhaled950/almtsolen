@@ -206,7 +206,7 @@ function Home() {
           <section key={cat.id} className="container-page py-10">
             <div className="flex items-end justify-between mb-5">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{cat.icon || cat.image_url || "📖"}</span>
+                <span className="text-3xl">{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
                 <div>
                   <h2 className="font-display font-extrabold text-2xl md:text-3xl">
                     {isAr ? cat.name_ar : cat.name_en}
