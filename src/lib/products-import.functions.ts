@@ -351,16 +351,16 @@ export const importProductsJson = createServerFn({ method: "POST" })
     }
     const rows = Array.from(bySlug.values());
 
-    const existingSlugs = new Set<string>();
-    for (let i = 0; i < rows.length; i += 500) {
-      const slugs = rows.slice(i, i + 500).map((row) => row.slug);
-      const { data: existing, error: existingErr } = await supabaseAdmin
-        .from("products")
-        .select("slug")
-        .in("slug", slugs);
-      if (existingErr) throw new Error(`فشل فحص المنتجات الموجودة: ${existingErr.message}`);
-      for (const row of existing ?? []) existingSlugs.add(row.slug);
-    }
+    const existingSlugs = await loadExistingSlugs(supabaseAdmin, rows.map((row) => row.slug));
+
+    const toUpdate = data.upsert ? rows.filter((row) => existingSlugs.has(row.slug)) : [];
+    const toInsert = data.upsert ? rows.filter((row) => !existingSlugs.has(row.slug)) : rows;
+
+    if (toInsert.length) await insertProductsInBatches(supabaseAdmin, toInsert);
+    if (toUpdate.length) await updateProductsIndividually(supabaseAdmin, toUpdate);
+
+    const inserted = toInsert.length;
+    const updated = toUpdate.length;
 
     // Chunked upsert — keep going if one batch fails, then retry that batch row-by-row
     const CHUNK = 25;
@@ -421,5 +421,6 @@ export const importProductsJson = createServerFn({ method: "POST" })
       categorized,
       skipped_invalid: errors.length,
       errors: errors.slice(0, 20),
+      products: await loadProductsBySlugs(supabaseAdmin, rows.map((row) => row.slug)),
     };
   });
