@@ -51,7 +51,7 @@ function Home() {
 
   const bestsellers = bestData?.products ?? [];
   const newArrivals = newData?.products  ?? [];
-  const latest      = latestData?.products ?? [];
+  
 
   // Custom home-page carousels from settings
   const homeSections = parseHomeSections(settings).filter((sec) => sec.enabled);
