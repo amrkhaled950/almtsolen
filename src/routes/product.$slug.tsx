@@ -143,7 +143,7 @@ function ProductPage() {
   const title = isAr ? product.title_ar : product.title_en;
   const author = isAr ? product.author_ar : product.author_en;
   const description = isAr ? product.description_ar : product.description_en;
-  const inStock = product.stock > 0;
+  const inStock = product.unlimited_stock || product.stock > 0;
   const discount = product.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : 0;
