@@ -59,7 +59,16 @@ function ProductsPage() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkDeleting, setBulkDeleting] = useState(false);
 
-  const refreshCatalog = () => {
+  const refreshCatalog = (importedProducts?: ProductRow[]) => {
+    if (importedProducts?.length) {
+      qc.setQueryData(["admin", "products"], (old: any) => {
+        const current = old?.products ?? [];
+        const byId = new Map<string, ProductRow>();
+        for (const product of current) byId.set(product.id, product);
+        for (const product of importedProducts) byId.set(product.id, product);
+        return { products: Array.from(byId.values()) };
+      });
+    }
     qc.invalidateQueries({ queryKey: ["admin", "products"] });
     qc.invalidateQueries({ queryKey: ["admin", "categories"] });
   };
@@ -468,7 +477,7 @@ function ImportJsonDialog({
   categories: any[];
   onClose: () => void;
   onImport: (payload: any, default_category_id: string | null, upsert: boolean) => Promise<any>;
-  onComplete: () => void;
+  onComplete: (importedProducts?: any[]) => void;
 }) {
   const locale = useLocale((s) => s.locale);
   const isAr = locale === "ar";
@@ -517,8 +526,8 @@ function ImportJsonDialog({
               onChange={async (e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
-                if (f.size > 30 * 1024 * 1024) {
-                  toast.error(isAr ? "الملف أكبر من 30 ميجا" : "File too large (>30MB)");
+                if (f.size > 200 * 1024 * 1024) {
+                  toast.error(isAr ? "الملف أكبر من 200 ميجا" : "File too large (>200MB)");
                   return;
                 }
                 setFilename(f.name);
@@ -581,7 +590,7 @@ function ImportJsonDialog({
               setResult(null);
               try {
                 const { items, wrap } = parseImportPayload(text);
-                const CHUNK = 100;
+                const CHUNK = 50;
                 const total = {
                   ok: true,
                   total: items.length,
@@ -593,6 +602,7 @@ function ImportJsonDialog({
                   skipped_invalid: 0,
                   errors: [] as any[],
                 };
+                const importedProducts: any[] = [];
 
                 for (let i = 0; i < items.length; i += CHUNK) {
                   const part = items.slice(i, i + CHUNK);
@@ -604,11 +614,12 @@ function ImportJsonDialog({
                   total.categorized += Number(r?.categorized ?? 0);
                   total.skipped_invalid += Number(r?.skipped_invalid ?? 0);
                   total.errors.push(...(r?.errors ?? []).map((err: any) => ({ ...err, idx: (err.idx ?? 0) + i })));
+                  importedProducts.push(...(r?.products ?? []));
                   setProgress(Math.min(i + CHUNK, items.length));
                 }
 
                 setResult(total);
-                onComplete();
+                onComplete(importedProducts);
                 toast.success(
                   isAr
                     ? `تم استيراد ${total.processed} من ${total.total} منتج`

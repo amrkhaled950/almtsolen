@@ -20,6 +20,72 @@ const importSchema = z.object({
   upsert: z.boolean().optional().default(true),
 });
 
+const ADMIN_PRODUCT_SELECT =
+  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, category_id, price, compare_at_price, cover_url, images, stock, isbn, pages, language, publication_year, is_featured, is_bestseller, is_new_arrival, is_active, rating, reviews_count, created_at, updated_at, cost_price, marketing_cost, misc_expenses, profit_margin";
+
+async function loadExistingSlugs(supabaseAdmin: any, slugs: string[]) {
+  const existingSlugs = new Set<string>();
+  for (let i = 0; i < slugs.length; i += 250) {
+    const chunk = slugs.slice(i, i + 250);
+    if (!chunk.length) continue;
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select("slug")
+      .in("slug", chunk);
+    if (error) throw new Error(`فشل فحص المنتجات الموجودة: ${error.message}`);
+    for (const row of data ?? []) existingSlugs.add(row.slug);
+  }
+  return existingSlugs;
+}
+
+async function loadProductsBySlugs(supabaseAdmin: any, slugs: string[]) {
+  const products: any[] = [];
+  for (let i = 0; i < slugs.length; i += 250) {
+    const chunk = slugs.slice(i, i + 250);
+    if (!chunk.length) continue;
+    const { data, error } = await supabaseAdmin
+      .from("products")
+      .select(ADMIN_PRODUCT_SELECT)
+      .in("slug", chunk);
+    if (error) throw new Error(`فشل تحميل المنتجات بعد الاستيراد: ${error.message}`);
+    products.push(...(data ?? []));
+  }
+  return products;
+}
+
+async function insertProductsInBatches(supabaseAdmin: any, rows: any[]) {
+  let inserted = 0;
+  const errors: { idx: number; error: string }[] = [];
+  for (let i = 0; i < rows.length; i += 500) {
+    const batch = rows.slice(i, i + 500);
+    const { error } = await supabaseAdmin.from("products").insert(batch);
+    if (!error) {
+      inserted += batch.length;
+      continue;
+    }
+    for (let j = 0; j < batch.length; j++) {
+      const row = batch[j];
+      const { error: rowError } = await supabaseAdmin.from("products").insert([row]);
+      if (rowError) errors.push({ idx: i + j, error: `${row.slug}: ${rowError.message}` });
+      else inserted += 1;
+    }
+  }
+  return { inserted, errors };
+}
+
+async function updateProductsIndividually(supabaseAdmin: any, rows: any[]) {
+  let updated = 0;
+  const errors: { idx: number; error: string }[] = [];
+  for (let i = 0; i < rows.length; i++) {
+    const row = rows[i];
+    const { slug, ...payload } = row;
+    const { error } = await supabaseAdmin.from("products").update(payload).eq("slug", slug);
+    if (error) errors.push({ idx: i, error: `${slug}: ${error.message}` });
+    else updated += 1;
+  }
+  return { updated, errors };
+}
+
 function slugify(input: string): string {
   return (input || "")
     .toString()
@@ -302,65 +368,17 @@ export const importProductsJson = createServerFn({ method: "POST" })
     }
     const rows = Array.from(bySlug.values());
 
-    const existingSlugs = new Set<string>();
-    for (let i = 0; i < rows.length; i += 500) {
-      const slugs = rows.slice(i, i + 500).map((row) => row.slug);
-      const { data: existing, error: existingErr } = await supabaseAdmin
-        .from("products")
-        .select("slug")
-        .in("slug", slugs);
-      if (existingErr) throw new Error(`فشل فحص المنتجات الموجودة: ${existingErr.message}`);
-      for (const row of existing ?? []) existingSlugs.add(row.slug);
-    }
+    const existingSlugs = await loadExistingSlugs(supabaseAdmin, rows.map((row) => row.slug));
 
-    // Chunked upsert — keep going if one batch fails, then retry that batch row-by-row
-    const CHUNK = 25;
-    let inserted = 0;
-    let updated = 0;
-    const batchErrors: { idx: number; error: string }[] = [];
-    for (let i = 0; i < rows.length; i += CHUNK) {
-      const slice = rows.slice(i, i + CHUNK);
-      try {
-        if (data.upsert) {
-          const { error, count } = await supabaseAdmin
-            .from("products")
-            .upsert(slice, { onConflict: "slug", count: "exact" });
-          if (error) throw error;
-          const existingInSlice = slice.filter((row) => existingSlugs.has(row.slug)).length;
-          updated += existingInSlice;
-          inserted += (count ?? slice.length) - existingInSlice;
-        } else {
-          const { error } = await supabaseAdmin.from("products").insert(slice);
-          if (error) throw error;
-          inserted += slice.length;
-        }
-      } catch (batchErr: any) {
-        // Fallback: try each row alone so one bad row doesn't kill the whole batch
-        for (let j = 0; j < slice.length; j++) {
-          const single = slice[j];
-          try {
-            if (data.upsert) {
-              const { error } = await supabaseAdmin
-                .from("products")
-                .upsert([single], { onConflict: "slug" });
-              if (error) throw error;
-              if (existingSlugs.has(single.slug)) updated += 1;
-              else inserted += 1;
-            } else {
-              const { error } = await supabaseAdmin.from("products").insert([single]);
-              if (error) throw error;
-              inserted += 1;
-            }
-          } catch (rowErr: any) {
-            batchErrors.push({
-              idx: i + j,
-              error: `${single?.slug ?? ""}: ${rowErr?.message || batchErr?.message || "خطأ"}`,
-            });
-          }
-        }
-      }
-    }
-    errors.push(...batchErrors);
+    const toUpdate = data.upsert ? rows.filter((row) => existingSlugs.has(row.slug)) : [];
+    const toInsert = data.upsert ? rows.filter((row) => !existingSlugs.has(row.slug)) : rows;
+
+    const insertResult = toInsert.length ? await insertProductsInBatches(supabaseAdmin, toInsert) : { inserted: 0, errors: [] };
+    const updateResult = toUpdate.length ? await updateProductsIndividually(supabaseAdmin, toUpdate) : { updated: 0, errors: [] };
+    errors.push(...insertResult.errors, ...updateResult.errors);
+
+    const inserted = insertResult.inserted;
+    const updated = updateResult.updated;
 
     return {
       ok: true,
@@ -372,5 +390,6 @@ export const importProductsJson = createServerFn({ method: "POST" })
       categorized,
       skipped_invalid: errors.length,
       errors: errors.slice(0, 20),
+      products: await loadProductsBySlugs(supabaseAdmin, rows.map((row) => row.slug)),
     };
   });
