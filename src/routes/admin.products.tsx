@@ -526,8 +526,8 @@ function ImportJsonDialog({
               onChange={async (e) => {
                 const f = e.target.files?.[0];
                 if (!f) return;
-                if (f.size > 30 * 1024 * 1024) {
-                  toast.error(isAr ? "الملف أكبر من 30 ميجا" : "File too large (>30MB)");
+                if (f.size > 200 * 1024 * 1024) {
+                  toast.error(isAr ? "الملف أكبر من 200 ميجا" : "File too large (>200MB)");
                   return;
                 }
                 setFilename(f.name);
@@ -590,7 +590,7 @@ function ImportJsonDialog({
               setResult(null);
               try {
                 const { items, wrap } = parseImportPayload(text);
-                const CHUNK = 100;
+                const CHUNK = 50;
                 const total = {
                   ok: true,
                   total: items.length,
