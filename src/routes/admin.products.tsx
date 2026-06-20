@@ -259,11 +259,11 @@ function ProductsPage() {
                   <td className="px-4 py-3 font-semibold text-emerald-600">{formatPrice(Number(p.profit_margin || 0), locale)}</td>
                   <td className="px-4 py-3">
                     <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${
-                      p.stock > 0
+                      (p.unlimited_stock || p.stock > 0)
                         ? "bg-emerald-100 text-emerald-800 dark:bg-emerald-950/40 dark:text-emerald-300"
                         : "bg-rose-100 text-rose-800 dark:bg-rose-950/40 dark:text-rose-300"
                     }`}>
-                      {p.stock}
+                      {p.unlimited_stock ? "∞" : p.stock}
                     </span>
                   </td>
                   <td className="px-4 py-3">
@@ -370,6 +370,7 @@ function ProductFormDialog({
     pages: product?.pages || null,
     isbn: product?.isbn || "",
     stock: Number(product?.stock || 0),
+    unlimited_stock: product?.unlimited_stock ?? false,
     is_active: product?.is_active ?? true,
     is_bestseller: product?.is_bestseller ?? false,
     is_new_arrival: product?.is_new_arrival ?? false,
@@ -441,9 +442,26 @@ function ProductFormDialog({
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Field label={isAr ? "المخزون" : "Stock"} required><input type="number" min="0" className="input" value={form.stock} onChange={num("stock")} required /></Field>
+            <Field label={isAr ? "المخزون" : "Stock"}>
+              <input
+                type="number"
+                min="0"
+                className="input"
+                value={form.unlimited_stock ? "" : form.stock}
+                onChange={num("stock")}
+                disabled={form.unlimited_stock}
+                placeholder={form.unlimited_stock ? (isAr ? "غير محدود" : "Unlimited") : ""}
+              />
+            </Field>
             <Field label={isAr ? "عدد الصفحات" : "Pages"}><input type="number" min="0" className="input" value={form.pages ?? ""} onChange={(e) => set("pages", e.target.value ? Number(e.target.value) : null)} /></Field>
             <Field label="ISBN"><input className="input" value={form.isbn} onChange={(e) => set("isbn", e.target.value)} /></Field>
+          </div>
+          <div>
+            <Checkbox
+              checked={form.unlimited_stock}
+              onChange={(v) => set("unlimited_stock", v)}
+              label={isAr ? "متوفر دائماً (مخزون غير محدود)" : "Always in stock (unlimited)"}
+            />
           </div>
 
           <Field label={isAr ? "الوصف (عربي)" : "Description AR"}><textarea className="input min-h-[80px]" value={form.description_ar} onChange={(e) => set("description_ar", e.target.value)} /></Field>

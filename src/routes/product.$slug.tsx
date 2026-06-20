@@ -53,7 +53,7 @@ export const Route = createFileRoute("/product/$slug")({
         { property: "og:image", content: image },
         { property: "product:price:amount", content: String(p.price) },
         { property: "product:price:currency", content: "EGP" },
-        { property: "product:availability", content: p.stock > 0 ? "in stock" : "out of stock" },
+        { property: "product:availability", content: (p.unlimited_stock || p.stock > 0) ? "in stock" : "out of stock" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:image", content: image },
         { name: "twitter:title", content: title },
@@ -78,7 +78,7 @@ export const Route = createFileRoute("/product/$slug")({
               url,
               priceCurrency: "EGP",
               price: p.price,
-              availability: p.stock > 0
+              availability: (p.unlimited_stock || p.stock > 0)
                 ? "https://schema.org/InStock"
                 : "https://schema.org/OutOfStock",
               itemCondition: "https://schema.org/NewCondition",
@@ -143,7 +143,7 @@ function ProductPage() {
   const title = isAr ? product.title_ar : product.title_en;
   const author = isAr ? product.author_ar : product.author_en;
   const description = isAr ? product.description_ar : product.description_en;
-  const inStock = product.stock > 0;
+  const inStock = product.unlimited_stock || product.stock > 0;
   const discount = product.compare_at_price
     ? Math.round(((product.compare_at_price - product.price) / product.compare_at_price) * 100)
     : 0;
@@ -179,7 +179,7 @@ function ProductPage() {
             <span className={cn("text-sm font-semibold px-3 py-1 rounded-full", inStock ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive")}>
               {inStock ? t("product.inStock", locale) : t("product.outOfStock", locale)}
             </span>
-            {inStock && product.stock > 0 && product.stock <= 5 && (
+            {inStock && !product.unlimited_stock && product.stock > 0 && product.stock <= 5 && (
               <span className="text-sm font-bold px-3 py-1 rounded-full bg-primary/10 text-primary flex items-center gap-1.5 animate-pulse">
                 <Flame className="h-3.5 w-3.5" />
                 {isAr ? `متبقي ${product.stock} نسخ فقط!` : `Only ${product.stock} left!`}

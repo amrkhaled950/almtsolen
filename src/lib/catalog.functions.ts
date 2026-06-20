@@ -23,6 +23,7 @@ export type UIProduct = {
   rating: number;
   reviews_count: number;
   stock: number;
+  unlimited_stock: boolean;
   is_active: boolean;
   is_bestseller: boolean;
   is_new_arrival: boolean;
@@ -42,7 +43,7 @@ export type UICategory = {
 };
 
 const PRODUCT_COLS =
-  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured";
+  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, unlimited_stock, is_active, is_bestseller, is_new_arrival, is_featured";
 
 // Public (anon) credentials — safe to hardcode as fallback so the catalog
 // works on any host even when server env vars are not configured.
@@ -153,7 +154,7 @@ export const getProductPublic = createServerFn({ method: "GET" })
     const { data: row, error } = await supabase
       .from("products")
       .select(
-        "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, is_active, is_bestseller, is_new_arrival, is_featured",
+        PRODUCT_COLS,
       )
       .eq("slug", data.slug)
       .eq("is_active", true)
@@ -210,7 +211,7 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
     if (typeof data.min_price === "number") q = q.gte("price", data.min_price);
     if (typeof data.max_price === "number") q = q.lte("price", data.max_price);
     if (typeof data.min_rating === "number") q = q.gte("rating", data.min_rating);
-    if (data.in_stock) q = q.gt("stock", 0);
+    if (data.in_stock) q = q.or("unlimited_stock.eq.true,stock.gt.0");
 
     switch (data.sort) {
       case "price-asc":

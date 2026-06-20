@@ -19,7 +19,7 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
   const wishlist = useWishlist();
   const inWishlist = wishlist.has(product.id);
 
-  const inStock = product.stock > 0;
+  const inStock = product.unlimited_stock || product.stock > 0;
   const cover = product.cover_url || PLACEHOLDER;
   const title = locale === "ar" ? product.title_ar : product.title_en;
   const author = locale === "ar" ? product.author_ar : product.author_en;
@@ -133,7 +133,7 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
               </span>
             )}
           </div>
-          {inStock && product.stock > 0 && product.stock <= 5 && (
+          {inStock && !product.unlimited_stock && product.stock > 0 && product.stock <= 5 && (
             <p className="mt-2 text-[11px] font-semibold text-primary animate-pulse">
               {locale === "ar"
                 ? `متبقي ${product.stock} نسخ فقط!`
