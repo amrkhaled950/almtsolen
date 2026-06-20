@@ -165,7 +165,7 @@ function Home() {
               <Link key={c.id} to="/shop" search={{ category: c.slug } as any}
                 className="flex flex-col items-center gap-2 bg-card rounded-xl p-3 text-center hover:shadow-elegant transition-all hover:-translate-y-1 border border-border group">
                 <span className="text-3xl group-hover:scale-110 transition-transform">
-                  {c.icon || c.image_url || "📖"}
+                  {c.icon || pickCategoryIcon(c.name_ar, c.name_en, c.slug)}
                 </span>
                 <span className="font-semibold text-xs leading-tight">
                   {isAr ? c.name_ar : c.name_en}
