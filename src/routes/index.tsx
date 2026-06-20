@@ -12,6 +12,7 @@ import { ProductCarousel } from "../components/home/ProductCarousel";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
+import { pickCategoryIcon } from "../lib/category-icon";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -164,7 +165,7 @@ function Home() {
               <Link key={c.id} to="/shop" search={{ category: c.slug } as any}
                 className="flex flex-col items-center gap-2 bg-card rounded-xl p-3 text-center hover:shadow-elegant transition-all hover:-translate-y-1 border border-border group">
                 <span className="text-3xl group-hover:scale-110 transition-transform">
-                  {c.icon || c.image_url || "📖"}
+                  {c.icon || pickCategoryIcon(c.name_ar, c.name_en, c.slug)}
                 </span>
                 <span className="font-semibold text-xs leading-tight">
                   {isAr ? c.name_ar : c.name_en}
@@ -205,7 +206,7 @@ function Home() {
           <section key={cat.id} className="container-page py-10">
             <div className="flex items-end justify-between mb-5">
               <div className="flex items-center gap-3">
-                <span className="text-3xl">{cat.icon || cat.image_url || "📖"}</span>
+                <span className="text-3xl">{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
                 <div>
                   <h2 className="font-display font-extrabold text-2xl md:text-3xl">
                     {isAr ? cat.name_ar : cat.name_en}

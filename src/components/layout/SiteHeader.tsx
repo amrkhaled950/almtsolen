@@ -9,6 +9,7 @@ import { cn } from "../../lib/utils";
 import { listCategoriesPublic } from "../../lib/catalog.functions";
 import { useSiteSettings } from "../../lib/use-site-settings";
 import { PromoModal } from "./PromoModal";
+import { pickCategoryIcon } from "../../lib/category-icon";
 
 export function SiteHeader() {
   const { locale, setLocale } = useLocale();
@@ -147,7 +148,7 @@ export function SiteHeader() {
                               onClick={() => setCatOpen(false)}
                               className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-muted font-semibold text-sm group"
                             >
-                              <span className="text-xl">{cat.icon || cat.image_url || "📖"}</span>
+                              <span className="text-xl">{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
                               <span>{locale === "ar" ? cat.name_ar : cat.name_en}</span>
                             </Link>
                             {subs.map((sub) => (
@@ -255,7 +256,7 @@ export function SiteHeader() {
                       <div key={cat.id}>
                         <Link to="/shop" search={{ category: cat.slug } as any} onClick={() => setMobileOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-md font-medium hover:bg-muted">
-                          <span>{cat.icon || cat.image_url || "📖"}</span>
+                          <span>{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
                           {locale === "ar" ? cat.name_ar : cat.name_en}
                         </Link>
                         {subs.map((sub) => (
