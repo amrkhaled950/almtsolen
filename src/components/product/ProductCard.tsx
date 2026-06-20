@@ -133,7 +133,7 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
               </span>
             )}
           </div>
-          {inStock && product.stock > 0 && product.stock <= 5 && (
+          {inStock && !product.unlimited_stock && product.stock > 0 && product.stock <= 5 && (
             <p className="mt-2 text-[11px] font-semibold text-primary animate-pulse">
               {locale === "ar"
                 ? `متبقي ${product.stock} نسخ فقط!`
