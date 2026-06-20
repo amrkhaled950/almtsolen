@@ -256,7 +256,7 @@ export function SiteHeader() {
                       <div key={cat.id}>
                         <Link to="/shop" search={{ category: cat.slug } as any} onClick={() => setMobileOpen(false)}
                           className="flex items-center gap-2 px-3 py-2 rounded-md font-medium hover:bg-muted">
-                          <span>{cat.icon || cat.image_url || "📖"}</span>
+                          <span>{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
                           {locale === "ar" ? cat.name_ar : cat.name_en}
                         </Link>
                         {subs.map((sub) => (
