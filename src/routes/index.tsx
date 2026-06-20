@@ -12,6 +12,7 @@ import { ProductCarousel } from "../components/home/ProductCarousel";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
+import { pickCategoryIcon } from "../lib/category-icon";
 
 export const Route = createFileRoute("/")({
   head: () => ({
