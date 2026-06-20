@@ -102,6 +102,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "stylesheet", href: appCss },
       { rel: "icon", type: "image/png", href: logoAsset.url },
       { rel: "apple-touch-icon", href: logoAsset.url },
+      { rel: "alternate", hrefLang: "ar", href: "https://www.almotasolen.com/" },
+      { rel: "alternate", hrefLang: "ar-EG", href: "https://www.almotasolen.com/" },
+      { rel: "alternate", hrefLang: "en", href: "https://www.almotasolen.com/" },
+      { rel: "alternate", hrefLang: "x-default", href: "https://www.almotasolen.com/" },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
