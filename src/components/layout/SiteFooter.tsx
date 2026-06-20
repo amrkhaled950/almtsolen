@@ -43,7 +43,7 @@ export function SiteFooter() {
         { label: isAr ? "الشحن والتوصيل" : "Shipping", to: "/shipping" },
         { label: isAr ? "الاسترجاع" : "Returns", to: "/returns" },
         { label: isAr ? "الأسئلة الشائعة" : "FAQ", to: "/contact" },
-        { label: isAr ? "تتبع الطلب" : "Track order", to: "/account" },
+        
       ],
     },
     {
