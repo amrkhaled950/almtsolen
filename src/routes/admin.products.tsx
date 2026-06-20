@@ -485,7 +485,7 @@ function ImportJsonDialog({
   const [text, setText] = useState("");
   const [filename, setFilename] = useState("");
   const [defaultCat, setDefaultCat] = useState<string>("");
-  const [upsert, setUpsert] = useState(true);
+  const [upsert, setUpsert] = useState(false);
   const [loading, setLoading] = useState(false);
   const [progress, setProgress] = useState(0);
   const [result, setResult] = useState<any | null>(null);
@@ -558,7 +558,7 @@ function ImportJsonDialog({
           <Checkbox
             checked={upsert}
             onChange={setUpsert}
-            label={isAr ? "تحديث المنتجات الموجودة (مطابقة بالـ slug)" : "Update existing products (match by slug)"}
+            label={isAr ? "تحديث الموجود بدل إضافة نسخة جديدة" : "Update existing instead of adding new copies"}
           />
 
           {result && (
