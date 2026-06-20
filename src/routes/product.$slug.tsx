@@ -53,7 +53,7 @@ export const Route = createFileRoute("/product/$slug")({
         { property: "og:image", content: image },
         { property: "product:price:amount", content: String(p.price) },
         { property: "product:price:currency", content: "EGP" },
-        { property: "product:availability", content: p.stock > 0 ? "in stock" : "out of stock" },
+        { property: "product:availability", content: (p.unlimited_stock || p.stock > 0) ? "in stock" : "out of stock" },
         { name: "twitter:card", content: "summary_large_image" },
         { name: "twitter:image", content: image },
         { name: "twitter:title", content: title },
