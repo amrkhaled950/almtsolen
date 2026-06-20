@@ -295,7 +295,18 @@ export const importProductsJson = createServerFn({ method: "POST" })
     const nameToCatId = new Map<string, string>();
     let categories_created = 0;
     if (uniqueCatNames.length) {
-      const wantedSlugs = uniqueCatNames.map((n) => ({ name: n, slug: categorySlug(n) }));
+      const wantedSlugs: { name: string; slug: string }[] = [];
+      const seenCategorySlugs = new Set<string>();
+      for (const name of uniqueCatNames) {
+        let slug = categorySlug(name);
+        let suffix = 2;
+        while (seenCategorySlugs.has(slug)) {
+          slug = `${categorySlug(name)}-${suffix}`;
+          suffix += 1;
+        }
+        seenCategorySlugs.add(slug);
+        wantedSlugs.push({ name, slug });
+      }
       const { data: existing, error: catFetchErr } = await supabaseAdmin
         .from("categories")
         .select("id, slug, name_ar, name_en");
@@ -313,6 +324,7 @@ export const importProductsJson = createServerFn({ method: "POST" })
         if (found) {
           nameToCatId.set(normalizeCategoryKey(name), found);
         } else {
+          bySlug.set(slug, "pending");
           toCreate.push({
             slug,
             name_ar: name,
