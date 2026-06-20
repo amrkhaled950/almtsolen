@@ -392,22 +392,13 @@ export const importProductsJson = createServerFn({ method: "POST" })
       }
     }
 
-    // De-duplicate by slug (last wins)
-    const bySlug = new Map<string, any>();
-    for (const row of valid) {
-      let base = row.slug;
-      let candidate = base;
-      let n = 1;
-      while (bySlug.has(candidate)) {
-        n += 1;
-        candidate = `${base}-${n}`;
-      }
-      row.slug = candidate;
-      bySlug.set(candidate, row);
-    }
-    const rows = Array.from(bySlug.values());
+    const rows = data.upsert
+      ? Array.from(new Map(valid.map((row) => [row.slug, row])).values())
+      : await ensureUniqueSlugsForInsert(supabaseAdmin, valid);
 
-    const existingSlugs = await loadExistingSlugs(supabaseAdmin, rows.map((row) => row.slug));
+    const existingSlugs = data.upsert
+      ? await loadExistingSlugs(supabaseAdmin, rows.map((row) => row.slug))
+      : new Set<string>();
 
     const toUpdate = data.upsert ? rows.filter((row) => existingSlugs.has(row.slug)) : [];
     const toInsert = data.upsert ? rows.filter((row) => !existingSlugs.has(row.slug)) : rows;
