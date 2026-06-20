@@ -17,7 +17,7 @@ async function assertAdmin(supabase: any, userId: string) {
 const importSchema = z.object({
   payload: z.any(),
   default_category_id: z.string().uuid().optional().nullable(),
-  upsert: z.boolean().optional().default(true),
+  upsert: z.boolean().optional().default(false),
 });
 
 const ADMIN_PRODUCT_SELECT =
@@ -51,6 +51,33 @@ async function loadProductsBySlugs(supabaseAdmin: any, slugs: string[]) {
     products.push(...(data ?? []));
   }
   return products;
+}
+
+async function ensureUniqueSlugsForInsert(supabaseAdmin: any, rows: any[]) {
+  const bases = rows.map((row) => row.slug);
+  const suffixes = rows.map(() => 2);
+  const candidates = [...bases];
+
+  for (let pass = 0; pass < 100; pass++) {
+    const existing = await loadExistingSlugs(supabaseAdmin, Array.from(new Set(candidates)));
+    const seen = new Set<string>();
+    let changed = false;
+
+    for (let i = 0; i < candidates.length; i++) {
+      while (seen.has(candidates[i]) || existing.has(candidates[i])) {
+        candidates[i] = `${bases[i]}-${suffixes[i]}`;
+        suffixes[i] += 1;
+        changed = true;
+      }
+      seen.add(candidates[i]);
+    }
+
+    if (!changed) {
+      return rows.map((row, i) => ({ ...row, slug: candidates[i] }));
+    }
+  }
+
+  throw new Error("تعذر إنشاء روابط فريدة لكل المنتجات. راجع بيانات slug في الملف.");
 }
 
 async function insertProductsInBatches(supabaseAdmin: any, rows: any[]) {
