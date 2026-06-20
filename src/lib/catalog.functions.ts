@@ -211,7 +211,7 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
     if (typeof data.min_price === "number") q = q.gte("price", data.min_price);
     if (typeof data.max_price === "number") q = q.lte("price", data.max_price);
     if (typeof data.min_rating === "number") q = q.gte("rating", data.min_rating);
-    if (data.in_stock) q = q.gt("stock", 0);
+    if (data.in_stock) q = q.or("unlimited_stock.eq.true,stock.gt.0");
 
     switch (data.sort) {
       case "price-asc":
