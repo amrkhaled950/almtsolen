@@ -442,9 +442,26 @@ function ProductFormDialog({
           </div>
 
           <div className="grid grid-cols-3 gap-3">
-            <Field label={isAr ? "المخزون" : "Stock"} required><input type="number" min="0" className="input" value={form.stock} onChange={num("stock")} required /></Field>
+            <Field label={isAr ? "المخزون" : "Stock"}>
+              <input
+                type="number"
+                min="0"
+                className="input"
+                value={form.unlimited_stock ? "" : form.stock}
+                onChange={num("stock")}
+                disabled={form.unlimited_stock}
+                placeholder={form.unlimited_stock ? (isAr ? "غير محدود" : "Unlimited") : ""}
+              />
+            </Field>
             <Field label={isAr ? "عدد الصفحات" : "Pages"}><input type="number" min="0" className="input" value={form.pages ?? ""} onChange={(e) => set("pages", e.target.value ? Number(e.target.value) : null)} /></Field>
             <Field label="ISBN"><input className="input" value={form.isbn} onChange={(e) => set("isbn", e.target.value)} /></Field>
+          </div>
+          <div>
+            <Checkbox
+              checked={form.unlimited_stock}
+              onChange={(v) => set("unlimited_stock", v)}
+              label={isAr ? "متوفر دائماً (مخزون غير محدود)" : "Always in stock (unlimited)"}
+            />
           </div>
 
           <Field label={isAr ? "الوصف (عربي)" : "Description AR"}><textarea className="input min-h-[80px]" value={form.description_ar} onChange={(e) => set("description_ar", e.target.value)} /></Field>
