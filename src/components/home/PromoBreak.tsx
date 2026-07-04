@@ -42,10 +42,10 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
   return (
     <section className="container-page py-8">
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 40, scale: 0.94 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.55, ease: "easeOut" }}
+        transition={{ type: "spring", stiffness: 180, damping: 18, mass: 0.9 }}
         className="relative overflow-hidden rounded-[2rem] bg-[#8b1c17] text-primary-foreground shadow-elegant"
       >
         {/* Layered gradient backdrop */}
@@ -73,11 +73,22 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
           <div className="order-2 md:order-1 relative">
             {/* Sale ribbon */}
             <div className="inline-flex items-center gap-2 mb-5">
-              <span className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gold text-gold-foreground text-[11px] font-black tracking-[0.15em] uppercase shadow-lg">
+              <motion.span
+                initial={{ scale: 0, rotate: -30 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.2 }}
+                className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gold text-gold-foreground text-[11px] font-black tracking-[0.15em] uppercase shadow-lg"
+              >
                 <Flame className="h-3.5 w-3.5" />
                 {badgeLabel}
-              </span>
-              <Sparkles className="h-4 w-4 text-gold/80" />
+              </motion.span>
+              <motion.span
+                animate={{ rotate: [0, 20, -20, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Sparkles className="h-4 w-4 text-gold/80" />
+              </motion.span>
             </div>
 
             {author && (
@@ -127,24 +138,35 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
 
             {/* Main book cover */}
             <motion.div
-              initial={{ rotate: -12, y: 20 }}
-              whileInView={{ rotate: -6, y: 0 }}
+              initial={{ rotate: -25, y: 60, scale: 0.7, opacity: 0 }}
+              whileInView={{ rotate: -6, y: 0, scale: 1, opacity: 1 }}
               viewport={{ once: true }}
-              whileHover={{ rotate: 0, scale: 1.03 }}
-              transition={{ duration: 0.5, ease: "easeOut" }}
+              whileHover={{ rotate: 0, scale: 1.06, y: -6 }}
+              transition={{ type: "spring", stiffness: 200, damping: 14, delay: 0.15 }}
               className="relative"
             >
-              <img
-                src={product.cover_url || PLACEHOLDER}
-                alt={title}
-                className="relative w-44 md:w-56 lg:w-64 aspect-[3/4] object-cover rounded-lg shadow-2xl ring-1 ring-white/10"
-              />
-              {/* Corner discount badge on the cover */}
-              {discount > 0 && !badge && (
-                <span className="absolute -top-3 -end-3 grid h-16 w-16 place-items-center rounded-full bg-gold text-gold-foreground font-black text-sm shadow-xl rotate-12">
-                  -{discount}%
-                </span>
-              )}
+              <motion.div
+                animate={{ y: [0, -10, 0] }}
+                transition={{ duration: 3.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <img
+                  src={product.cover_url || PLACEHOLDER}
+                  alt={title}
+                  className="relative w-44 md:w-56 lg:w-64 aspect-[3/4] object-cover rounded-lg shadow-2xl ring-1 ring-white/10"
+                />
+                {/* Corner discount badge on the cover */}
+                {discount > 0 && !badge && (
+                  <motion.span
+                    initial={{ scale: 0, rotate: -180 }}
+                    whileInView={{ scale: 1, rotate: 12 }}
+                    viewport={{ once: true }}
+                    transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.5 }}
+                    className="absolute -top-3 -end-3 grid h-16 w-16 place-items-center rounded-full bg-gold text-gold-foreground font-black text-sm shadow-xl"
+                  >
+                    -{discount}%
+                  </motion.span>
+                )}
+              </motion.div>
             </motion.div>
           </div>
         </div>

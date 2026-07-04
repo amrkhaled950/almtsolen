@@ -149,12 +149,16 @@ function Home() {
               {heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Link to="/shop" className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary-foreground text-primary font-bold hover:bg-gold hover:text-gold-foreground transition-colors shadow-elegant">
-                {t("hero.cta", locale)} <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-              <Link to="/categories" className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-primary-foreground/40 hover:bg-primary-foreground/10 font-bold transition-colors">
-                {t("hero.cta2", locale)}
-              </Link>
+              <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+                <Link to="/shop" className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary-foreground text-primary font-bold hover:bg-gold hover:text-gold-foreground transition-colors shadow-elegant">
+                  {t("hero.cta", locale)} <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+                <Link to="/categories" className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-primary-foreground/40 hover:bg-primary-foreground/10 font-bold transition-colors">
+                  {t("hero.cta2", locale)}
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
 
@@ -200,19 +204,39 @@ function Home() {
               {isAr ? "الكل" : "All"} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
             </Link>
           </div>
-          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          <motion.div
+            className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3"
+            initial="hidden"
+            whileInView="show"
+            viewport={{ once: true, margin: "-40px" }}
+            variants={{ hidden: {}, show: { transition: { staggerChildren: 0.05 } } }}
+          >
             {rootCats.map((c: any) => (
-              <Link key={c.id} to="/shop" search={{ category: c.slug } as any}
-                className="flex flex-col items-center gap-2 bg-gradient-to-br from-[#a52822] via-[#8b1c17] to-[#6a1410] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-all hover:-translate-y-1 border border-[#8b1c17]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_6px_16px_-6px_rgba(139,28,23,0.55)] group">
-                <span className="text-3xl group-hover:scale-110 transition-transform [text-shadow:0_1px_2px_rgba(0,0,0,0.35),0_4px_10px_rgba(0,0,0,0.25)]">
-                  {c.icon || pickCategoryIcon(c.name_ar, c.name_en, c.slug)}
-                </span>
-                <span className="font-semibold text-xs leading-tight">
-                  {isAr ? c.name_ar : c.name_en}
-                </span>
-              </Link>
+              <motion.div
+                key={c.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20, scale: 0.7 },
+                  show: { opacity: 1, y: 0, scale: 1, transition: { type: "spring", stiffness: 400, damping: 15 } },
+                }}
+                whileHover={{ y: -6, scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <Link to="/shop" search={{ category: c.slug } as any}
+                  className="flex flex-col items-center gap-2 bg-gradient-to-br from-[#a52822] via-[#8b1c17] to-[#6a1410] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-shadow border border-[#8b1c17]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_6px_16px_-6px_rgba(139,28,23,0.55)] group">
+                  <motion.span
+                    className="text-3xl [text-shadow:0_1px_2px_rgba(0,0,0,0.35),0_4px_10px_rgba(0,0,0,0.25)]"
+                    whileHover={{ rotate: [0, -12, 12, -6, 0], scale: 1.15 }}
+                    transition={{ duration: 0.5 }}
+                  >
+                    {c.icon || pickCategoryIcon(c.name_ar, c.name_en, c.slug)}
+                  </motion.span>
+                  <span className="font-semibold text-xs leading-tight">
+                    {isAr ? c.name_ar : c.name_en}
+                  </span>
+                </Link>
+              </motion.div>
             ))}
-          </div>
+          </motion.div>
         </section>
       )}
 
