@@ -96,15 +96,15 @@ export function SiteHeader() {
         "sticky top-0 z-40 w-full border-b border-border/60 bg-background/95 backdrop-blur-md transition-shadow",
         scrolled && "shadow-card-soft",
       )}>
-        <div className="container-page flex h-16 md:h-20 items-center gap-4 md:gap-8">
+        <div className="container-page flex h-20 md:h-28 items-center gap-4 md:gap-8">
           {/* Mobile menu trigger */}
           <button className="lg:hidden -ms-2 p-2" onClick={() => setMobileOpen(true)} aria-label="Menu">
-            <Menu className="h-6 w-6" />
+            <Menu className="h-7 w-7" />
           </button>
 
           {/* Logo */}
           <Link to="/" className="flex items-center shrink-0">
-            <img src={logoUrl} alt={siteName} className="h-16 w-16 md:h-20 md:w-20 object-contain" />
+            <img src={logoUrl} alt={siteName} className="h-20 w-20 md:h-28 md:w-28 object-contain" />
           </Link>
 
           {/* Desktop nav */}
