@@ -221,11 +221,14 @@ function Home() {
 
       {/* ── Per-category sections (auto fallback if no custom carousels) ── */}
       {!hasCustomSections && (() => {
-        // Pool of promo picks: discounted bestsellers first, then any bestseller/new
+        // Pool of promo picks: discounted first, then bestsellers/new, then any category product
+        const allCatProducts = catProductQueries.flatMap((q: any) => q?.data?.products ?? []);
         const promoPool = [
+          ...allCatProducts.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
           ...bestsellers.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
           ...bestsellers,
           ...newArrivals,
+          ...allCatProducts,
         ].filter((p: any, i: number, arr: any[]) => arr.findIndex((x) => x.id === p.id) === i);
 
         const visibleCats = rootCats.filter((cat: any, i: number) => {
