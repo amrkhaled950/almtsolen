@@ -52,35 +52,53 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      initial={{ opacity: 0, y: 30, scale: 0.9 }}
+      whileInView={{ opacity: 1, y: 0, scale: 1 }}
       viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.4, delay: index * 0.05 }}
+      transition={{
+        type: "spring",
+        stiffness: 260,
+        damping: 18,
+        delay: index * 0.06,
+      }}
+      whileHover={{ y: -6 }}
       className="group"
     >
       <Link
         to="/product/$slug"
         params={{ slug: product.slug }}
-        className="block bg-card rounded-xl overflow-hidden shadow-card-soft hover:shadow-elegant transition-all duration-300 hover:-translate-y-1"
+        className="block bg-card rounded-xl overflow-hidden shadow-card-soft hover:shadow-elegant transition-shadow duration-300"
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-          <img
+          <motion.img
             src={cover}
             alt={title}
             loading="lazy"
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+            className="w-full h-full object-cover"
+            whileHover={{ scale: 1.08, rotate: -1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
           />
 
           <div className="absolute top-3 start-3 flex flex-col gap-1.5">
             {discount > 0 && (
-              <span className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-md">
+              <motion.span
+                initial={{ scale: 0, rotate: -20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 12, delay: 0.15 }}
+                className="bg-primary text-primary-foreground text-xs font-bold px-2 py-1 rounded-md"
+              >
                 -{discount}%
-              </span>
+              </motion.span>
             )}
             {product.is_new_arrival && (
-              <span className="bg-gold text-gold-foreground text-xs font-bold px-2 py-1 rounded-md">
+              <motion.span
+                initial={{ scale: 0, rotate: 20 }}
+                animate={{ scale: 1, rotate: 0 }}
+                transition={{ type: "spring", stiffness: 500, damping: 12, delay: 0.2 }}
+                className="bg-gold text-gold-foreground text-xs font-bold px-2 py-1 rounded-md"
+              >
                 {locale === "ar" ? "جديد" : "NEW"}
-              </span>
+              </motion.span>
             )}
             {!inStock && (
               <span className="bg-muted-foreground text-background text-xs font-bold px-2 py-1 rounded-md">
@@ -89,33 +107,39 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
             )}
           </div>
 
-          <button
+          <motion.button
             onClick={handleWishlist}
+            whileTap={{ scale: 0.8 }}
+            whileHover={{ scale: 1.15, rotate: -8 }}
+            transition={{ type: "spring", stiffness: 500, damping: 12 }}
             className={cn(
-              "absolute top-3 end-3 grid h-9 w-9 place-items-center rounded-full bg-background/90 backdrop-blur shadow-card-soft hover:scale-110 transition-transform",
+              "absolute top-3 end-3 grid h-9 w-9 place-items-center rounded-full bg-background/90 backdrop-blur shadow-card-soft",
               inWishlist && "text-primary",
             )}
             aria-label="Wishlist"
           >
             <Heart className={cn("h-4 w-4", inWishlist && "fill-current")} />
-          </button>
+          </motion.button>
 
           {/* Persistent cart icon — always visible */}
-          <button
+          <motion.button
             onClick={handleAdd}
             disabled={!inStock}
             aria-label={t("product.addToCart", locale)}
-            className="absolute bottom-3 end-3 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-elegant hover:bg-primary-hover hover:scale-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-0"
+            whileTap={{ scale: 0.85 }}
+            whileHover={{ scale: 1.15, rotate: 8 }}
+            transition={{ type: "spring", stiffness: 500, damping: 12 }}
+            className="absolute bottom-3 end-3 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-elegant hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-0 transition-opacity"
           >
             <ShoppingBag className="h-4 w-4" />
-          </button>
+          </motion.button>
 
           {/* Hover overlay — Buy Now + Add to Cart stacked */}
-          <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
+          <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-y-3 group-hover:translate-y-0 transition-all duration-300 ease-[cubic-bezier(0.34,1.56,0.64,1)]">
             <button
               onClick={handleBuyNow}
               disabled={!inStock}
-              className="w-full h-10 rounded-md bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed shadow-elegant"
+              className="w-full h-10 rounded-md bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-elegant"
             >
               <Zap className="h-4 w-4" />
               {locale === "ar" ? "اشترِ الآن" : "Buy Now"}
@@ -123,13 +147,14 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
             <button
               onClick={handleAdd}
               disabled={!inStock}
-              className="w-full h-10 rounded-md bg-background/95 backdrop-blur text-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-background disabled:opacity-50 disabled:cursor-not-allowed shadow-card-soft border border-border"
+              className="w-full h-10 rounded-md bg-background/95 backdrop-blur text-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-background hover:scale-[1.02] active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed shadow-card-soft border border-border"
             >
               <ShoppingBag className="h-4 w-4" />
               {t("product.addToCart", locale)}
             </button>
           </div>
         </div>
+
 
         <div className="p-3">
           <p className="text-xs text-muted-foreground mb-0.5 truncate">{author}</p>
