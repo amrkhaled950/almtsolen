@@ -3,7 +3,7 @@ import { useServerFn } from "@tanstack/react-start";
 import { useQueries, useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
-import { ArrowLeft, Sparkles, TrendingUp, ChevronRight } from "lucide-react";
+import { ArrowLeft, Sparkles, TrendingUp, ChevronRight, ChevronLeft } from "lucide-react";
 import { ProductGridSkeleton } from "../components/ui/skeletons";
 
 import { useLocale, t } from "../lib/i18n";
@@ -96,33 +96,38 @@ function Home() {
 
   return (
     <div>
-      {/* ── Hero ─────────────────────────────────────────────── */}
+      {/* ── Hero Slider ──────────────────────────────────────── */}
       <section className="relative overflow-hidden bg-gradient-hero text-primary-foreground">
         {heroImages.length > 0 && (
           <>
             {heroImages.map((img, i) => (
               <div
                 key={i}
-                className="absolute inset-0 bg-cover bg-center transition-opacity duration-1000"
-                style={{ backgroundImage: `url(${img.url})`, opacity: i === heroIdx ? 0.35 : 0 }}
+                className="absolute inset-0 bg-cover bg-center transition-opacity duration-[1200ms] ease-in-out"
+                style={{ backgroundImage: `url(${img.url})`, opacity: i === heroIdx ? 1 : 0 }}
               />
             ))}
-            <div className="absolute inset-0 bg-gradient-to-b from-primary/40 to-primary/80" />
+            <div className="absolute inset-0 bg-gradient-to-b from-primary/70 via-primary/60 to-primary/85" />
           </>
         )}
-        <div className="container-page relative py-16 md:py-24 text-center">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }}>
+        <div className="container-page relative py-20 md:py-32 text-center min-h-[420px] md:min-h-[560px] flex items-center justify-center">
+          <motion.div
+            key={heroIdx}
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+          >
             <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary-foreground/10 backdrop-blur text-xs font-semibold mb-5">
               <Sparkles className="h-3.5 w-3.5" />
               {t("hero.tag", locale)}
             </span>
-            <h1 className="font-display font-black text-4xl md:text-6xl leading-tight mb-5">
+            <h1 className="font-display font-black text-4xl md:text-6xl leading-tight mb-5 drop-shadow-lg">
               {heroTitle}
               {!settings?.hero_title_ar && !settings?.hero_title_en && (
                 <span className="block text-gold mt-2">{isAr ? "بين يديك" : "in your hands"}</span>
               )}
             </h1>
-            <p className="text-lg text-primary-foreground/80 mb-8 leading-relaxed max-w-xl mx-auto">
+            <p className="text-lg text-primary-foreground/90 mb-8 leading-relaxed max-w-xl mx-auto drop-shadow">
               {heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
@@ -133,19 +138,36 @@ function Home() {
                 {t("hero.cta2", locale)}
               </Link>
             </div>
-            {heroImages.length > 1 && (
-              <div className="flex justify-center gap-1.5 mt-8">
+          </motion.div>
+
+          {heroImages.length > 1 && (
+            <>
+              <button
+                onClick={() => setHeroIdx((i) => (i - 1 + heroImages.length) % heroImages.length)}
+                aria-label="Previous slide"
+                className="absolute start-3 md:start-6 top-1/2 -translate-y-1/2 grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/30 backdrop-blur border border-primary-foreground/25 transition-colors"
+              >
+                <ChevronLeft className="h-5 w-5 rtl:rotate-180" />
+              </button>
+              <button
+                onClick={() => setHeroIdx((i) => (i + 1) % heroImages.length)}
+                aria-label="Next slide"
+                className="absolute end-3 md:end-6 top-1/2 -translate-y-1/2 grid h-11 w-11 md:h-12 md:w-12 place-items-center rounded-full bg-primary-foreground/15 hover:bg-primary-foreground/30 backdrop-blur border border-primary-foreground/25 transition-colors"
+              >
+                <ChevronRight className="h-5 w-5 rtl:rotate-180" />
+              </button>
+              <div className="absolute bottom-5 left-1/2 -translate-x-1/2 flex justify-center gap-1.5">
                 {heroImages.map((_, i) => (
                   <button
                     key={i}
                     onClick={() => setHeroIdx(i)}
-                    className={`h-2 rounded-full transition-all ${i === heroIdx ? "w-8 bg-primary-foreground" : "w-2 bg-primary-foreground/40"}`}
+                    className={`h-2 rounded-full transition-all ${i === heroIdx ? "w-8 bg-primary-foreground" : "w-2 bg-primary-foreground/40 hover:bg-primary-foreground/70"}`}
                     aria-label={`Slide ${i + 1}`}
                   />
                 ))}
               </div>
-            )}
-          </motion.div>
+            </>
+          )}
         </div>
       </section>
 
