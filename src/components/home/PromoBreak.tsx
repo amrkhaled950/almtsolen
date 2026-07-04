@@ -73,11 +73,24 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
           <div className="order-2 md:order-1 relative">
             {/* Sale ribbon */}
             <div className="inline-flex items-center gap-2 mb-5">
-              <span className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gold text-gold-foreground text-[11px] font-black tracking-[0.15em] uppercase shadow-lg">
+              <motion.span
+                initial={{ scale: 0, rotate: -30 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                viewport={{ once: true }}
+                transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.2 }}
+                animate={{ scale: [1, 1.06, 1] }}
+                {...({ transition: { scale: { duration: 2, repeat: Infinity, ease: "easeInOut" } } } as any)}
+                className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gold text-gold-foreground text-[11px] font-black tracking-[0.15em] uppercase shadow-lg"
+              >
                 <Flame className="h-3.5 w-3.5" />
                 {badgeLabel}
-              </span>
-              <Sparkles className="h-4 w-4 text-gold/80" />
+              </motion.span>
+              <motion.span
+                animate={{ rotate: [0, 20, -20, 0], scale: [1, 1.2, 1] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+              >
+                <Sparkles className="h-4 w-4 text-gold/80" />
+              </motion.span>
             </div>
 
             {author && (
