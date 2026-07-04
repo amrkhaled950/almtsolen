@@ -238,9 +238,10 @@ function Home() {
 
       {/* ── Per-category sections (auto fallback if no custom carousels) ── */}
       {!hasCustomSections && (() => {
-        // Pool of promo picks: discounted first, then bestsellers/new, then any category product
+        // Promo pool: use admin-configured breaks first; otherwise auto-pick from discounted/bestsellers
+        const usingConfigured = configuredPromoBreaks.length > 0;
         const allCatProducts = catProductQueries.flatMap((q: any) => q?.data?.products ?? []);
-        const promoPool = [
+        const autoPool = [
           ...allCatProducts.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
           ...bestsellers.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
           ...bestsellers,
