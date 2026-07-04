@@ -38,6 +38,13 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
     toast.success(locale === "ar" ? "تمت الإضافة إلى السلة" : "Added to cart");
   };
 
+  const handleBuyNow = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!inStock) return;
+    addItem(product, 1);
+    navigate({ to: "/checkout" });
+  };
+
   const handleWishlist = (e: React.MouseEvent) => {
     e.preventDefault();
     wishlist.toggle(product.id);
