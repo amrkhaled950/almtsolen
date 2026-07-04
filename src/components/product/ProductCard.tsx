@@ -18,6 +18,7 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
   const addItem = useCart((s) => s.addItem);
   const wishlist = useWishlist();
   const inWishlist = wishlist.has(product.id);
+  const navigate = useNavigate();
 
   const inStock = product.unlimited_stock || product.stock > 0;
   const cover = product.cover_url || PLACEHOLDER;
