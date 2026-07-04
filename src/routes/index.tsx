@@ -185,8 +185,8 @@ function Home() {
           <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
             {rootCats.map((c: any) => (
               <Link key={c.id} to="/shop" search={{ category: c.slug } as any}
-                className="flex flex-col items-center gap-2 bg-[#8b1c17] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-all hover:-translate-y-1 border border-[#8b1c17] group">
-                <span className="text-3xl group-hover:scale-110 transition-transform [text-shadow:0_2px_6px_rgba(0,0,0,0.55),0_0_14px_rgba(0,0,0,0.35)]">
+                className="flex flex-col items-center gap-2 bg-gradient-to-br from-[#a52822] via-[#8b1c17] to-[#6a1410] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-all hover:-translate-y-1 border border-[#8b1c17]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_6px_16px_-6px_rgba(139,28,23,0.55)] group">
+                <span className="text-3xl group-hover:scale-110 transition-transform [text-shadow:0_1px_2px_rgba(0,0,0,0.35),0_4px_10px_rgba(0,0,0,0.25)]">
                   {c.icon || pickCategoryIcon(c.name_ar, c.name_en, c.slug)}
                 </span>
                 <span className="font-semibold text-xs leading-tight">
