@@ -11,8 +11,9 @@ import { toast } from "sonner";
 import { useLocale } from "@/lib/i18n";
 import { getShippingRates, upsertShippingRates, type GovernorateShipping } from "@/lib/shipping.functions";
 import { getSiteSettings, updateSiteSettings, type SiteSettings } from "@/lib/site-settings.functions";
-import { listCategoriesPublic } from "@/lib/catalog.functions";
+import { listCategoriesPublic, listProductsPublic } from "@/lib/catalog.functions";
 import { parseHomeSections, serializeHomeSections, type HomeSection } from "@/lib/home-sections";
+import { parsePromoBreaks, serializePromoBreaks, type PromoBreakItem } from "@/lib/promo-breaks";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export const Route = createFileRoute("/admin/settings")({
