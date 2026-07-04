@@ -85,6 +85,22 @@ function Home() {
     })),
   });
 
+  // Configured promo breaks (managed from admin)
+  const configuredBreaks = parsePromoBreaks(settings).filter((b) => b.enabled && b.product_slug);
+  const fetchProductBySlug = useServerFn(getProductPublic);
+  const promoBreakQueries = useQueries({
+    queries: configuredBreaks.map((b) => ({
+      queryKey: ["promo-break-product", b.product_slug],
+      queryFn: () => fetchProductBySlug({ data: { slug: b.product_slug } }),
+      staleTime: 5 * 60_000,
+    })),
+  });
+
+  const configuredPromoBreaks = configuredBreaks
+    .map((b, i) => ({ cfg: b, product: promoBreakQueries[i]?.data?.product }))
+    .filter((x): x is { cfg: typeof configuredBreaks[number]; product: NonNullable<typeof x.product> } => !!x.product);
+
+
   const heroTitle = (isAr ? settings?.hero_title_ar : settings?.hero_title_en) || t("hero.title", locale);
   const heroSubtitle = (isAr ? settings?.hero_subtitle_ar : settings?.hero_subtitle_en) || t("hero.subtitle", locale);
   const heroImages = settings?.hero_images ?? [];
