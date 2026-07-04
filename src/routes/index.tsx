@@ -186,7 +186,7 @@ function Home() {
             {rootCats.map((c: any) => (
               <Link key={c.id} to="/shop" search={{ category: c.slug } as any}
                 className="flex flex-col items-center gap-2 bg-[#8b1c17] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-all hover:-translate-y-1 border border-[#8b1c17] group">
-                <span className="text-3xl group-hover:scale-110 transition-transform">
+                <span className="text-3xl group-hover:scale-110 transition-transform [text-shadow:0_2px_6px_rgba(0,0,0,0.55),0_0_14px_rgba(0,0,0,0.35)]">
                   {c.icon || pickCategoryIcon(c.name_ar, c.name_en, c.slug)}
                 </span>
                 <span className="font-semibold text-xs leading-tight">
