@@ -100,11 +100,30 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
             <Heart className={cn("h-4 w-4", inWishlist && "fill-current")} />
           </button>
 
-          <div className="absolute inset-x-3 bottom-3 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
+          {/* Persistent cart icon — always visible */}
+          <button
+            onClick={handleAdd}
+            disabled={!inStock}
+            aria-label={t("product.addToCart", locale)}
+            className="absolute bottom-3 end-3 grid h-9 w-9 place-items-center rounded-full bg-primary text-primary-foreground shadow-elegant hover:bg-primary-hover hover:scale-110 transition-all disabled:opacity-50 disabled:cursor-not-allowed group-hover:opacity-0"
+          >
+            <ShoppingBag className="h-4 w-4" />
+          </button>
+
+          {/* Hover overlay — Buy Now + Add to Cart stacked */}
+          <div className="absolute inset-x-3 bottom-3 flex flex-col gap-2 opacity-0 group-hover:opacity-100 translate-y-2 group-hover:translate-y-0 transition-all">
+            <button
+              onClick={handleBuyNow}
+              disabled={!inStock}
+              className="w-full h-10 rounded-md bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed shadow-elegant"
+            >
+              <Zap className="h-4 w-4" />
+              {locale === "ar" ? "اشترِ الآن" : "Buy Now"}
+            </button>
             <button
               onClick={handleAdd}
               disabled={!inStock}
-              className="w-full h-10 rounded-md bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed shadow-elegant"
+              className="w-full h-10 rounded-md bg-background/95 backdrop-blur text-foreground font-bold text-sm flex items-center justify-center gap-2 hover:bg-background disabled:opacity-50 disabled:cursor-not-allowed shadow-card-soft border border-border"
             >
               <ShoppingBag className="h-4 w-4" />
               {t("product.addToCart", locale)}
