@@ -15,6 +15,15 @@ import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
 import { parsePromoBreaks } from "../lib/promo-breaks";
 import { pickCategoryIcon } from "../lib/category-icon";
+import hero1 from "../assets/hero1.jpg.asset.json";
+import hero2 from "../assets/hero2.jpg.asset.json";
+import hero3 from "../assets/hero3.jpg.asset.json";
+
+const DEFAULT_HERO_IMAGES = [
+  { url: hero1.url },
+  { url: hero2.url },
+  { url: hero3.url },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
