@@ -302,9 +302,27 @@ function Home() {
 
           // Insert promo break every 3 categories (not after the last one)
           const isBreakPoint = (vi + 1) % 3 === 0 && vi < visibleCats.length - 1;
-          if (isBreakPoint && promoPool[promoIdx]) {
-            nodes.push(<PromoBreak key={`promo-${vi}`} product={promoPool[promoIdx]} isAr={isAr} />);
-            promoIdx++;
+          if (isBreakPoint) {
+            if (usingConfigured) {
+              const item = configuredPromoBreaks[promoIdx % configuredPromoBreaks.length];
+              if (item) {
+                nodes.push(
+                  <PromoBreak
+                    key={`promo-${vi}`}
+                    product={item.product}
+                    isAr={isAr}
+                    badge={isAr ? item.cfg.badge_ar : item.cfg.badge_en}
+                    headline={isAr ? item.cfg.headline_ar : item.cfg.headline_en}
+                    cta={isAr ? item.cfg.cta_ar : item.cfg.cta_en}
+                    priceOverride={item.cfg.price_override}
+                  />
+                );
+                promoIdx++;
+              }
+            } else if (autoPool[promoIdx]) {
+              nodes.push(<PromoBreak key={`promo-${vi}`} product={autoPool[promoIdx]} isAr={isAr} />);
+              promoIdx++;
+            }
           }
         });
 
