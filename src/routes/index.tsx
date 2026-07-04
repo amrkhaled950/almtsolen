@@ -149,12 +149,16 @@ function Home() {
               {heroSubtitle}
             </p>
             <div className="flex flex-wrap gap-3 justify-center">
-              <Link to="/shop" className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary-foreground text-primary font-bold hover:bg-gold hover:text-gold-foreground transition-colors shadow-elegant">
-                {t("hero.cta", locale)} <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-              <Link to="/categories" className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-primary-foreground/40 hover:bg-primary-foreground/10 font-bold transition-colors">
-                {t("hero.cta2", locale)}
-              </Link>
+              <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+                <Link to="/shop" className="inline-flex items-center gap-2 h-12 px-7 rounded-full bg-primary-foreground text-primary font-bold hover:bg-gold hover:text-gold-foreground transition-colors shadow-elegant">
+                  {t("hero.cta", locale)} <ArrowLeft className="h-4 w-4 rtl:rotate-180" />
+                </Link>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05, y: -2 }} whileTap={{ scale: 0.95 }} transition={{ type: "spring", stiffness: 400, damping: 15 }}>
+                <Link to="/categories" className="inline-flex items-center gap-2 h-12 px-7 rounded-full border-2 border-primary-foreground/40 hover:bg-primary-foreground/10 font-bold transition-colors">
+                  {t("hero.cta2", locale)}
+                </Link>
+              </motion.div>
             </div>
           </motion.div>
 
