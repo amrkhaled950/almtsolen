@@ -78,8 +78,6 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
                 whileInView={{ scale: 1, rotate: 0 }}
                 viewport={{ once: true }}
                 transition={{ type: "spring", stiffness: 400, damping: 12, delay: 0.2 }}
-                animate={{ scale: [1, 1.06, 1] }}
-                {...({ transition: { scale: { duration: 2, repeat: Infinity, ease: "easeInOut" } } } as any)}
                 className="relative inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-gold text-gold-foreground text-[11px] font-black tracking-[0.15em] uppercase shadow-lg"
               >
                 <Flame className="h-3.5 w-3.5" />
