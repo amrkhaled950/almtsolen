@@ -9,6 +9,7 @@ import { ProductGridSkeleton } from "../components/ui/skeletons";
 import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { ProductCarousel } from "../components/home/ProductCarousel";
+import { PromoBreak } from "../components/home/PromoBreak";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
