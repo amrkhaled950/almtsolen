@@ -131,24 +131,24 @@ export function ProductCard({ product, index = 0 }: { product: UIProduct; index?
           </div>
         </div>
 
-        <div className="p-4">
-          <p className="text-xs text-muted-foreground mb-1 truncate">{author}</p>
-          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 mb-2 min-h-[2.5rem] group-hover:text-primary transition-colors">
+        <div className="p-3">
+          <p className="text-xs text-muted-foreground mb-0.5 truncate">{author}</p>
+          <h3 className="font-display font-bold text-sm leading-snug line-clamp-2 mb-1.5 group-hover:text-primary transition-colors">
             {title}
           </h3>
-          <div className="flex items-center gap-1 mb-2.5">
+          <div className="flex items-center gap-1 mb-1.5">
             <div className="flex">
               {Array.from({ length: 5 }).map((_, i) => (
                 <Star
                   key={i}
                   className={cn(
-                    "h-3.5 w-3.5",
+                    "h-3 w-3",
                     i < Math.round(product.rating || 0) ? "fill-gold text-gold" : "text-muted",
                   )}
                 />
               ))}
             </div>
-            <span className="text-xs text-muted-foreground">({product.reviews_count})</span>
+            <span className="text-[11px] text-muted-foreground">({product.reviews_count})</span>
           </div>
           <div className="flex items-baseline gap-2">
             <span className="font-display font-extrabold text-primary text-lg">
