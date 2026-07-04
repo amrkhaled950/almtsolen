@@ -112,7 +112,7 @@ function Home() {
 
   const heroTitle = (isAr ? settings?.hero_title_ar : settings?.hero_title_en) || t("hero.title", locale);
   const heroSubtitle = (isAr ? settings?.hero_subtitle_ar : settings?.hero_subtitle_en) || t("hero.subtitle", locale);
-  const heroImages = settings?.hero_images ?? [];
+  const heroImages = (settings?.hero_images && settings.hero_images.length > 0) ? settings.hero_images : DEFAULT_HERO_IMAGES;
 
   const [heroIdx, setHeroIdx] = useState(0);
   useEffect(() => {
