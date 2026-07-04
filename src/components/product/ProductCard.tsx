@@ -1,5 +1,5 @@
-import { Link } from "@tanstack/react-router";
-import { Star, ShoppingBag, Heart } from "lucide-react";
+import { Link, useNavigate } from "@tanstack/react-router";
+import { Star, ShoppingBag, Heart, Zap } from "lucide-react";
 import { motion } from "framer-motion";
 import type { UIProduct } from "../../lib/catalog.functions";
 import { useLocale, t, formatPrice } from "../../lib/i18n";
