@@ -42,10 +42,10 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
   return (
     <section className="container-page py-8">
       <motion.div
-        initial={{ opacity: 0, y: 24 }}
-        whileInView={{ opacity: 1, y: 0 }}
+        initial={{ opacity: 0, y: 40, scale: 0.94 }}
+        whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-80px" }}
-        transition={{ duration: 0.55, ease: "easeOut" }}
+        transition={{ type: "spring", stiffness: 180, damping: 18, mass: 0.9 }}
         className="relative overflow-hidden rounded-[2rem] bg-[#8b1c17] text-primary-foreground shadow-elegant"
       >
         {/* Layered gradient backdrop */}
