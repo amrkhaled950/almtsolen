@@ -9,6 +9,7 @@ import { ProductGridSkeleton } from "../components/ui/skeletons";
 import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { ProductCarousel } from "../components/home/ProductCarousel";
+import { PromoBreak } from "../components/home/PromoBreak";
 import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
@@ -219,49 +220,75 @@ function Home() {
       })}
 
       {/* ── Per-category sections (auto fallback if no custom carousels) ── */}
-      {!hasCustomSections && rootCats.map((cat: any, i: number) => {
-        const subs = subCatsOf(cat.id);
-        const products = catProductQueries[i]?.data?.products ?? [];
-        const loading  = catProductQueries[i]?.isLoading;
-        if (!loading && products.length === 0) return null;
-        return (
-          <section key={cat.id} className="container-page py-10">
-            <div className="flex items-end justify-between mb-5">
-              <div className="flex items-center gap-3">
-                <span className="text-3xl">{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
-                <div>
-                  <h2 className="font-display font-extrabold text-2xl md:text-3xl">
-                    {isAr ? cat.name_ar : cat.name_en}
-                  </h2>
-                  {subs.length > 0 && (
-                    <div className="flex flex-wrap gap-1.5 mt-1.5">
-                      {subs.map((sub: any) => (
-                        <Link key={sub.id} to="/shop" search={{ category: sub.slug } as any}
-                          className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary text-xs font-medium transition-colors">
-                          {sub.icon && <span>{sub.icon}</span>}
-                          {isAr ? sub.name_ar : sub.name_en}
-                        </Link>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <Link to="/shop" search={{ category: cat.slug } as any}
-                className="text-sm text-primary font-semibold hover:underline flex items-center gap-1 shrink-0">
-                {isAr ? "عرض الكل" : "View all"} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-              </Link>
-            </div>
-            {loading ? (
-              <ProductGridSkeleton count={4} />
+      {!hasCustomSections && (() => {
+        // Pool of promo picks: discounted bestsellers first, then any bestseller/new
+        const promoPool = [
+          ...bestsellers.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
+          ...bestsellers,
+          ...newArrivals,
+        ].filter((p: any, i: number, arr: any[]) => arr.findIndex((x) => x.id === p.id) === i);
 
-            ) : (
-              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-                {products.map((p: any, pi: number) => <ProductCard key={p.id} product={p} index={pi} />)}
+        const visibleCats = rootCats.filter((cat: any, i: number) => {
+          const products = catProductQueries[i]?.data?.products ?? [];
+          const loading = catProductQueries[i]?.isLoading;
+          return loading || products.length > 0;
+        });
+
+        const nodes: React.ReactNode[] = [];
+        let promoIdx = 0;
+        visibleCats.forEach((cat: any, vi: number) => {
+          const originalIdx = rootCats.indexOf(cat);
+          const products = catProductQueries[originalIdx]?.data?.products ?? [];
+          const loading = catProductQueries[originalIdx]?.isLoading;
+          const subs = subCatsOf(cat.id);
+
+          nodes.push(
+            <section key={cat.id} className="container-page py-10">
+              <div className="flex items-end justify-between mb-5">
+                <div className="flex items-center gap-3">
+                  <span className="text-3xl">{cat.icon || pickCategoryIcon(cat.name_ar, cat.name_en, cat.slug)}</span>
+                  <div>
+                    <h2 className="font-display font-extrabold text-2xl md:text-3xl">
+                      {isAr ? cat.name_ar : cat.name_en}
+                    </h2>
+                    {subs.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 mt-1.5">
+                        {subs.map((sub: any) => (
+                          <Link key={sub.id} to="/shop" search={{ category: sub.slug } as any}
+                            className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-muted hover:bg-primary/10 hover:text-primary text-xs font-medium transition-colors">
+                            {sub.icon && <span>{sub.icon}</span>}
+                            {isAr ? sub.name_ar : sub.name_en}
+                          </Link>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+                <Link to="/shop" search={{ category: cat.slug } as any}
+                  className="text-sm text-primary font-semibold hover:underline flex items-center gap-1 shrink-0">
+                  {isAr ? "عرض الكل" : "View all"} <ChevronRight className="h-4 w-4 rtl:rotate-180" />
+                </Link>
               </div>
-            )}
-          </section>
-        );
-      })}
+              {loading ? (
+                <ProductGridSkeleton count={4} />
+              ) : (
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+                  {products.map((p: any, pi: number) => <ProductCard key={p.id} product={p} index={pi} />)}
+                </div>
+              )}
+            </section>
+          );
+
+          // Insert promo break every 3 categories (not after the last one)
+          const isBreakPoint = (vi + 1) % 3 === 0 && vi < visibleCats.length - 1;
+          if (isBreakPoint && promoPool[promoIdx]) {
+            nodes.push(<PromoBreak key={`promo-${vi}`} product={promoPool[promoIdx]} isAr={isAr} />);
+            promoIdx++;
+          }
+        });
+
+        return nodes;
+      })()}
 
       {/* ── Bestsellers ──────────────────────────────────────── */}
       {bestsellers.length > 0 && (
