@@ -32,6 +32,21 @@ function Checkout() {
     queryFn: () => fetchRatesFn(),
   });
 
+  const [form, setForm] = useState({
+    full_name: "",
+    phone: "",
+    email: "",
+    governorate: "",
+    city: "",
+    street: "",
+    building: "",
+    apartment: "",
+    notes: "",
+  });
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [busy, setBusy] = useState(false);
+  const [success, setSuccess] = useState<{ order_number: string } | null>(null);
+
   const getShippingPrice = () => {
     if (subtotal >= 2000) return 0;
     if (!form.governorate || !ratesData?.rates.length) return 50;
@@ -61,21 +76,6 @@ function Checkout() {
       toast.error(e?.message || "Invalid coupon");
     } finally { setCouponBusy(false); }
   };
-
-  const [form, setForm] = useState({
-    full_name: "",
-    phone: "",
-    email: "",
-    governorate: "",
-    city: "",
-    street: "",
-    building: "",
-    apartment: "",
-    notes: "",
-  });
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [busy, setBusy] = useState(false);
-  const [success, setSuccess] = useState<{ order_number: string } | null>(null);
 
   const setField = (k: keyof typeof form, v: string) => {
     setForm((s) => ({ ...s, [k]: v }));
