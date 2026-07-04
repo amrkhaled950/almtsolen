@@ -15,6 +15,15 @@ import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
 import { parsePromoBreaks } from "../lib/promo-breaks";
 import { pickCategoryIcon } from "../lib/category-icon";
+import hero1 from "../assets/hero1.jpg.asset.json";
+import hero2 from "../assets/hero2.jpg.asset.json";
+import hero3 from "../assets/hero3.jpg.asset.json";
+
+const DEFAULT_HERO_IMAGES = [
+  { url: hero1.url },
+  { url: hero2.url },
+  { url: hero3.url },
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -103,7 +112,7 @@ function Home() {
 
   const heroTitle = (isAr ? settings?.hero_title_ar : settings?.hero_title_en) || t("hero.title", locale);
   const heroSubtitle = (isAr ? settings?.hero_subtitle_ar : settings?.hero_subtitle_en) || t("hero.subtitle", locale);
-  const heroImages = settings?.hero_images ?? [];
+  const heroImages = (settings?.hero_images && settings.hero_images.length > 0) ? settings.hero_images : DEFAULT_HERO_IMAGES;
 
   const [heroIdx, setHeroIdx] = useState(0);
   useEffect(() => {
