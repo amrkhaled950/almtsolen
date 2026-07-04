@@ -11,8 +11,9 @@ import { toast } from "sonner";
 import { useLocale } from "@/lib/i18n";
 import { getShippingRates, upsertShippingRates, type GovernorateShipping } from "@/lib/shipping.functions";
 import { getSiteSettings, updateSiteSettings, type SiteSettings } from "@/lib/site-settings.functions";
-import { listCategoriesPublic } from "@/lib/catalog.functions";
+import { listCategoriesPublic, listProductsPublic } from "@/lib/catalog.functions";
 import { parseHomeSections, serializeHomeSections, type HomeSection } from "@/lib/home-sections";
+import { parsePromoBreaks, serializePromoBreaks, type PromoBreakItem } from "@/lib/promo-breaks";
 import { ImageUpload } from "@/components/admin/ImageUpload";
 
 export const Route = createFileRoute("/admin/settings")({
@@ -605,7 +606,145 @@ function PromoTab({ isAr, s, set, save, saving }: { isAr: boolean; s: FormState;
         </div>
       </div>
 
+      {/* Promo Breaks between category sections */}
+      <PromoBreaksCard isAr={isAr} s={s} set={set} />
+
       <SaveBar onSave={save} saving={saving} isAr={isAr} />
+    </div>
+  );
+}
+
+/* ── Promo Breaks card (used inside PromoTab) ─────────── */
+function PromoBreaksCard({ isAr, s, set }: { isAr: boolean; s: FormState; set: any }) {
+  const items = parsePromoBreaks(s);
+  const fetchProducts = useServerFn(listProductsPublic);
+  const { data: prodData } = useQuery({
+    queryKey: ["admin-all-products-picker"],
+    queryFn: () => fetchProducts({ data: { limit: 500 } }),
+    staleTime: 60_000,
+  });
+  const products = (prodData?.products ?? []) as any[];
+
+  const update = (next: PromoBreakItem[]) => {
+    set("custom_strings", serializePromoBreaks(next, s.custom_strings));
+  };
+  const patch = (i: number, p: Partial<PromoBreakItem>) =>
+    update(items.map((it, idx) => (idx === i ? { ...it, ...p } : it)));
+  const move = (i: number, dir: -1 | 1) => {
+    const j = i + dir;
+    if (j < 0 || j >= items.length) return;
+    const next = [...items];
+    [next[i], next[j]] = [next[j], next[i]];
+    update(next);
+  };
+  const add = () =>
+    update([
+      ...items,
+      {
+        id: Math.random().toString(36).slice(2, 10),
+        product_slug: products[0]?.slug ?? "",
+        badge_ar: "",
+        badge_en: "",
+        headline_ar: "",
+        headline_en: "",
+        cta_ar: "",
+        cta_en: "",
+        price_override: null,
+        enabled: true,
+      },
+    ]);
+  const remove = (i: number) => update(items.filter((_, idx) => idx !== i));
+
+  return (
+    <div className="rounded-2xl border border-border bg-card shadow-card-soft p-6 space-y-4">
+      <div className="flex items-start justify-between gap-3">
+        <div>
+          <h3 className="font-bold">{isAr ? "الفواصل الإعلانية بين التصنيفات" : "Promo breaks between category sections"}</h3>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {isAr
+              ? "بانر منتج مميز يظهر بعد كل 3 تصنيفات في الصفحة الرئيسية. يتم عرضها بالترتيب بشكل دوري."
+              : "A featured-product banner shown after every 3 category sections on the home page. Cycles through the list."}
+          </p>
+        </div>
+        <button
+          onClick={add}
+          className="shrink-0 inline-flex items-center gap-1.5 h-9 px-3 rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary-hover"
+        >
+          <Plus className="h-4 w-4" /> {isAr ? "إضافة فاصل" : "Add break"}
+        </button>
+      </div>
+
+      {items.length === 0 && (
+        <div className="text-sm text-muted-foreground text-center py-6 bg-muted/40 rounded-lg">
+          {isAr ? "لا يوجد فواصل بعد. سيتم اختيار منتجات تلقائياً." : "No breaks yet. Products will be auto-selected."}
+        </div>
+      )}
+
+      {items.map((it, i) => {
+        const selected = products.find((p) => p.slug === it.product_slug);
+        return (
+          <div key={it.id} className="rounded-xl border border-border p-4 space-y-3 bg-background">
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-2 min-w-0">
+                <span className="text-xs font-bold text-muted-foreground">#{i + 1}</span>
+                <span className="text-sm font-semibold truncate">
+                  {selected ? (isAr ? selected.title_ar : selected.title_en) : (isAr ? "اختر منتج" : "Pick a product")}
+                </span>
+              </div>
+              <div className="flex items-center gap-1 shrink-0">
+                <label className="inline-flex items-center gap-1 text-xs text-muted-foreground me-1">
+                  <input type="checkbox" checked={it.enabled} onChange={(e) => patch(i, { enabled: e.target.checked })} />
+                  {isAr ? "مفعل" : "Enabled"}
+                </label>
+                <button onClick={() => move(i, -1)} disabled={i === 0} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ArrowUp className="h-4 w-4" /></button>
+                <button onClick={() => move(i, 1)} disabled={i === items.length - 1} className="p-1.5 rounded hover:bg-muted disabled:opacity-30"><ArrowDown className="h-4 w-4" /></button>
+                <button onClick={() => remove(i)} className="p-1.5 rounded text-destructive hover:bg-destructive/10"><Trash2 className="h-4 w-4" /></button>
+              </div>
+            </div>
+
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Field label={isAr ? "المنتج" : "Product"}>
+                <select
+                  value={it.product_slug}
+                  onChange={(e) => patch(i, { product_slug: e.target.value })}
+                  className="w-full h-10 px-3 rounded-lg border border-input bg-background text-sm focus:outline-none focus:border-primary"
+                >
+                  <option value="">{isAr ? "اختر منتج…" : "Select product…"}</option>
+                  {products.map((p) => (
+                    <option key={p.id} value={p.slug}>{isAr ? p.title_ar : p.title_en}</option>
+                  ))}
+                </select>
+              </Field>
+              <Field label={isAr ? "سعر مخصص (اختياري)" : "Custom price (optional)"}>
+                <TextInput
+                  type="number"
+                  value={it.price_override ?? ""}
+                  onChange={(v) => patch(i, { price_override: v === "" ? null : Number(v) || null })}
+                  placeholder={selected ? String(selected.price) : ""}
+                />
+              </Field>
+              <Field label={isAr ? "شارة (عربي)" : "Badge (Arabic)"}>
+                <TextInput value={it.badge_ar} onChange={(v) => patch(i, { badge_ar: v })} placeholder="عرض حصري" />
+              </Field>
+              <Field label={isAr ? "شارة (إنجليزي)" : "Badge (English)"}>
+                <TextInput value={it.badge_en} onChange={(v) => patch(i, { badge_en: v })} placeholder="Exclusive deal" />
+              </Field>
+              <Field label={isAr ? "عنوان مخصص (عربي)" : "Custom headline (Arabic)"}>
+                <TextInput value={it.headline_ar} onChange={(v) => patch(i, { headline_ar: v })} placeholder={isAr ? "اتركه فارغ لعرض اسم الكتاب" : ""} />
+              </Field>
+              <Field label={isAr ? "عنوان مخصص (إنجليزي)" : "Custom headline (English)"}>
+                <TextInput value={it.headline_en} onChange={(v) => patch(i, { headline_en: v })} placeholder="Leave empty to use book title" />
+              </Field>
+              <Field label={isAr ? "نص الزر (عربي)" : "Button text (Arabic)"}>
+                <TextInput value={it.cta_ar} onChange={(v) => patch(i, { cta_ar: v })} placeholder="اطلبه الآن" />
+              </Field>
+              <Field label={isAr ? "نص الزر (إنجليزي)" : "Button text (English)"}>
+                <TextInput value={it.cta_en} onChange={(v) => patch(i, { cta_en: v })} placeholder="Shop now" />
+              </Field>
+            </div>
+          </div>
+        );
+      })}
     </div>
   );
 }

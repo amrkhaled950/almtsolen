@@ -10,9 +10,10 @@ import { useLocale, t } from "../lib/i18n";
 import { ProductCard } from "../components/product/ProductCard";
 import { ProductCarousel } from "../components/home/ProductCarousel";
 import { PromoBreak } from "../components/home/PromoBreak";
-import { listCategoriesPublic, listProductsPublic } from "../lib/catalog.functions";
+import { listCategoriesPublic, listProductsPublic, getProductPublic } from "../lib/catalog.functions";
 import { useSiteSettings } from "../lib/use-site-settings";
 import { parseHomeSections } from "../lib/home-sections";
+import { parsePromoBreaks } from "../lib/promo-breaks";
 import { pickCategoryIcon } from "../lib/category-icon";
 
 export const Route = createFileRoute("/")({
@@ -83,6 +84,22 @@ function Home() {
       enabled: !!slug && !hasCustomSections,
     })),
   });
+
+  // Configured promo breaks (managed from admin)
+  const configuredBreaks = parsePromoBreaks(settings).filter((b) => b.enabled && b.product_slug);
+  const fetchProductBySlug = useServerFn(getProductPublic);
+  const promoBreakQueries = useQueries({
+    queries: configuredBreaks.map((b) => ({
+      queryKey: ["promo-break-product", b.product_slug],
+      queryFn: () => fetchProductBySlug({ data: { slug: b.product_slug } }),
+      staleTime: 5 * 60_000,
+    })),
+  });
+
+  const configuredPromoBreaks = configuredBreaks
+    .map((b, i) => ({ cfg: b, product: promoBreakQueries[i]?.data?.product }))
+    .filter((x): x is { cfg: typeof configuredBreaks[number]; product: NonNullable<typeof x.product> } => !!x.product);
+
 
   const heroTitle = (isAr ? settings?.hero_title_ar : settings?.hero_title_en) || t("hero.title", locale);
   const heroSubtitle = (isAr ? settings?.hero_subtitle_ar : settings?.hero_subtitle_en) || t("hero.subtitle", locale);
@@ -221,9 +238,10 @@ function Home() {
 
       {/* ── Per-category sections (auto fallback if no custom carousels) ── */}
       {!hasCustomSections && (() => {
-        // Pool of promo picks: discounted first, then bestsellers/new, then any category product
+        // Promo pool: use admin-configured breaks first; otherwise auto-pick from discounted/bestsellers
+        const usingConfigured = configuredPromoBreaks.length > 0;
         const allCatProducts = catProductQueries.flatMap((q: any) => q?.data?.products ?? []);
-        const promoPool = [
+        const autoPool = [
           ...allCatProducts.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
           ...bestsellers.filter((p: any) => p.compare_at_price && p.compare_at_price > p.price),
           ...bestsellers,
@@ -284,9 +302,27 @@ function Home() {
 
           // Insert promo break every 3 categories (not after the last one)
           const isBreakPoint = (vi + 1) % 3 === 0 && vi < visibleCats.length - 1;
-          if (isBreakPoint && promoPool[promoIdx]) {
-            nodes.push(<PromoBreak key={`promo-${vi}`} product={promoPool[promoIdx]} isAr={isAr} />);
-            promoIdx++;
+          if (isBreakPoint) {
+            if (usingConfigured) {
+              const item = configuredPromoBreaks[promoIdx % configuredPromoBreaks.length];
+              if (item) {
+                nodes.push(
+                  <PromoBreak
+                    key={`promo-${vi}`}
+                    product={item.product}
+                    isAr={isAr}
+                    badge={isAr ? item.cfg.badge_ar : item.cfg.badge_en}
+                    headline={isAr ? item.cfg.headline_ar : item.cfg.headline_en}
+                    cta={isAr ? item.cfg.cta_ar : item.cfg.cta_en}
+                    priceOverride={item.cfg.price_override}
+                  />
+                );
+                promoIdx++;
+              }
+            } else if (autoPool[promoIdx]) {
+              nodes.push(<PromoBreak key={`promo-${vi}`} product={autoPool[promoIdx]} isAr={isAr} />);
+              promoIdx++;
+            }
           }
         });
 
