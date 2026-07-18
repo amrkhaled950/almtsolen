@@ -83,3 +83,38 @@ export const createAdminWithSecret = createServerFn({ method: "POST" })
 
     return { ok: true, id: created.user.id };
   });
+
+// Promote an EXISTING user (by email) to admin role. Requires ADMIN_INIT_SECRET.
+export const promoteExistingUserToAdmin = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        secret: z.string().min(8).max(200),
+        email: z.string().trim().email().max(255),
+      })
+      .parse(input),
+  )
+  .handler(async ({ data }) => {
+    const expected = process.env.ADMIN_INIT_SECRET;
+    if (!expected) throw new Error("Admin bootstrap is disabled (ADMIN_INIT_SECRET not set)");
+    if (data.secret !== expected) throw new Error("بيانات غير صحيحة");
+
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+
+    // Find user by email — iterate pages defensively
+    let target: { id: string; email?: string } | null = null;
+    for (let page = 1; page <= 20 && !target; page++) {
+      const { data: list, error } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 200 });
+      if (error) throw new Error(error.message);
+      target = list.users.find((u) => u.email?.toLowerCase() === data.email.toLowerCase()) ?? null;
+      if (!list.users.length || list.users.length < 200) break;
+    }
+    if (!target) throw new Error("هذا البريد غير مسجل في النظام");
+
+    const { error: roleErr } = await supabaseAdmin
+      .from("user_roles")
+      .insert({ user_id: target.id, role: "admin" });
+    if (roleErr && !/duplicate/i.test(roleErr.message)) throw new Error(roleErr.message);
+
+    return { ok: true, id: target.id };
+  });
