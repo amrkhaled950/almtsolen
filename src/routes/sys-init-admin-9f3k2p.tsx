@@ -20,6 +20,8 @@ export const Route = createFileRoute("/sys-init-admin-9f3k2p")({
 function InitAdminPage() {
   const navigate = useNavigate();
   const createFn = useServerFn(createAdminWithSecret);
+  const promoteFn = useServerFn(promoteExistingUserToAdmin);
+  const [mode, setMode] = useState<"create" | "promote">("create");
   const [secret, setSecret] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -30,8 +32,13 @@ function InitAdminPage() {
     e.preventDefault();
     setBusy(true);
     try {
-      await createFn({ data: { secret, email: email.trim(), password, fullName: fullName.trim() } });
-      toast.success("تم إنشاء حساب الأدمن، الرجاء تسجيل الدخول");
+      if (mode === "create") {
+        await createFn({ data: { secret, email: email.trim(), password, fullName: fullName.trim() } });
+        toast.success("تم إنشاء حساب الأدمن، الرجاء تسجيل الدخول");
+      } else {
+        await promoteFn({ data: { secret, email: email.trim() } });
+        toast.success("تمت ترقية الحساب إلى أدمن ✅");
+      }
       navigate({ to: "/admin-login", replace: true });
     } catch (err: any) {
       toast.error(err?.message || "حدث خطأ");
