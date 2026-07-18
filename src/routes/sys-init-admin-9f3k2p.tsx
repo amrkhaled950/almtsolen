@@ -2,7 +2,7 @@ import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 import { Loader2, KeyRound, AlertTriangle } from "lucide-react";
 import { useServerFn } from "@tanstack/react-start";
-import { createAdminWithSecret } from "@/lib/customer-auth.functions";
+import { createAdminWithSecret, promoteExistingUserToAdmin } from "@/lib/customer-auth.functions";
 import { toast } from "sonner";
 
 // Hidden, obscure path. NOT linked from any UI. Requires ADMIN_INIT_SECRET.
