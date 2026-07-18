@@ -65,11 +65,26 @@ function InitAdminPage() {
           <span>لا تشارك مفتاح التهيئة مع أحد. بعد إنشاء أول مسؤول، أضف الباقي من لوحة التحكم.</span>
         </div>
 
+        <div className="flex rounded-lg border border-border p-1 mb-4 text-sm">
+          <button type="button" onClick={() => setMode("create")}
+            className={`flex-1 h-9 rounded-md font-medium ${mode === "create" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            إنشاء حساب جديد
+          </button>
+          <button type="button" onClick={() => setMode("promote")}
+            className={`flex-1 h-9 rounded-md font-medium ${mode === "promote" ? "bg-primary text-primary-foreground" : "text-muted-foreground"}`}>
+            ترقية حساب موجود
+          </button>
+        </div>
+
         <form onSubmit={onSubmit} className="space-y-3">
           <Field label="مفتاح التهيئة (سر)" type="password" value={secret} onChange={setSecret} required />
-          <Field label="الاسم الكامل" value={fullName} onChange={setFullName} required />
           <Field label="البريد الإلكتروني" type="email" value={email} onChange={setEmail} required />
-          <Field label="كلمة المرور (10 أحرف على الأقل)" type="password" value={password} onChange={setPassword} required />
+          {mode === "create" && (
+            <>
+              <Field label="الاسم الكامل" value={fullName} onChange={setFullName} required />
+              <Field label="كلمة المرور (10 أحرف على الأقل)" type="password" value={password} onChange={setPassword} required />
+            </>
+          )}
 
           <button
             type="submit"
@@ -77,7 +92,7 @@ function InitAdminPage() {
             className="w-full h-11 rounded-lg bg-primary text-primary-foreground font-bold hover:bg-primary-hover disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {busy && <Loader2 className="h-4 w-4 animate-spin" />}
-            إنشاء حساب الأدمن
+            {mode === "create" ? "إنشاء حساب الأدمن" : "ترقية إلى أدمن"}
           </button>
         </form>
       </div>
