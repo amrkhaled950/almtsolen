@@ -249,8 +249,22 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
           "جدول product_categories غير موجود في قاعدة البيانات. نفّذ SQL الخاص بالجدول أولاً (db/product_categories_junction.sql)."
         );
       }
+
+      const { data: savedLinks, error: verifyErr } = await supabaseAdmin
+        .from("product_categories" as any)
+        .select("category_id")
+        .eq("product_id", productId);
+      if (verifyErr) throw new Error(`فشل التأكد من التصنيفات بعد الحفظ: ${verifyErr.message}`);
+
+      const savedIds = new Set((savedLinks ?? []).map((link: any) => link.category_id));
+      const expectedIds = new Set(catIds);
+      const sameCount = savedIds.size === expectedIds.size;
+      const sameValues = catIds.every((categoryId) => savedIds.has(categoryId));
+      if (!sameCount || !sameValues) {
+        throw new Error("تم إرسال الحفظ لكن التصنيفات لم تُسجل في قاعدة البيانات. راجع صلاحيات product_categories و service role key.");
+      }
     }
-    return { ok: true };
+    return { ok: true, productId, category_ids: catIds, category_id: primaryCat, display_order: payload.display_order };
   });
 
 
