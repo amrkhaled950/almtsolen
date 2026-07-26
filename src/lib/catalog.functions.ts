@@ -101,6 +101,7 @@ export const listProductsPublic = createServerFn({ method: "GET" })
   .handler(async ({ data }): Promise<{ products: UIProduct[] }> => {
     const supabase = getPublicClient();
     let categoryId: string | null = null;
+    let categoryProductIds: string[] | null = null;
     if (data.category_slug) {
       const { data: cat } = await supabase
         .from("categories")
@@ -109,18 +110,35 @@ export const listProductsPublic = createServerFn({ method: "GET" })
         .maybeSingle();
       categoryId = cat?.id ?? null;
       if (!categoryId) return { products: [] };
+      try {
+        const { data: links } = await supabase
+          .from("product_categories" as any)
+          .select("product_id")
+          .eq("category_id", categoryId);
+        categoryProductIds = Array.from(new Set((links ?? []).map((l: any) => l.product_id)));
+      } catch {
+        categoryProductIds = null;
+      }
     }
     const buildQuery = () => {
       let q = supabase
         .from("products")
         .select(PRODUCT_COLS)
         .eq("is_active", true);
-      if (categoryId) q = q.eq("category_id", categoryId);
+      if (categoryId) {
+        if (categoryProductIds && categoryProductIds.length) {
+          const list = categoryProductIds.map((id) => `"${id}"`).join(",");
+          q = q.or(`category_id.eq.${categoryId},id.in.(${list})`);
+        } else {
+          q = q.eq("category_id", categoryId);
+        }
+      }
       if (data.featured) q = q.eq("is_featured", true);
       if (data.bestseller) q = q.eq("is_bestseller", true);
       if (data.new_arrival) q = q.eq("is_new_arrival", true);
       return q;
     };
+
 
     if (data.limit) {
       const { data: rows, error } = await buildQuery()
