@@ -144,11 +144,13 @@ export const listProductsPublic = createServerFn({ method: "GET" })
 
     if (data.limit) {
       const { data: rows, error } = await buildQuery()
+        .order("display_order" as any, { ascending: true })
         .order("created_at", { ascending: false })
         .limit(data.limit);
       if (error) throw new Error(error.message);
       return { products: (rows ?? []) as UIProduct[] };
     }
+
 
     // Keyset pagination by id to bypass PostgREST db-max-rows cap on range/offset.
     const PAGE = 500;
