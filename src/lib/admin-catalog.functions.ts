@@ -110,7 +110,7 @@ const productInput = z.object({
   description_en: z.string().trim().max(2000).optional().or(z.literal("")),
   price: z.number().min(0).max(1000000),
   compare_at_price: z.number().min(0).max(1000000).optional().nullable(),
-  cover_url: z.string().trim().max(1000).optional().or(z.literal("")),
+  cover_url: z.string().trim().max(5_000_000).optional().or(z.literal("")),
   category_id: z.string().uuid().optional().nullable(),
   category_ids: z.array(z.string().uuid()).optional(),
   pages: z.number().int().min(0).max(20000).optional().nullable(),
