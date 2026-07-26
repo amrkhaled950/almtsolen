@@ -309,6 +309,7 @@ function ProductsPage() {
         <ProductFormDialog
           product={editing}
           categories={categories}
+          allProducts={products}
           onClose={() => { setShowForm(false); setEditing(null); }}
           onSave={async (payload) => {
             try {
