@@ -254,25 +254,36 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
     if (res.error) throw new Error(`فشل حفظ المنتج: ${res.error.message}`);
     productId = res.id;
 
-    // Sync junction table. Surface errors so the admin knows why multi-category didn't stick.
+    // Sync junction table via SECURITY DEFINER RPC (avoids RLS edge cases on self-host).
     if (productId && data.category_ids) {
-      const { error: delErr } = await supabaseAdmin
-        .from("product_categories" as any)
-        .delete()
-        .eq("product_id", productId);
-      if (delErr && !/relation .* does not exist|schema cache/i.test(delErr.message)) {
-        throw new Error(`فشل تحديث التصنيفات (delete): ${delErr.message}`);
-      }
-      if (!delErr && catIds.length) {
-        const { error: insErr } = await supabaseAdmin
-          .from("product_categories" as any)
-          .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
-        if (insErr) throw new Error(`فشل تحديث التصنيفات (insert): ${insErr.message}`);
-      }
-      if (delErr) {
-        throw new Error(
-          "جدول product_categories غير موجود في قاعدة البيانات. نفّذ SQL الخاص بالجدول أولاً (db/product_categories_junction.sql)."
-        );
+      const { error: rpcErr } = await supabaseAdmin.rpc("sync_product_categories" as any, {
+        p_product_id: productId,
+        p_category_ids: catIds,
+      });
+      if (rpcErr) {
+        // Fallback: direct delete/insert (older DBs without the RPC installed).
+        if (/function .* does not exist|schema cache|Could not find the function/i.test(rpcErr.message)) {
+          const { error: delErr } = await supabaseAdmin
+            .from("product_categories" as any)
+            .delete()
+            .eq("product_id", productId);
+          if (delErr && !/relation .* does not exist/i.test(delErr.message)) {
+            throw new Error(`فشل تحديث التصنيفات (delete): ${delErr.message}`);
+          }
+          if (!delErr && catIds.length) {
+            const { error: insErr } = await supabaseAdmin
+              .from("product_categories" as any)
+              .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
+            if (insErr) throw new Error(`فشل تحديث التصنيفات (insert): ${insErr.message}`);
+          }
+          if (delErr) {
+            throw new Error(
+              "جدول product_categories غير موجود. نفّذ db/product_categories_junction.sql و db/sync_product_categories_rpc.sql."
+            );
+          }
+        } else {
+          throw new Error(`فشل تحديث التصنيفات: ${rpcErr.message}`);
+        }
       }
 
       const { data: savedLinks, error: verifyErr } = await supabaseAdmin
@@ -282,11 +293,10 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       if (verifyErr) throw new Error(`فشل التأكد من التصنيفات بعد الحفظ: ${verifyErr.message}`);
 
       const savedIds = new Set((savedLinks ?? []).map((link: any) => link.category_id));
-      const expectedIds = new Set(catIds);
-      const sameCount = savedIds.size === expectedIds.size;
-      const sameValues = catIds.every((categoryId) => savedIds.has(categoryId));
+      const sameCount = savedIds.size === catIds.length;
+      const sameValues = catIds.every((cid) => savedIds.has(cid));
       if (!sameCount || !sameValues) {
-        throw new Error("تم إرسال الحفظ لكن التصنيفات لم تُسجل في قاعدة البيانات. راجع صلاحيات product_categories و service role key.");
+        throw new Error("تم إرسال الحفظ لكن التصنيفات لم تُسجل. نفّذ db/sync_product_categories_rpc.sql على قاعدة البيانات.");
       }
     }
     return { ok: true, productId, category_ids: catIds, category_id: primaryCat, display_order: payload.display_order };
