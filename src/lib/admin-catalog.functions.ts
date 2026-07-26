@@ -112,6 +112,7 @@ const productInput = z.object({
   compare_at_price: z.number().min(0).max(1000000).optional().nullable(),
   cover_url: z.string().trim().max(1000).optional().or(z.literal("")),
   category_id: z.string().uuid().optional().nullable(),
+  category_ids: z.array(z.string().uuid()).optional(),
   pages: z.number().int().min(0).max(20000).optional().nullable(),
   isbn: z.string().trim().max(40).optional().or(z.literal("")),
   stock: z.number().int().min(0).max(100000),
@@ -121,6 +122,7 @@ const productInput = z.object({
   is_new_arrival: z.boolean().optional(),
   is_featured: z.boolean().optional(),
 });
+
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
