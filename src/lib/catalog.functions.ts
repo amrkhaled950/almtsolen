@@ -43,7 +43,7 @@ export type UICategory = {
 };
 
 const PRODUCT_COLS =
-  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, unlimited_stock, is_active, is_bestseller, is_new_arrival, is_featured";
+  "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, unlimited_stock, is_active, is_bestseller, is_new_arrival, is_featured, display_order, created_at";
 
 
 
@@ -144,30 +144,41 @@ export const listProductsPublic = createServerFn({ method: "GET" })
           if (seen.has(r.id)) continue;
           seen.add(r.id);
           out.push(r);
-          if (limit && out.length >= limit) return true;
         }
-        return false;
       };
       // Direct category_id
       {
-        let q = buildQuery().eq("category_id", categoryId!);
-        if (limit) q = q.limit(limit);
+        let q = buildQuery()
+          .eq("category_id", categoryId!)
+          .order("display_order" as any, { ascending: true })
+          .order("created_at", { ascending: false });
         const { data: rows, error } = await q;
         if (error) throw new Error(error.message);
-        if (pushRows(rows as UIProduct[])) return out;
+        pushRows(rows as unknown as UIProduct[]);
       }
       // Junction — chunk IDs to keep URLs short
       const ids = categoryProductIds ?? [];
       const CHUNK = 50;
       for (let i = 0; i < ids.length; i += CHUNK) {
         const slice = ids.slice(i, i + CHUNK);
-        let q = buildQuery().in("id", slice);
-        if (limit) q = q.limit(limit);
+        let q = buildQuery()
+          .in("id", slice)
+          .order("display_order" as any, { ascending: true })
+          .order("created_at", { ascending: false });
         const { data: rows, error } = await q;
         if (error) throw new Error(error.message);
-        if (pushRows(rows as UIProduct[])) return out;
+        pushRows(rows as unknown as UIProduct[]);
       }
-      return out;
+      // Merge-sort by display_order (asc), then created_at (desc)
+      out.sort((a: any, b: any) => {
+        const da = Number(a.display_order ?? 0);
+        const db = Number(b.display_order ?? 0);
+        if (da !== db) return da - db;
+        const ta = a.created_at ? Date.parse(a.created_at) : 0;
+        const tb = b.created_at ? Date.parse(b.created_at) : 0;
+        return tb - ta;
+      });
+      return limit ? out.slice(0, limit) : out;
     };
 
     if (categoryId) {
@@ -181,7 +192,7 @@ export const listProductsPublic = createServerFn({ method: "GET" })
         .order("created_at", { ascending: false })
         .limit(data.limit);
       if (error) throw new Error(error.message);
-      return { products: (rows ?? []) as UIProduct[] };
+      return { products: (rows ?? []) as unknown as UIProduct[] };
     }
 
 
@@ -195,9 +206,9 @@ export const listProductsPublic = createServerFn({ method: "GET" })
       const { data: rows, error } = await q;
       if (error) throw new Error(error.message);
       if (!rows?.length) break;
-      all.push(...(rows as UIProduct[]));
+      all.push(...(rows as unknown as UIProduct[]));
       if (rows.length < PAGE) break;
-      cursor = (rows[rows.length - 1] as UIProduct).id;
+      cursor = (rows[rows.length - 1] as unknown as UIProduct).id;
     }
     return { products: all };
   });
@@ -216,7 +227,7 @@ export const getProductPublic = createServerFn({ method: "GET" })
       .eq("is_active", true)
       .maybeSingle();
     if (error) throw new Error(error.message);
-    return { product: (row as UIProduct | null) ?? null };
+    return { product: (row as unknown as UIProduct | null) ?? null };
   });
 
 function escapeIlike(s: string) {
@@ -310,7 +321,7 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
 
     const { data: rows, error, count } = await q;
     if (error) throw new Error(error.message);
-    return { products: (rows ?? []) as UIProduct[], total: count ?? rows?.length ?? 0 };
+    return { products: (rows ?? []) as unknown as UIProduct[], total: count ?? rows?.length ?? 0 };
   });
 
 export const listRelatedProductsPublic = createServerFn({ method: "GET" })
@@ -342,5 +353,5 @@ export const listRelatedProductsPublic = createServerFn({ method: "GET" })
 
     const { data: rows, error } = await q;
     if (error) throw new Error(error.message);
-    return { products: (rows ?? []) as UIProduct[] };
+    return { products: (rows ?? []) as unknown as UIProduct[] };
   });
