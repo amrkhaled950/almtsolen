@@ -340,10 +340,11 @@ function ProductsPage() {
 }
 
 function ProductFormDialog({
-  product, categories, onClose, onSave,
+  product, categories, allProducts, onClose, onSave,
 }: {
   product: any | null;
   categories: any[];
+  allProducts: any[];
   onClose: () => void;
   onSave: (payload: any) => Promise<void>;
 }) {
