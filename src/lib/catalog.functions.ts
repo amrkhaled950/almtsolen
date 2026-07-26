@@ -264,10 +264,13 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
         q = q.order("rating", { ascending: false });
         break;
       case "new":
+        q = q.order("created_at", { ascending: false });
+        break;
       case "relevance":
       default:
-        q = q.order("created_at", { ascending: false });
+        q = q.order("display_order" as any, { ascending: true }).order("created_at", { ascending: false });
     }
+
 
     q = q.limit(data.limit ?? 60);
 
