@@ -255,8 +255,8 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
       const ids = all.map((p) => p.id);
       if (ids.length) {
         const map = new Map<string, string[]>();
-        for (let i = 0; i < ids.length; i += 500) {
-          const slice = ids.slice(i, i + 500);
+        for (let i = 0; i < ids.length; i += 50) {
+          const slice = ids.slice(i, i + 50);
           const { data: links, error: linksError } = await supabaseAdmin
             .from("product_categories" as any)
             .select("product_id, category_id")
