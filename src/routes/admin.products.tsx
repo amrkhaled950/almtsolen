@@ -418,14 +418,32 @@ function ProductFormDialog({
           <Field label={isAr ? "صورة الغلاف" : "Cover image"}>
             <ImageUpload value={form.cover_url} onChange={(v) => set("cover_url", v)} folder="products" size={120} />
           </Field>
-          <Field label={isAr ? "التصنيف" : "Category"}>
-            <select className="input" value={form.category_id || ""} onChange={(e) => set("category_id", e.target.value || null)}>
-              <option value="">—</option>
-              {categories.map((c) => (
-                <option key={c.id} value={c.id}>{isAr ? c.name_ar : c.name_en}</option>
-              ))}
-            </select>
+          <Field label={isAr ? "التصنيفات (اختر واحد أو أكثر)" : "Categories (pick one or more)"}>
+            <div className="rounded-lg border border-input bg-background p-3 max-h-48 overflow-y-auto grid grid-cols-2 gap-2">
+              {categories.map((c) => {
+                const checked = (form.category_ids as string[]).includes(c.id);
+                return (
+                  <label key={c.id} className="flex items-center gap-2 text-sm cursor-pointer hover:bg-muted/40 rounded px-2 py-1">
+                    <input
+                      type="checkbox"
+                      checked={checked}
+                      onChange={(e) => {
+                        const next = new Set(form.category_ids as string[]);
+                        if (e.target.checked) next.add(c.id); else next.delete(c.id);
+                        const arr = Array.from(next);
+                        setForm((f) => ({ ...f, category_ids: arr, category_id: arr[0] ?? null }));
+                      }}
+                    />
+                    <span>{isAr ? c.name_ar : c.name_en}</span>
+                  </label>
+                );
+              })}
+              {categories.length === 0 && (
+                <div className="text-xs text-muted-foreground col-span-2">{isAr ? "لا توجد تصنيفات" : "No categories"}</div>
+              )}
+            </div>
           </Field>
+
 
           <div className="rounded-xl border border-border bg-muted/30 p-4 space-y-3">
             <div className="font-display font-bold">{isAr ? "الأسعار" : "Pricing"}</div>
