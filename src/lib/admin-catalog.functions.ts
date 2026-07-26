@@ -209,27 +209,45 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       display_order: data.display_order ?? 0,
     };
 
-    let productId = data.id;
-    if (data.id) {
-      const { error } = await supabaseAdmin.from("products").update(payload as any).eq("id", data.id);
-      if (error) throw new Error(error.message);
-    } else {
-      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload as any).select("id").single();
-      if (error) throw new Error(error.message);
-      productId = inserted?.id;
+    // Try update/insert. If a column doesn't exist yet on the DB (e.g. display_order
+    // migration not applied), retry without the optional columns so the save still works.
+    async function saveProducts(p: any) {
+      if (data.id) {
+        const { error } = await supabaseAdmin.from("products").update(p).eq("id", data.id);
+        return { error, id: data.id as string | undefined };
+      } else {
+        const { data: inserted, error } = await supabaseAdmin.from("products").insert(p).select("id").single();
+        return { error, id: inserted?.id as string | undefined };
+      }
     }
+    let productId = data.id;
+    let res = await saveProducts(payload as any);
+    if (res.error && /display_order|column .* does not exist/i.test(res.error.message)) {
+      const { display_order: _omit, ...fallback } = payload as any;
+      res = await saveProducts(fallback);
+    }
+    if (res.error) throw new Error(`فشل حفظ المنتج: ${res.error.message}`);
+    productId = res.id;
 
-    // Sync junction table (best-effort). If table missing, skip silently.
+    // Sync junction table. Surface errors so the admin knows why multi-category didn't stick.
     if (productId && data.category_ids) {
-      try {
-        await supabaseAdmin.from("product_categories" as any).delete().eq("product_id", productId);
-        if (catIds.length) {
-          await supabaseAdmin
-            .from("product_categories" as any)
-            .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
-        }
-      } catch {
-        // junction table not created yet — legacy single category_id still works
+      const { error: delErr } = await supabaseAdmin
+        .from("product_categories" as any)
+        .delete()
+        .eq("product_id", productId);
+      if (delErr && !/relation .* does not exist|schema cache/i.test(delErr.message)) {
+        throw new Error(`فشل تحديث التصنيفات (delete): ${delErr.message}`);
+      }
+      if (!delErr && catIds.length) {
+        const { error: insErr } = await supabaseAdmin
+          .from("product_categories" as any)
+          .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
+        if (insErr) throw new Error(`فشل تحديث التصنيفات (insert): ${insErr.message}`);
+      }
+      if (delErr) {
+        throw new Error(
+          "جدول product_categories غير موجود في قاعدة البيانات. نفّذ SQL الخاص بالجدول أولاً (db/product_categories_junction.sql)."
+        );
       }
     }
     return { ok: true };
