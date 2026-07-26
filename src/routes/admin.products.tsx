@@ -491,9 +491,41 @@ function ProductFormDialog({
           <Field label={isAr ? "الوصف (عربي)" : "Description AR"}><textarea className="input min-h-[80px]" value={form.description_ar} onChange={(e) => set("description_ar", e.target.value)} /></Field>
           <Field label={isAr ? "الوصف (إنجليزي)" : "Description EN"}><textarea className="input min-h-[80px]" value={form.description_en} onChange={(e) => set("description_en", e.target.value)} /></Field>
 
-          <Field label={isAr ? "ترتيب العرض (رقم أقل = يظهر أولاً)" : "Display order (lower = shows first)"}>
-            <input type="number" step="1" className="input" value={form.display_order} onChange={num("display_order")} />
-          </Field>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <Field label={isAr ? "ترتيب العرض (رقم أقل = يظهر أولاً)" : "Display order (lower = shows first)"}>
+              <input type="number" step="1" className="input" value={form.display_order} onChange={num("display_order")} />
+            </Field>
+            <Field label={isAr ? "أظهر قبل منتج..." : "Show before product..."}>
+              <select
+                className="input"
+                value=""
+                onChange={(e) => {
+                  const targetId = e.target.value;
+                  if (!targetId) return;
+                  const target = allProducts.find((p) => p.id === targetId);
+                  if (!target) return;
+                  const targetOrder = Number(target.display_order ?? 0);
+                  set("display_order", targetOrder - 1);
+                  toast.success(
+                    isAr
+                      ? `سيظهر قبل: ${target.title_ar} (ترتيب ${targetOrder - 1})`
+                      : `Will show before: ${target.title_en} (order ${targetOrder - 1})`
+                  );
+                }}
+              >
+                <option value="">{isAr ? "— اختر منتج —" : "— pick a product —"}</option>
+                {allProducts
+                  .filter((p) => p.id !== product?.id)
+                  .slice()
+                  .sort((a, b) => Number(a.display_order ?? 0) - Number(b.display_order ?? 0))
+                  .map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {(isAr ? p.title_ar : p.title_en)} — #{Number(p.display_order ?? 0)}
+                    </option>
+                  ))}
+              </select>
+            </Field>
+          </div>
 
           <div className="flex flex-wrap gap-4">
             <Checkbox checked={form.is_active} onChange={(v) => set("is_active", v)} label={isAr ? "نشط" : "Active"} />
