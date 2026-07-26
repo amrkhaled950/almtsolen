@@ -112,6 +112,7 @@ const productInput = z.object({
   compare_at_price: z.number().min(0).max(1000000).optional().nullable(),
   cover_url: z.string().trim().max(1000).optional().or(z.literal("")),
   category_id: z.string().uuid().optional().nullable(),
+  category_ids: z.array(z.string().uuid()).optional(),
   pages: z.number().int().min(0).max(20000).optional().nullable(),
   isbn: z.string().trim().max(40).optional().or(z.literal("")),
   stock: z.number().int().min(0).max(100000),
@@ -121,6 +122,7 @@ const productInput = z.object({
   is_new_arrival: z.boolean().optional(),
   is_featured: z.boolean().optional(),
 });
+
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
@@ -140,8 +142,28 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
       all.push(...data);
       if (data.length < PAGE) break;
     }
+    // Attach category_ids from junction table (best-effort; table may not exist yet).
+    try {
+      const ids = all.map((p) => p.id);
+      if (ids.length) {
+        const { data: links } = await supabaseAdmin
+          .from("product_categories" as any)
+          .select("product_id, category_id")
+          .in("product_id", ids);
+        const map = new Map<string, string[]>();
+        (links ?? []).forEach((l: any) => {
+          const arr = map.get(l.product_id) ?? [];
+          arr.push(l.category_id);
+          map.set(l.product_id, arr);
+        });
+        for (const p of all) p.category_ids = map.get(p.id) ?? (p.category_id ? [p.category_id] : []);
+      }
+    } catch {
+      for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
+    }
     return { products: all };
   });
+
 
 export const upsertProductAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
@@ -152,6 +174,11 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
     const finalSlug = data.slug && data.slug.length >= 2
       ? data.slug
       : await ensureUniqueSlug(supabaseAdmin, "products", data.title_en || data.title_ar, data.id);
+    const catIds = Array.from(new Set([
+      ...(data.category_ids ?? []),
+      ...(data.category_id ? [data.category_id] : []),
+    ]));
+    const primaryCat = catIds[0] ?? data.category_id ?? null;
     const payload = {
       slug: finalSlug,
 
@@ -166,7 +193,7 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       price: data.price,
       compare_at_price: data.compare_at_price ?? null,
       cover_url: data.cover_url || null,
-      category_id: data.category_id ?? null,
+      category_id: primaryCat,
       pages: data.pages ?? null,
       isbn: data.isbn || null,
       stock: data.stock,
@@ -176,15 +203,31 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       is_new_arrival: data.is_new_arrival ?? false,
       is_featured: data.is_featured ?? false,
     };
+    let productId = data.id;
     if (data.id) {
       const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabaseAdmin.from("products").insert(payload);
+      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload).select("id").single();
       if (error) throw new Error(error.message);
+      productId = inserted?.id;
+    }
+    // Sync junction table (best-effort). If table missing, skip silently.
+    if (productId && data.category_ids) {
+      try {
+        await supabaseAdmin.from("product_categories" as any).delete().eq("product_id", productId);
+        if (catIds.length) {
+          await supabaseAdmin
+            .from("product_categories" as any)
+            .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
+        }
+      } catch {
+        // junction table not created yet — legacy single category_id still works
+      }
     }
     return { ok: true };
   });
+
 
 export const deleteProductAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
