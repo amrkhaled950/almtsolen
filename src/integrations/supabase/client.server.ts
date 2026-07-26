@@ -6,9 +6,11 @@ import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
 function createSupabaseAdminClient() {
-  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
   const SUPABASE_SERVICE_ROLE_KEY =
-    process.env.SELFHOST_SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY;
+    process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SELFHOST_SUPABASE_SERVICE_KEY?.trim() ||
+    process.env.SERVICE_SUPABASESERVICE_KEY?.trim();
 
   if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
     const missing = [
@@ -20,12 +22,40 @@ function createSupabaseAdminClient() {
     throw new Error(message);
   }
 
+  if (SUPABASE_SERVICE_ROLE_KEY.startsWith('eyJ')) {
+    const [, payload] = SUPABASE_SERVICE_ROLE_KEY.split('.');
+    try {
+      const decoded = JSON.parse(Buffer.from(payload ?? '', 'base64url').toString('utf8')) as { role?: string };
+      if (decoded.role && decoded.role !== 'service_role') {
+        throw new Error(
+          `SUPABASE_SERVICE_ROLE_KEY must be the service_role key, but the configured key role is "${decoded.role}".`,
+        );
+      }
+    } catch (error) {
+      if (error instanceof Error && error.message.includes('configured key role')) throw error;
+      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not a valid Supabase service-role JWT.');
+    }
+  }
+
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
       storage: undefined,
       persistSession: false,
       autoRefreshToken: false,
-    }
+    },
+    global: {
+      fetch: (input, init) => {
+        const headers = new Headers(init?.headers);
+        if (
+          SUPABASE_SERVICE_ROLE_KEY.startsWith('sb_') &&
+          headers.get('Authorization') === `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`
+        ) {
+          headers.delete('Authorization');
+        }
+        headers.set('apikey', SUPABASE_SERVICE_ROLE_KEY);
+        return fetch(input, { ...init, headers });
+      },
+    },
   });
 }
 
