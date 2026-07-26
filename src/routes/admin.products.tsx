@@ -367,6 +367,8 @@ function ProductFormDialog({
     misc_expenses: Number(product?.misc_expenses || 0),
     cover_url: product?.cover_url || "",
     category_id: product?.category_id || null,
+    category_ids: (product?.category_ids as string[] | undefined) ?? (product?.category_id ? [product.category_id] : []),
+
     pages: product?.pages || null,
     isbn: product?.isbn || "",
     stock: Number(product?.stock || 0),
