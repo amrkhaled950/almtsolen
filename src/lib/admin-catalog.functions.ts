@@ -174,6 +174,11 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
     const finalSlug = data.slug && data.slug.length >= 2
       ? data.slug
       : await ensureUniqueSlug(supabaseAdmin, "products", data.title_en || data.title_ar, data.id);
+    const catIds = Array.from(new Set([
+      ...(data.category_ids ?? []),
+      ...(data.category_id ? [data.category_id] : []),
+    ]));
+    const primaryCat = catIds[0] ?? data.category_id ?? null;
     const payload = {
       slug: finalSlug,
 
@@ -188,7 +193,7 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       price: data.price,
       compare_at_price: data.compare_at_price ?? null,
       cover_url: data.cover_url || null,
-      category_id: data.category_id ?? null,
+      category_id: primaryCat,
       pages: data.pages ?? null,
       isbn: data.isbn || null,
       stock: data.stock,
@@ -198,15 +203,31 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       is_new_arrival: data.is_new_arrival ?? false,
       is_featured: data.is_featured ?? false,
     };
+    let productId = data.id;
     if (data.id) {
       const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { error } = await supabaseAdmin.from("products").insert(payload);
+      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload).select("id").single();
       if (error) throw new Error(error.message);
+      productId = inserted?.id;
+    }
+    // Sync junction table (best-effort). If table missing, skip silently.
+    if (productId && data.category_ids) {
+      try {
+        await supabaseAdmin.from("product_categories" as any).delete().eq("product_id", productId);
+        if (catIds.length) {
+          await supabaseAdmin
+            .from("product_categories" as any)
+            .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
+        }
+      } catch {
+        // junction table not created yet — legacy single category_id still works
+      }
     }
     return { ok: true };
   });
+
 
 export const deleteProductAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
