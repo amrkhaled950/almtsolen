@@ -153,11 +153,11 @@ const productInput = z.object({
 });
 
 async function syncProductCategories(supabaseAdmin: any, productId: string, categoryIds: string[]) {
-  const desired = Array.from(new Set(categoryIds.filter(Boolean)));
+  const desired: string[] = Array.from(new Set(categoryIds.filter(Boolean)));
   const relationMissingMessage =
     "جدول ربط التصنيفات غير موجود. نفّذ db/product_categories_junction.sql على قاعدة البيانات ثم أعد المحاولة.";
 
-  const readLinks = async () => {
+  const readLinks = async (): Promise<string[]> => {
     const { data, error } = await supabaseAdmin
       .from("product_categories" as any)
       .select("category_id")
