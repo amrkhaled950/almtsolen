@@ -209,13 +209,14 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
 
     let productId = data.id;
     if (data.id) {
-      const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
+      const { error } = await supabaseAdmin.from("products").update(payload as any).eq("id", data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload).select("id").single();
+      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload as any).select("id").single();
       if (error) throw new Error(error.message);
       productId = inserted?.id;
     }
+
     // Sync junction table (best-effort). If table missing, skip silently.
     if (productId && data.category_ids) {
       try {
