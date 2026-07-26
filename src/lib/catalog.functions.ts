@@ -144,30 +144,41 @@ export const listProductsPublic = createServerFn({ method: "GET" })
           if (seen.has(r.id)) continue;
           seen.add(r.id);
           out.push(r);
-          if (limit && out.length >= limit) return true;
         }
-        return false;
       };
       // Direct category_id
       {
-        let q = buildQuery().eq("category_id", categoryId!);
-        if (limit) q = q.limit(limit);
+        let q = buildQuery()
+          .eq("category_id", categoryId!)
+          .order("display_order" as any, { ascending: true })
+          .order("created_at", { ascending: false });
         const { data: rows, error } = await q;
         if (error) throw new Error(error.message);
-        if (pushRows(rows as UIProduct[])) return out;
+        pushRows(rows as UIProduct[]);
       }
       // Junction — chunk IDs to keep URLs short
       const ids = categoryProductIds ?? [];
       const CHUNK = 50;
       for (let i = 0; i < ids.length; i += CHUNK) {
         const slice = ids.slice(i, i + CHUNK);
-        let q = buildQuery().in("id", slice);
-        if (limit) q = q.limit(limit);
+        let q = buildQuery()
+          .in("id", slice)
+          .order("display_order" as any, { ascending: true })
+          .order("created_at", { ascending: false });
         const { data: rows, error } = await q;
         if (error) throw new Error(error.message);
-        if (pushRows(rows as UIProduct[])) return out;
+        pushRows(rows as UIProduct[]);
       }
-      return out;
+      // Merge-sort by display_order (asc), then created_at (desc)
+      out.sort((a: any, b: any) => {
+        const da = Number(a.display_order ?? 0);
+        const db = Number(b.display_order ?? 0);
+        if (da !== db) return da - db;
+        const ta = a.created_at ? Date.parse(a.created_at) : 0;
+        const tb = b.created_at ? Date.parse(b.created_at) : 0;
+        return tb - ta;
+      });
+      return limit ? out.slice(0, limit) : out;
     };
 
     if (categoryId) {
