@@ -204,7 +204,9 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       is_bestseller: data.is_bestseller ?? false,
       is_new_arrival: data.is_new_arrival ?? false,
       is_featured: data.is_featured ?? false,
+      display_order: data.display_order ?? 0,
     };
+
     let productId = data.id;
     if (data.id) {
       const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
