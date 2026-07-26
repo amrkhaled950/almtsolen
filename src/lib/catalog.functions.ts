@@ -45,6 +45,8 @@ export type UICategory = {
 const PRODUCT_COLS =
   "id, slug, title_ar, title_en, author_ar, author_en, publisher_ar, publisher_en, description_ar, description_en, price, compare_at_price, cover_url, category_id, pages, isbn, rating, reviews_count, stock, unlimited_stock, is_active, is_bestseller, is_new_arrival, is_featured";
 
+
+
 // Public (anon) credentials — safe to hardcode as fallback so the catalog
 // works on any host even when server env vars are not configured.
 const FALLBACK_SUPABASE_URL = "https://hiaewjagcvycyuxweiwj.supabase.co";
@@ -142,11 +144,13 @@ export const listProductsPublic = createServerFn({ method: "GET" })
 
     if (data.limit) {
       const { data: rows, error } = await buildQuery()
+        .order("display_order" as any, { ascending: true })
         .order("created_at", { ascending: false })
         .limit(data.limit);
       if (error) throw new Error(error.message);
       return { products: (rows ?? []) as UIProduct[] };
     }
+
 
     // Keyset pagination by id to bypass PostgREST db-max-rows cap on range/offset.
     const PAGE = 500;
@@ -260,10 +264,13 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
         q = q.order("rating", { ascending: false });
         break;
       case "new":
+        q = q.order("created_at", { ascending: false });
+        break;
       case "relevance":
       default:
-        q = q.order("created_at", { ascending: false });
+        q = q.order("display_order" as any, { ascending: true }).order("created_at", { ascending: false });
     }
+
 
     q = q.limit(data.limit ?? 60);
 

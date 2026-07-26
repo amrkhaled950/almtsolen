@@ -121,7 +121,9 @@ const productInput = z.object({
   is_bestseller: z.boolean().optional(),
   is_new_arrival: z.boolean().optional(),
   is_featured: z.boolean().optional(),
+  display_order: z.number().int().min(-99999).max(99999).optional(),
 });
+
 
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
@@ -135,8 +137,10 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
       const { data, error } = await supabaseAdmin
         .from("products")
         .select("*")
+        .order("display_order", { ascending: true })
         .order("created_at", { ascending: false })
         .range(from, from + PAGE - 1);
+
       if (error) throw new Error(error.message);
       if (!data || data.length === 0) break;
       all.push(...data);
@@ -202,16 +206,19 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       is_bestseller: data.is_bestseller ?? false,
       is_new_arrival: data.is_new_arrival ?? false,
       is_featured: data.is_featured ?? false,
+      display_order: data.display_order ?? 0,
     };
+
     let productId = data.id;
     if (data.id) {
-      const { error } = await supabaseAdmin.from("products").update(payload).eq("id", data.id);
+      const { error } = await supabaseAdmin.from("products").update(payload as any).eq("id", data.id);
       if (error) throw new Error(error.message);
     } else {
-      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload).select("id").single();
+      const { data: inserted, error } = await supabaseAdmin.from("products").insert(payload as any).select("id").single();
       if (error) throw new Error(error.message);
       productId = inserted?.id;
     }
+
     // Sync junction table (best-effort). If table missing, skip silently.
     if (productId && data.category_ids) {
       try {
