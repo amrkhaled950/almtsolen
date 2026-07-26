@@ -377,7 +377,9 @@ function ProductFormDialog({
     is_bestseller: product?.is_bestseller ?? false,
     is_new_arrival: product?.is_new_arrival ?? false,
     is_featured: product?.is_featured ?? false,
+    display_order: Number(product?.display_order ?? 0),
   });
+
   const profit = form.price - form.cost_price - form.marketing_cost - form.misc_expenses;
 
   const set = (k: string, v: any) => setForm((f) => ({ ...f, [k]: v }));
