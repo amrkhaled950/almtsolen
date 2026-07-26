@@ -204,6 +204,7 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
     const supabase = getPublicClient();
 
     let categoryId: string | null = null;
+    let categoryProductIds: string[] | null = null;
     if (data.category_slug) {
       const { data: cat } = await supabase
         .from("categories")
@@ -212,6 +213,15 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
         .maybeSingle();
       categoryId = cat?.id ?? null;
       if (!categoryId) return { products: [], total: 0 };
+      try {
+        const { data: links } = await supabase
+          .from("product_categories" as any)
+          .select("product_id")
+          .eq("category_id", categoryId);
+        categoryProductIds = Array.from(new Set((links ?? []).map((l: any) => l.product_id)));
+      } catch {
+        categoryProductIds = null;
+      }
     }
 
     let q = supabase
@@ -225,7 +235,15 @@ export const searchProductsPublic = createServerFn({ method: "GET" })
         `title_ar.ilike.${term},title_en.ilike.${term},author_ar.ilike.${term},author_en.ilike.${term},publisher_ar.ilike.${term},publisher_en.ilike.${term}`,
       );
     }
-    if (categoryId) q = q.eq("category_id", categoryId);
+    if (categoryId) {
+      if (categoryProductIds && categoryProductIds.length) {
+        const list = categoryProductIds.map((id) => `"${id}"`).join(",");
+        q = q.or(`category_id.eq.${categoryId},id.in.(${list})`);
+      } else {
+        q = q.eq("category_id", categoryId);
+      }
+    }
+
     if (typeof data.min_price === "number") q = q.gte("price", data.min_price);
     if (typeof data.max_price === "number") q = q.lte("price", data.max_price);
     if (typeof data.min_rating === "number") q = q.gte("rating", data.min_rating);
