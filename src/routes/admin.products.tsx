@@ -315,7 +315,8 @@ function ProductsPage() {
             try {
               await upsertFn({ data: payload });
               toast.success(isAr ? "تم الحفظ" : "Saved");
-              qc.invalidateQueries({ queryKey: ["admin", "products"] });
+              await qc.refetchQueries({ queryKey: ["admin", "products"] });
+              await qc.refetchQueries({ queryKey: ["admin", "categories"] });
               setShowForm(false);
               setEditing(null);
             } catch (e: any) {
