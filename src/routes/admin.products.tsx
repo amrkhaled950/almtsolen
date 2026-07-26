@@ -489,12 +489,17 @@ function ProductFormDialog({
           <Field label={isAr ? "الوصف (عربي)" : "Description AR"}><textarea className="input min-h-[80px]" value={form.description_ar} onChange={(e) => set("description_ar", e.target.value)} /></Field>
           <Field label={isAr ? "الوصف (إنجليزي)" : "Description EN"}><textarea className="input min-h-[80px]" value={form.description_en} onChange={(e) => set("description_en", e.target.value)} /></Field>
 
+          <Field label={isAr ? "ترتيب العرض (رقم أقل = يظهر أولاً)" : "Display order (lower = shows first)"}>
+            <input type="number" step="1" className="input" value={form.display_order} onChange={num("display_order")} />
+          </Field>
+
           <div className="flex flex-wrap gap-4">
             <Checkbox checked={form.is_active} onChange={(v) => set("is_active", v)} label={isAr ? "نشط" : "Active"} />
             <Checkbox checked={form.is_bestseller} onChange={(v) => set("is_bestseller", v)} label={isAr ? "الأكثر مبيعاً" : "Best seller"} />
             <Checkbox checked={form.is_new_arrival} onChange={(v) => set("is_new_arrival", v)} label={isAr ? "وصل حديثاً" : "New arrival"} />
             <Checkbox checked={form.is_featured} onChange={(v) => set("is_featured", v)} label={isAr ? "مميز" : "Featured"} />
           </div>
+
 
           <div className="flex gap-2 pt-3 border-t border-border sticky bottom-0 bg-background -mx-5 -mb-5 px-5 py-4">
             <button type="button" onClick={onClose} className="h-10 px-4 rounded-lg border border-input bg-background text-sm font-semibold hover:bg-muted">
