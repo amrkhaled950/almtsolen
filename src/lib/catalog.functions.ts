@@ -208,7 +208,7 @@ export const listProductsPublic = createServerFn({ method: "GET" })
       if (!rows?.length) break;
       all.push(...(rows as unknown as UIProduct[]));
       if (rows.length < PAGE) break;
-      cursor = (rows[rows.length - 1] as UIProduct).id;
+      cursor = (rows[rows.length - 1] as unknown as UIProduct).id;
     }
     return { products: all };
   });
