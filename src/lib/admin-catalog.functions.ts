@@ -135,6 +135,9 @@ const productInput = z.object({
   description_en: z.string().trim().max(2000).optional().or(z.literal("")),
   price: z.number().min(0).max(1000000),
   compare_at_price: z.number().min(0).max(1000000).optional().nullable(),
+  cost_price: z.number().min(0).max(1000000).optional(),
+  marketing_cost: z.number().min(0).max(1000000).optional(),
+  misc_expenses: z.number().min(0).max(1000000).optional(),
   cover_url: z.string().trim().max(5_000_000).optional().or(z.literal("")),
   category_id: z.string().uuid().optional().nullable(),
   category_ids: z.array(z.string().uuid()).optional(),
@@ -148,6 +151,82 @@ const productInput = z.object({
   is_featured: z.boolean().optional(),
   display_order: z.number().int().min(-99999).max(99999).optional(),
 });
+
+async function syncProductCategories(supabaseAdmin: any, productId: string, categoryIds: string[]) {
+  const desired: string[] = Array.from(new Set(categoryIds.filter(Boolean)));
+  const relationMissingMessage =
+    "جدول ربط التصنيفات غير موجود. نفّذ db/product_categories_junction.sql على قاعدة البيانات ثم أعد المحاولة.";
+
+  const readLinks = async (): Promise<string[]> => {
+    const { data, error } = await supabaseAdmin
+      .from("product_categories" as any)
+      .select("category_id")
+      .eq("product_id", productId);
+    if (error) {
+      if (/relation .*product_categories.* does not exist|schema cache|Could not find/i.test(error.message)) {
+        throw new Error(relationMissingMessage);
+      }
+      throw new Error(`فشل قراءة تصنيفات المنتج: ${error.message}`);
+    }
+    return (data ?? []).map((link: any) => link.category_id as string).filter(Boolean);
+  };
+
+  const writeDirectly = async () => {
+    const existing = await readLinks();
+    const existingSet = new Set(existing);
+    const desiredSet = new Set(desired);
+    const toInsert = desired.filter((categoryId) => !existingSet.has(categoryId));
+    const toDelete = existing.filter((categoryId) => !desiredSet.has(categoryId));
+
+    if (toInsert.length) {
+      const { error } = await supabaseAdmin
+        .from("product_categories" as any)
+        .upsert(
+          toInsert.map((categoryId) => ({ product_id: productId, category_id: categoryId })),
+          { onConflict: "product_id,category_id", ignoreDuplicates: true },
+        );
+      if (error) throw new Error(`فشل إضافة التصنيفات الجديدة: ${error.message}`);
+    }
+
+    if (toDelete.length) {
+      const { error } = await supabaseAdmin
+        .from("product_categories" as any)
+        .delete()
+        .eq("product_id", productId)
+        .in("category_id", toDelete);
+      if (error) throw new Error(`فشل حذف التصنيفات القديمة: ${error.message}`);
+    }
+  };
+
+  try {
+    await writeDirectly();
+  } catch (directError) {
+    const directMessage = directError instanceof Error ? directError.message : String(directError);
+    if (directMessage === relationMissingMessage) throw directError;
+
+    const { error: rpcErr } = await supabaseAdmin.rpc("sync_product_categories" as any, {
+      p_product_id: productId,
+      p_category_ids: desired,
+    });
+    if (rpcErr) {
+      if (/function .* does not exist|schema cache|Could not find the function/i.test(rpcErr.message)) {
+        throw new Error(`فشل تحديث التصنيفات مباشرة، ودالة sync_product_categories غير موجودة. السبب: ${directMessage}`);
+      }
+      throw new Error(`فشل تحديث التصنيفات: ${rpcErr.message}. السبب المباشر: ${directMessage}`);
+    }
+  }
+
+  const saved = await readLinks();
+  const savedSet = new Set(saved);
+  const sameCount = savedSet.size === desired.length;
+  const sameValues = desired.every((categoryId) => savedSet.has(categoryId));
+  if (!sameCount || !sameValues) {
+    throw new Error(
+      `تم حفظ المنتج لكن تصنيفات الربط لم تتسجل بالكامل. المطلوب: ${desired.length}، المسجل: ${savedSet.size}.`,
+    );
+  }
+  return desired;
+}
 
 
 
@@ -175,19 +254,31 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
     try {
       const ids = all.map((p) => p.id);
       if (ids.length) {
-        const { data: links } = await supabaseAdmin
-          .from("product_categories" as any)
-          .select("product_id, category_id")
-          .in("product_id", ids);
         const map = new Map<string, string[]>();
-        (links ?? []).forEach((l: any) => {
-          const arr = map.get(l.product_id) ?? [];
-          arr.push(l.category_id);
-          map.set(l.product_id, arr);
-        });
-        for (const p of all) p.category_ids = map.get(p.id) ?? (p.category_id ? [p.category_id] : []);
+        for (let i = 0; i < ids.length; i += 500) {
+          const slice = ids.slice(i, i + 500);
+          const { data: links, error: linksError } = await supabaseAdmin
+            .from("product_categories" as any)
+            .select("product_id, category_id")
+            .in("product_id", slice);
+          if (linksError) {
+            throw new Error(`فشل تحميل تصنيفات المنتجات المتعددة: ${linksError.message}`);
+          }
+          (links ?? []).forEach((link: any) => {
+            const arr = map.get(link.product_id) ?? [];
+            if (!arr.includes(link.category_id)) arr.push(link.category_id);
+            map.set(link.product_id, arr);
+          });
+        }
+        for (const p of all) {
+          const linked = map.get(p.id) ?? [];
+          if (p.category_id && !linked.includes(p.category_id)) linked.unshift(p.category_id);
+          p.category_ids = linked;
+        }
       }
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/product_categories|schema cache|relation/i.test(message)) throw error;
       for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
     }
     return { products: all };
@@ -221,6 +312,9 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       description_en: data.description_en || null,
       price: data.price,
       compare_at_price: data.compare_at_price ?? null,
+      cost_price: data.cost_price ?? 0,
+      marketing_cost: data.marketing_cost ?? 0,
+      misc_expenses: data.misc_expenses ?? 0,
       cover_url: data.cover_url || null,
       category_id: primaryCat,
       pages: data.pages ?? null,
@@ -238,8 +332,13 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
     // migration not applied), retry without the optional columns so the save still works.
     async function saveProducts(p: any) {
       if (data.id) {
-        const { error } = await supabaseAdmin.from("products").update(p).eq("id", data.id);
-        return { error, id: data.id as string | undefined };
+        const { data: updated, error } = await supabaseAdmin
+          .from("products")
+          .update(p)
+          .eq("id", data.id)
+          .select("id")
+          .maybeSingle();
+        return { error, id: updated?.id as string | undefined };
       } else {
         const { data: inserted, error } = await supabaseAdmin.from("products").insert(p).select("id").single();
         return { error, id: inserted?.id as string | undefined };
@@ -253,53 +352,12 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
     }
     if (res.error) throw new Error(`فشل حفظ المنتج: ${res.error.message}`);
     productId = res.id;
-
-    // Sync junction table via SECURITY DEFINER RPC (avoids RLS edge cases on self-host).
-    if (productId && data.category_ids) {
-      const { error: rpcErr } = await supabaseAdmin.rpc("sync_product_categories" as any, {
-        p_product_id: productId,
-        p_category_ids: catIds,
-      });
-      if (rpcErr) {
-        // Fallback: direct delete/insert (older DBs without the RPC installed).
-        if (/function .* does not exist|schema cache|Could not find the function/i.test(rpcErr.message)) {
-          const { error: delErr } = await supabaseAdmin
-            .from("product_categories" as any)
-            .delete()
-            .eq("product_id", productId);
-          if (delErr && !/relation .* does not exist/i.test(delErr.message)) {
-            throw new Error(`فشل تحديث التصنيفات (delete): ${delErr.message}`);
-          }
-          if (!delErr && catIds.length) {
-            const { error: insErr } = await supabaseAdmin
-              .from("product_categories" as any)
-              .insert(catIds.map((cid) => ({ product_id: productId, category_id: cid })));
-            if (insErr) throw new Error(`فشل تحديث التصنيفات (insert): ${insErr.message}`);
-          }
-          if (delErr) {
-            throw new Error(
-              "جدول product_categories غير موجود. نفّذ db/product_categories_junction.sql و db/sync_product_categories_rpc.sql."
-            );
-          }
-        } else {
-          throw new Error(`فشل تحديث التصنيفات: ${rpcErr.message}`);
-        }
-      }
-
-      const { data: savedLinks, error: verifyErr } = await supabaseAdmin
-        .from("product_categories" as any)
-        .select("category_id")
-        .eq("product_id", productId);
-      if (verifyErr) throw new Error(`فشل التأكد من التصنيفات بعد الحفظ: ${verifyErr.message}`);
-
-      const savedIds = new Set((savedLinks ?? []).map((link: any) => link.category_id));
-      const sameCount = savedIds.size === catIds.length;
-      const sameValues = catIds.every((cid) => savedIds.has(cid));
-      if (!sameCount || !sameValues) {
-        throw new Error("تم إرسال الحفظ لكن التصنيفات لم تُسجل. نفّذ db/sync_product_categories_rpc.sql على قاعدة البيانات.");
-      }
+    if (!productId) {
+      throw new Error("لم يتم العثور على المنتج بعد الحفظ. تأكد أن المنتج موجود ولم يتم حذفه من قاعدة البيانات.");
     }
-    return { ok: true, productId, category_ids: catIds, category_id: primaryCat, display_order: payload.display_order };
+
+    const savedCategoryIds = await syncProductCategories(supabaseAdmin, productId, catIds);
+    return { ok: true, productId, category_ids: savedCategoryIds, category_id: primaryCat, display_order: payload.display_order };
   });
 
 
