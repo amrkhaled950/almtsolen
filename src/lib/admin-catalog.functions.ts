@@ -254,19 +254,31 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
     try {
       const ids = all.map((p) => p.id);
       if (ids.length) {
-        const { data: links } = await supabaseAdmin
-          .from("product_categories" as any)
-          .select("product_id, category_id")
-          .in("product_id", ids);
         const map = new Map<string, string[]>();
-        (links ?? []).forEach((l: any) => {
-          const arr = map.get(l.product_id) ?? [];
-          arr.push(l.category_id);
-          map.set(l.product_id, arr);
-        });
-        for (const p of all) p.category_ids = map.get(p.id) ?? (p.category_id ? [p.category_id] : []);
+        for (let i = 0; i < ids.length; i += 500) {
+          const slice = ids.slice(i, i + 500);
+          const { data: links, error: linksError } = await supabaseAdmin
+            .from("product_categories" as any)
+            .select("product_id, category_id")
+            .in("product_id", slice);
+          if (linksError) {
+            throw new Error(`فشل تحميل تصنيفات المنتجات المتعددة: ${linksError.message}`);
+          }
+          (links ?? []).forEach((link: any) => {
+            const arr = map.get(link.product_id) ?? [];
+            if (!arr.includes(link.category_id)) arr.push(link.category_id);
+            map.set(link.product_id, arr);
+          });
+        }
+        for (const p of all) {
+          const linked = map.get(p.id) ?? [];
+          if (p.category_id && !linked.includes(p.category_id)) linked.unshift(p.category_id);
+          p.category_ids = linked;
+        }
       }
-    } catch {
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      if (!/product_categories|schema cache|relation/i.test(message)) throw error;
       for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
     }
     return { products: all };
