@@ -142,8 +142,28 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
       all.push(...data);
       if (data.length < PAGE) break;
     }
+    // Attach category_ids from junction table (best-effort; table may not exist yet).
+    try {
+      const ids = all.map((p) => p.id);
+      if (ids.length) {
+        const { data: links } = await supabaseAdmin
+          .from("product_categories" as any)
+          .select("product_id, category_id")
+          .in("product_id", ids);
+        const map = new Map<string, string[]>();
+        (links ?? []).forEach((l: any) => {
+          const arr = map.get(l.product_id) ?? [];
+          arr.push(l.category_id);
+          map.set(l.product_id, arr);
+        });
+        for (const p of all) p.category_ids = map.get(p.id) ?? (p.category_id ? [p.category_id] : []);
+      }
+    } catch {
+      for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
+    }
     return { products: all };
   });
+
 
 export const upsertProductAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
