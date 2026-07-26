@@ -31,7 +31,11 @@ const categoryInput = z.object({
   description_ar: z.string().trim().max(500).optional().or(z.literal("")),
   description_en: z.string().trim().max(500).optional().or(z.literal("")),
   image_url: z.string().trim().max(500).optional().or(z.literal("")),
+  icon: z.string().trim().max(20).optional().or(z.literal("")),
   display_order: z.number().int().min(0).max(9999).optional(),
+  nav_order: z.number().int().min(0).max(9999).optional(),
+  parent_id: z.string().uuid().nullable().optional(),
+  show_in_nav: z.boolean().optional(),
   is_active: z.boolean().optional(),
 });
 
@@ -64,17 +68,38 @@ export const upsertCategoryAdmin = createServerFn({ method: "POST" })
       description_ar: data.description_ar || null,
       description_en: data.description_en || null,
       image_url: data.image_url || null,
+      icon: data.icon || data.image_url || null,
       display_order: data.display_order ?? 0,
+      nav_order: data.nav_order ?? data.display_order ?? 0,
+      parent_id: data.parent_id ?? null,
+      show_in_nav: data.show_in_nav ?? true,
       is_active: data.is_active ?? true,
     };
+    const selectCols = "id, name_ar, name_en, slug, icon, image_url, display_order, nav_order, parent_id, show_in_nav, is_active";
+    let savedCategory: any = null;
     if (data.id) {
-      const { error } = await supabaseAdmin.from("categories").update(payload).eq("id", data.id);
+      const { data: updatedRows, error } = await supabaseAdmin
+        .from("categories")
+        .update(payload)
+        .eq("id", data.id)
+        .select(selectCols);
       if (error) throw new Error(error.message);
+      savedCategory = updatedRows?.[0] ?? null;
+      if (!savedCategory) {
+        throw new Error("لم يتم تحديث التصنيف: لم يتم العثور على التصنيف المطلوب في قاعدة البيانات.");
+      }
     } else {
-      const { error } = await supabaseAdmin.from("categories").insert(payload);
+      const { data: insertedRows, error } = await supabaseAdmin
+        .from("categories")
+        .insert(payload)
+        .select(selectCols);
       if (error) throw new Error(error.message);
+      savedCategory = insertedRows?.[0] ?? null;
+      if (!savedCategory) {
+        throw new Error("تم إرسال التصنيف لكن قاعدة البيانات لم ترجع الصف المحفوظ.");
+      }
     }
-    return { ok: true };
+    return { ok: true, category: savedCategory };
 
   });
 
