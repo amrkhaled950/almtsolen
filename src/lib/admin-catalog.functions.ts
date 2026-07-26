@@ -137,8 +137,10 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
       const { data, error } = await supabaseAdmin
         .from("products")
         .select("*")
+        .order("display_order", { ascending: true })
         .order("created_at", { ascending: false })
         .range(from, from + PAGE - 1);
+
       if (error) throw new Error(error.message);
       if (!data || data.length === 0) break;
       all.push(...data);
