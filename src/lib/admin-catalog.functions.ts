@@ -121,7 +121,9 @@ const productInput = z.object({
   is_bestseller: z.boolean().optional(),
   is_new_arrival: z.boolean().optional(),
   is_featured: z.boolean().optional(),
+  display_order: z.number().int().min(-99999).max(99999).optional(),
 });
+
 
 
 export const listProductsAdmin = createServerFn({ method: "GET" })
