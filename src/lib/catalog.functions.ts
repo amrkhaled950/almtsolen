@@ -127,20 +127,53 @@ export const listProductsPublic = createServerFn({ method: "GET" })
         .from("products")
         .select(PRODUCT_COLS)
         .eq("is_active", true);
-      if (categoryId) {
-        if (categoryProductIds && categoryProductIds.length) {
-          const list = categoryProductIds.map((id) => `"${id}"`).join(",");
-          q = q.or(`category_id.eq.${categoryId},id.in.(${list})`);
-        } else {
-          q = q.eq("category_id", categoryId);
-        }
-      }
       if (data.featured) q = q.eq("is_featured", true);
       if (data.bestseller) q = q.eq("is_bestseller", true);
       if (data.new_arrival) q = q.eq("is_new_arrival", true);
       return q;
     };
 
+    // Fetch products for a category by combining direct category_id matches
+    // and junction-table matches in-memory (avoids URI-too-long errors when
+    // a category has many linked products).
+    const fetchByCategory = async (limit?: number): Promise<UIProduct[]> => {
+      const seen = new Set<string>();
+      const out: UIProduct[] = [];
+      const pushRows = (rows: UIProduct[] | null) => {
+        for (const r of rows ?? []) {
+          if (seen.has(r.id)) continue;
+          seen.add(r.id);
+          out.push(r);
+          if (limit && out.length >= limit) return true;
+        }
+        return false;
+      };
+      // Direct category_id
+      {
+        let q = buildQuery().eq("category_id", categoryId!);
+        if (limit) q = q.limit(limit);
+        const { data: rows, error } = await q;
+        if (error) throw new Error(error.message);
+        if (pushRows(rows as UIProduct[])) return out;
+      }
+      // Junction — chunk IDs to keep URLs short
+      const ids = categoryProductIds ?? [];
+      const CHUNK = 50;
+      for (let i = 0; i < ids.length; i += CHUNK) {
+        const slice = ids.slice(i, i + CHUNK);
+        let q = buildQuery().in("id", slice);
+        if (limit) q = q.limit(limit);
+        const { data: rows, error } = await q;
+        if (error) throw new Error(error.message);
+        if (pushRows(rows as UIProduct[])) return out;
+      }
+      return out;
+    };
+
+    if (categoryId) {
+      const rows = await fetchByCategory(data.limit);
+      return { products: rows };
+    }
 
     if (data.limit) {
       const { data: rows, error } = await buildQuery()
@@ -168,6 +201,7 @@ export const listProductsPublic = createServerFn({ method: "GET" })
     }
     return { products: all };
   });
+
 
 export const getProductPublic = createServerFn({ method: "GET" })
   .inputValidator((input) => z.object({ slug: z.string().min(1).max(200) }).parse(input))
