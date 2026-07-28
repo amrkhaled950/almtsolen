@@ -250,11 +250,11 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
       all.push(...data);
       if (data.length < PAGE) break;
     }
-    // Attach category_ids from junction table (best-effort; table may not exist yet).
+    // Attach category_ids from junction table (best-effort; never break the list on failure).
     try {
       const ids = all.map((p) => p.id);
+      const map = new Map<string, string[]>();
       if (ids.length) {
-        const map = new Map<string, string[]>();
         for (let i = 0; i < ids.length; i += 50) {
           const slice = ids.slice(i, i + 50);
           const { data: links, error: linksError } = await supabaseAdmin
@@ -262,7 +262,8 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
             .select("product_id, category_id")
             .in("product_id", slice);
           if (linksError) {
-            throw new Error(`فشل تحميل تصنيفات المنتجات المتعددة: ${linksError.message}`);
+            console.error("[listProductsAdmin] junction chunk failed:", linksError.message);
+            continue;
           }
           (links ?? []).forEach((link: any) => {
             const arr = map.get(link.product_id) ?? [];
@@ -270,15 +271,15 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
             map.set(link.product_id, arr);
           });
         }
-        for (const p of all) {
-          const linked = map.get(p.id) ?? [];
-          if (p.category_id && !linked.includes(p.category_id)) linked.unshift(p.category_id);
-          p.category_ids = linked;
-        }
+      }
+      for (const p of all) {
+        const linked = map.get(p.id) ?? [];
+        if (p.category_id && !linked.includes(p.category_id)) linked.unshift(p.category_id);
+        p.category_ids = linked;
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
-      if (!/product_categories|schema cache|relation/i.test(message)) throw error;
+      console.error("[listProductsAdmin] junction attach failed:", message);
       for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
     }
     return { products: all };
