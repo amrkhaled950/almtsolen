@@ -43,13 +43,23 @@ export const listCategoriesAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const { data, error } = await supabaseAdmin
-      .from("categories")
-      .select("*")
-      .order("display_order", { ascending: true });
-    if (error) throw new Error(error.message);
-    return { categories: data ?? [] };
+    const loadCategories = async (client: any) => {
+      const { data, error } = await client
+        .from("categories")
+        .select("*")
+        .order("display_order", { ascending: true });
+      if (error) throw new Error(error.message);
+      return data ?? [];
+    };
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      return { categories: await loadCategories(supabaseAdmin) };
+    } catch (adminError) {
+      const message = adminError instanceof Error ? adminError.message : String(adminError);
+      console.warn("[listCategoriesAdmin] admin client failed, falling back to user client:", message);
+      return { categories: await loadCategories(context.supabase) };
+    }
   });
 
 export const upsertCategoryAdmin = createServerFn({ method: "POST" })
@@ -234,55 +244,65 @@ export const listProductsAdmin = createServerFn({ method: "GET" })
   .middleware([requireSupabaseAuth])
   .handler(async ({ context }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
-    const PAGE = 1000;
-    const all: any[] = [];
-    for (let from = 0; from < 50000; from += PAGE) {
-      const { data, error } = await supabaseAdmin
-        .from("products")
-        .select("*")
-        .order("display_order", { ascending: true })
-        .order("created_at", { ascending: false })
-        .range(from, from + PAGE - 1);
+    const loadProducts = async (client: any) => {
+      const PAGE = 1000;
+      const all: any[] = [];
+      for (let from = 0; from < 50000; from += PAGE) {
+        const { data, error } = await client
+          .from("products")
+          .select("*")
+          .order("display_order", { ascending: true })
+          .order("created_at", { ascending: false })
+          .range(from, from + PAGE - 1);
 
-      if (error) throw new Error(error.message);
-      if (!data || data.length === 0) break;
-      all.push(...data);
-      if (data.length < PAGE) break;
-    }
-    // Attach category_ids from junction table (best-effort; never break the list on failure).
-    try {
-      const ids = all.map((p) => p.id);
-      const map = new Map<string, string[]>();
-      if (ids.length) {
-        for (let i = 0; i < ids.length; i += 50) {
-          const slice = ids.slice(i, i + 50);
-          const { data: links, error: linksError } = await supabaseAdmin
-            .from("product_categories" as any)
-            .select("product_id, category_id")
-            .in("product_id", slice);
-          if (linksError) {
-            console.error("[listProductsAdmin] junction chunk failed:", linksError.message);
-            continue;
+        if (error) throw new Error(error.message);
+        if (!data || data.length === 0) break;
+        all.push(...data);
+        if (data.length < PAGE) break;
+      }
+      // Attach category_ids from junction table (best-effort; never break the list on failure).
+      try {
+        const ids = all.map((p) => p.id);
+        const map = new Map<string, string[]>();
+        if (ids.length) {
+          for (let i = 0; i < ids.length; i += 50) {
+            const slice = ids.slice(i, i + 50);
+            const { data: links, error: linksError } = await client
+              .from("product_categories" as any)
+              .select("product_id, category_id")
+              .in("product_id", slice);
+            if (linksError) {
+              console.error("[listProductsAdmin] junction chunk failed:", linksError.message);
+              continue;
+            }
+            (links ?? []).forEach((link: any) => {
+              const arr = map.get(link.product_id) ?? [];
+              if (!arr.includes(link.category_id)) arr.push(link.category_id);
+              map.set(link.product_id, arr);
+            });
           }
-          (links ?? []).forEach((link: any) => {
-            const arr = map.get(link.product_id) ?? [];
-            if (!arr.includes(link.category_id)) arr.push(link.category_id);
-            map.set(link.product_id, arr);
-          });
         }
+        for (const p of all) {
+          const linked = map.get(p.id) ?? [];
+          if (p.category_id && !linked.includes(p.category_id)) linked.unshift(p.category_id);
+          p.category_ids = linked;
+        }
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        console.error("[listProductsAdmin] junction attach failed:", message);
+        for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
       }
-      for (const p of all) {
-        const linked = map.get(p.id) ?? [];
-        if (p.category_id && !linked.includes(p.category_id)) linked.unshift(p.category_id);
-        p.category_ids = linked;
-      }
-    } catch (error) {
-      const message = error instanceof Error ? error.message : String(error);
-      console.error("[listProductsAdmin] junction attach failed:", message);
-      for (const p of all) p.category_ids = p.category_id ? [p.category_id] : [];
+      return all;
+    };
+
+    try {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      return { products: await loadProducts(supabaseAdmin) };
+    } catch (adminError) {
+      const message = adminError instanceof Error ? adminError.message : String(adminError);
+      console.warn("[listProductsAdmin] admin client failed, falling back to user client:", message);
+      return { products: await loadProducts(context.supabase) };
     }
-    return { products: all };
   });
 
 
