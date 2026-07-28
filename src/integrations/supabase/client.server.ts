@@ -9,6 +9,9 @@ function createSupabaseAdminClient() {
   const SUPABASE_URL = process.env.SUPABASE_URL?.trim();
   const SUPABASE_SERVICE_ROLE_KEY =
     process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() ||
+    process.env.SERVICE_ROLE_KEY?.trim() ||
+    process.env.SUPABASE_SERVICE_KEY?.trim() ||
+    process.env.SERVICE_SUPABASEANON_KEY?.trim() ||
     process.env.SELFHOST_SUPABASE_SERVICE_KEY?.trim() ||
     process.env.SERVICE_SUPABASESERVICE_KEY?.trim();
 
