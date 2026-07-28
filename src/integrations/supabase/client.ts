@@ -3,10 +3,16 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
+const SELFHOST_SUPABASE_URL = 'https://supabase-al-mtsolen.creativessquare.store';
+const SELFHOST_SUPABASE_PUBLISHABLE_KEY =
+  'eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4MzExOTQyMCwiZXhwIjo0OTM4NzkzMDIwLCJyb2xlIjoiYW5vbiJ9.ykWR6X6NsWxAmjZvUoHJuqwONjUw6OXbCF-X7Bzp8WQ';
+
 const SUPABASE_URL =
-  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || '';
+  (import.meta.env.VITE_SUPABASE_URL as string | undefined) || SELFHOST_SUPABASE_URL;
 const SUPABASE_PUBLISHABLE_KEY =
-  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) || '';
+  (import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY as string | undefined) ||
+  (import.meta.env.VITE_SUPABASE_ANON_KEY as string | undefined) ||
+  SELFHOST_SUPABASE_PUBLISHABLE_KEY;
 
 function createDisconnectedProxy(): ReturnType<typeof createClient<Database>> {
   const message =
