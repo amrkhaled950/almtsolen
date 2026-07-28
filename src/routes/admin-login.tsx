@@ -59,7 +59,15 @@ function AdminLoginPage() {
       toast.success(isAr ? "أهلاً بك في لوحة التحكم" : "Welcome to the dashboard");
       navigate({ to: "/admin", replace: true });
     } catch (err: any) {
-      toast.error(err?.message || (isAr ? "حدث خطأ" : "Something went wrong"));
+      const message = String(err?.message || "");
+      const isNetworkError = /load failed|failed to fetch|network/i.test(message);
+      toast.error(
+        isNetworkError
+          ? isAr
+            ? "تعذر الاتصال بسيرفر Supabase الجديد. تأكد أن نسخة Vercel منشورة بعد تحديث الإعدادات."
+            : "Could not reach the new Supabase server. Make sure Vercel is redeployed with the updated config."
+          : message || (isAr ? "حدث خطأ" : "Something went wrong"),
+      );
     } finally {
       setBusy(false);
     }

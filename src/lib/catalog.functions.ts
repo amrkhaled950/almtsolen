@@ -48,10 +48,10 @@ const PRODUCT_COLS =
 
 
 // Public (anon) credentials — safe to hardcode as fallback so the catalog
-// works on any host even when server env vars are not configured.
-const FALLBACK_SUPABASE_URL = "https://hiaewjagcvycyuxweiwj.supabase.co";
+// keeps using the self-hosted Supabase when deployment env vars lag behind.
+const FALLBACK_SUPABASE_URL = "https://supabase-al-mtsolen.creativessquare.store";
 const FALLBACK_SUPABASE_PUBLISHABLE_KEY =
-  "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhpYWV3amFnY3Z5Y3l1eHdlaXdqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzOTMzODcsImV4cCI6MjA5NTk2OTM4N30.EMCWia7PoTDUhCljG2Oa8YBuQPnbuyC80E0Ss_iDA6Y";
+  "eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJpc3MiOiJzdXBhYmFzZSIsImlhdCI6MTc4MzExOTQyMCwiZXhwIjo0OTM4NzkzMDIwLCJyb2xlIjoiYW5vbiJ9.ykWR6X6NsWxAmjZvUoHJuqwONjUw6OXbCF-X7Bzp8WQ";
 
 function getPublicClient() {
   const url =
