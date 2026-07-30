@@ -313,8 +313,9 @@ function ProductsPage() {
           onClose={() => { setShowForm(false); setEditing(null); }}
           onSave={async (payload) => {
             try {
-              await upsertFn({ data: payload });
-              toast.success(isAr ? "تم الحفظ" : "Saved");
+              const res: any = await upsertFn({ data: payload });
+              if (res?.warning) toast.warning(res.warning);
+              else toast.success(isAr ? "تم الحفظ" : "Saved");
               await qc.refetchQueries({ queryKey: ["admin", "products"] });
               await qc.refetchQueries({ queryKey: ["admin", "categories"] });
               setShowForm(false);
@@ -322,6 +323,7 @@ function ProductsPage() {
             } catch (e: any) {
               toast.error(e?.message || "Error");
             }
+
           }}
         />
       )}
