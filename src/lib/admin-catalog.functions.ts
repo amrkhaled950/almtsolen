@@ -410,6 +410,11 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       attempt = rest;
       res = await saveProducts(attempt);
     }
+    // Slug taken (race or leftover row): retry with a unique suffix.
+    for (let i = 2; i < 8 && res.error && /products_slug_key|duplicate key/i.test(res.error.message || ""); i++) {
+      attempt = { ...attempt, slug: `${finalSlug}-${i}` };
+      res = await saveProducts(attempt);
+    }
     if (res.error) throw new Error(`فشل حفظ المنتج: ${res.error.message}`);
     productId = res.id;
     if (!productId && data.id) productId = data.id;
