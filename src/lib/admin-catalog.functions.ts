@@ -22,9 +22,10 @@ const categoryInput = z.object({
     .string()
     .trim()
     .max(80)
-    .regex(/^[a-z0-9-]*$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -")
+    .transform((s) => s.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""))
     .optional()
     .or(z.literal("")),
+
 
   name_ar: z.string().trim().min(1).max(120),
   name_en: z.string().trim().min(1).max(120),
@@ -131,9 +132,10 @@ const productInput = z.object({
     .string()
     .trim()
     .max(120)
-    .regex(/^[a-z0-9-]*$/, "slug يجب أن يكون بحروف إنجليزية صغيرة وأرقام و -")
+    .transform((s) => s.toLowerCase().replace(/[^a-z0-9-]+/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, ""))
     .optional()
     .or(z.literal("")),
+
 
   title_ar: z.string().trim().min(1).max(200),
   title_en: z.string().trim().min(1).max(200),
