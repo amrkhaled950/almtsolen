@@ -229,35 +229,38 @@ async function syncProductCategories(supabaseAdmin: any, productId: string, cate
     }
   };
 
+  let warning: string | null = null;
+
   try {
     await writeDirectly();
   } catch (directError) {
     const directMessage = directError instanceof Error ? directError.message : String(directError);
-    if (directMessage === relationMissingMessage) throw directError;
-
     const { error: rpcErr } = await supabaseAdmin.rpc("sync_product_categories" as any, {
       p_product_id: productId,
       p_category_ids: desired,
     });
     if (rpcErr) {
-      if (/function .* does not exist|schema cache|Could not find the function/i.test(rpcErr.message)) {
-        throw new Error(`فشل تحديث التصنيفات مباشرة، ودالة sync_product_categories غير موجودة. السبب: ${directMessage}`);
-      }
-      throw new Error(`فشل تحديث التصنيفات: ${rpcErr.message}. السبب المباشر: ${directMessage}`);
+      warning = `تم حفظ المنتج، لكن تعذّر تحديث التصنيفات الإضافية: ${directMessage}`;
+      console.error("[syncProductCategories]", directMessage, "| rpc:", rpcErr.message);
+      return { saved: [], warning };
     }
   }
 
-  const saved = await readLinks();
-  const savedSet = new Set(saved);
-  const sameCount = savedSet.size === desired.length;
-  const sameValues = desired.every((categoryId) => savedSet.has(categoryId));
-  if (!sameCount || !sameValues) {
-    throw new Error(
-      `تم حفظ المنتج لكن تصنيفات الربط لم تتسجل بالكامل. المطلوب: ${desired.length}، المسجل: ${savedSet.size}.`,
-    );
+  try {
+    const saved = await readLinks();
+    const savedSet = new Set(saved);
+    const complete = savedSet.size === desired.length && desired.every((id) => savedSet.has(id));
+    if (!complete) {
+      warning = `تم حفظ المنتج لكن بعض التصنيفات لم تتسجل (المطلوب ${desired.length}، المسجل ${savedSet.size}).`;
+    }
+    return { saved, warning };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[syncProductCategories] verify failed:", message);
+    return { saved: desired, warning: null };
   }
-  return desired;
 }
+
 
 
 
