@@ -336,9 +336,13 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
     const supabaseAdmin = await getWriteClient(context);
-    const finalSlug = data.slug && data.slug.length >= 2
-      ? data.slug
-      : await ensureUniqueSlug(supabaseAdmin, "products", data.title_en || data.title_ar, data.id);
+    // Always make sure the slug is unique (auto-appends -2, -3, ... when taken)
+    const finalSlug = await ensureUniqueSlug(
+      supabaseAdmin,
+      "products",
+      data.slug && data.slug.length >= 2 ? data.slug : data.title_en || data.title_ar,
+      data.id,
+    );
     const catIds = Array.from(new Set([
       ...(data.category_ids ?? []),
       ...(data.category_id ? [data.category_id] : []),
@@ -404,6 +408,11 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
       if (!col || !(col in attempt)) break;
       const { [col]: _omit, ...rest } = attempt;
       attempt = rest;
+      res = await saveProducts(attempt);
+    }
+    // Slug taken (race or leftover row): retry with a unique suffix.
+    for (let i = 2; i < 8 && res.error && /products_slug_key|duplicate key/i.test(res.error.message || ""); i++) {
+      attempt = { ...attempt, slug: `${finalSlug}-${i}` };
       res = await saveProducts(attempt);
     }
     if (res.error) throw new Error(`فشل حفظ المنتج: ${res.error.message}`);
