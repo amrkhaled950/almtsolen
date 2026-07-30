@@ -15,6 +15,25 @@ async function assertAdmin(supabase: any, userId: string) {
   if (!data) throw new Error("Forbidden: admin role required");
 }
 
+/**
+ * Returns the service-role client when it is usable, otherwise falls back to the
+ * authenticated (already verified as admin) user client so the dashboard keeps
+ * working even when the self-hosted service key is missing/misconfigured.
+ */
+async function getWriteClient(context: any) {
+  try {
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    // Touch the proxy so a bad/missing key throws here, not mid-write.
+    void supabaseAdmin.from("products");
+    return supabaseAdmin as any;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.warn("[admin-catalog] service-role client unavailable, using user client:", message);
+    return context.supabase as any;
+  }
+}
+
+
 // ---------- Categories ----------
 const categoryInput = z.object({
   id: z.string().uuid().optional(),
