@@ -26,19 +26,21 @@ function createSupabaseAdminClient() {
   }
 
   if (SUPABASE_SERVICE_ROLE_KEY.startsWith('eyJ')) {
-    const [, payload] = SUPABASE_SERVICE_ROLE_KEY.split('.');
+    // Best-effort sanity check. Never hard-fail on decoding issues (self-hosted
+    // instances can use non-standard JWT payloads); only warn.
     try {
+      const [, payload] = SUPABASE_SERVICE_ROLE_KEY.split('.');
       const decoded = JSON.parse(Buffer.from(payload ?? '', 'base64url').toString('utf8')) as { role?: string };
       if (decoded.role && decoded.role !== 'service_role') {
-        throw new Error(
-          `SUPABASE_SERVICE_ROLE_KEY must be the service_role key, but the configured key role is "${decoded.role}".`,
+        console.warn(
+          `[Supabase] Configured service key role is "${decoded.role}" (expected "service_role"). Admin writes may be restricted by RLS.`,
         );
       }
-    } catch (error) {
-      if (error instanceof Error && error.message.includes('configured key role')) throw error;
-      throw new Error('SUPABASE_SERVICE_ROLE_KEY is not a valid Supabase service-role JWT.');
+    } catch {
+      console.warn('[Supabase] Could not decode the configured service key payload; continuing anyway.');
     }
   }
+
 
   return createClient<Database>(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
     auth: {
