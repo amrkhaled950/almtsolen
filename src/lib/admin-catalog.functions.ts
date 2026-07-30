@@ -87,7 +87,7 @@ export const upsertCategoryAdmin = createServerFn({ method: "POST" })
   .inputValidator((input) => categoryInput.parse(input))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getWriteClient(context);
     const finalSlug = data.slug && data.slug.length >= 2
       ? data.slug
       : await ensureUniqueSlug(supabaseAdmin, "categories", data.name_en || data.name_ar, data.id);
@@ -138,7 +138,7 @@ export const deleteCategoryAdmin = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getWriteClient(context);
     const { error } = await supabaseAdmin.from("categories").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
@@ -332,7 +332,7 @@ export const upsertProductAdmin = createServerFn({ method: "POST" })
   .inputValidator((input) => productInput.parse(input))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getWriteClient(context);
     const finalSlug = data.slug && data.slug.length >= 2
       ? data.slug
       : await ensureUniqueSlug(supabaseAdmin, "products", data.title_en || data.title_ar, data.id);
@@ -408,7 +408,7 @@ export const deleteProductAdmin = createServerFn({ method: "POST" })
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))
   .handler(async ({ context, data }) => {
     await assertAdmin(context.supabase, context.userId);
-    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const supabaseAdmin = await getWriteClient(context);
     const { error } = await supabaseAdmin.from("products").delete().eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
