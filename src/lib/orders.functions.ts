@@ -114,7 +114,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         if (c.type === "percent" && c.max_discount) {
           d = Math.min(d, Number(c.max_discount));
         }
-        d = Math.min(d, subtotal);
+        d = Math.min(d, subtotal + shipping);
         discount = Math.round(d * 100) / 100;
         coupon_id = c.id;
         coupon_code = c.code;

@@ -15,6 +15,7 @@ export const validateCoupon = createServerFn({ method: "POST" })
     z.object({
       code: z.string().trim().min(1).max(50),
       subtotal: z.number().min(0),
+      shipping: z.number().min(0).optional(),
     }).parse(input),
   )
   .handler(async ({ data }): Promise<CouponPreview> => {
@@ -37,7 +38,8 @@ export const validateCoupon = createServerFn({ method: "POST" })
     if (c.type === "percent" && c.max_discount) {
       discount = Math.min(discount, Number(c.max_discount));
     }
-    discount = Math.min(discount, data.subtotal);
+    const maxOrderTotal = data.subtotal + (data.shipping ?? 0);
+    discount = Math.min(discount, maxOrderTotal);
     discount = Math.round(discount * 100) / 100;
     return { id: c.id, code: c.code, type: c.type, value: Number(c.value), discount };
   });

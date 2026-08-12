@@ -73,7 +73,9 @@ function Checkout() {
     if (!couponInput.trim()) return;
     setCouponBusy(true);
     try {
-      const res = await validateCouponFn({ data: { code: couponInput.trim(), subtotal } });
+      const res = await validateCouponFn({
+        data: { code: couponInput.trim(), subtotal, shipping: shipping ?? 0 },
+      });
       setCoupon(res);
       toast.success(isAr ? `تم تطبيق الكوبون: -${res.discount} ج.م` : `Applied: -${res.discount}`);
     } catch (e: any) {
