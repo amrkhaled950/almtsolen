@@ -21,7 +21,7 @@ export type MetaEventData = {
 
 declare global {
   interface Window {
-    fbq?: ((...args: unknown[]) => void) & { callMethod?: (...args: unknown[]) => void };
+    fbq?: any;
     _fbq?: unknown;
   }
 }
