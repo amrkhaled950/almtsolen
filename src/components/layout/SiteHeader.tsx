@@ -16,6 +16,8 @@ export function SiteHeader() {
   const cartCount = useCart((s) => s.count());
   const openCart = useCart((s) => s.openCart);
   const [scrolled, setScrolled] = useState(false);
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [searchQ, setSearchQ] = useState("");
@@ -203,7 +205,7 @@ export function SiteHeader() {
             </Link>
             <button onClick={openCart} className="relative grid h-10 w-10 place-items-center rounded-full hover:bg-muted transition-colors" aria-label={t("nav.cart", locale)}>
               <ShoppingBag className="h-5 w-5" />
-              {cartCount > 0 && (
+              {mounted && cartCount > 0 && (
                 <span className="absolute -top-0.5 -end-0.5 grid h-5 min-w-5 place-items-center rounded-full bg-primary px-1 text-[10px] font-bold text-primary-foreground">
                   {cartCount}
                 </span>

@@ -1,10 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState, useId, cloneElement, isValidElement, type ReactElement } from "react";
+import { useState, useId, useEffect, useRef, cloneElement, isValidElement, type ReactElement } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Loader2, CheckCircle2 } from "lucide-react";
 import { useLocale, formatPrice } from "../lib/i18n";
 import { useCart } from "../lib/cart-store";
+import { trackMeta } from "../lib/meta-pixel";
 import { EG_GOVERNORATES, EG_PHONE_REGEX } from "../lib/governorates";
 import { placeOrder } from "../lib/orders.functions";
 import { getShippingRates } from "../lib/shipping.functions";
@@ -96,6 +97,20 @@ function Checkout() {
     return Object.keys(e).length === 0;
   };
 
+  const initiatedRef = useRef(false);
+  useEffect(() => {
+    if (initiatedRef.current || items.length === 0) return;
+    initiatedRef.current = true;
+    trackMeta("InitiateCheckout", {
+      value: total,
+      currency: "EGP",
+      content_type: "product",
+      num_items: items.reduce((n, i) => n + i.quantity, 0),
+      content_ids: items.map((i) => String(i.product.id)),
+      contents: items.map((i) => ({ id: String(i.product.id), quantity: i.quantity, item_price: Number(i.product.price) })),
+    });
+  }, [items.length, total]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!validate()) {
@@ -121,6 +136,19 @@ function Checkout() {
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         },
       });
+      trackMeta(
+        "Purchase",
+        {
+          value: total,
+          currency: "EGP",
+          content_type: "product",
+          order_id: res.order_number,
+          num_items: items.reduce((n, i) => n + i.quantity, 0),
+          content_ids: items.map((i) => String(i.product.id)),
+          contents: items.map((i) => ({ id: String(i.product.id), quantity: i.quantity, item_price: Number(i.product.price) })),
+        },
+        { email: form.email.trim() || undefined, phone: form.phone.trim() || undefined },
+      );
       setSuccess({ order_number: res.order_number });
       clear();
       closeCart();

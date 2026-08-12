@@ -2,8 +2,9 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, queryOptions } from "@tanstack/react-query";
 import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Flame } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
+import { trackMeta } from "../lib/meta-pixel";
 import { useCart, useWishlist } from "../lib/cart-store";
 import { getProductPublic, listRelatedProductsPublic } from "../lib/catalog.functions";
 import { toast } from "sonner";
@@ -131,6 +132,18 @@ function ProductPage() {
     ...productQueryOptions(slug),
     queryFn: () => fetchProduct({ data: { slug } }),
   });
+
+  const viewed = data?.product;
+  useEffect(() => {
+    if (!viewed) return;
+    trackMeta("ViewContent", {
+      value: Number(viewed.price),
+      currency: "EGP",
+      content_type: "product",
+      content_ids: [String(viewed.id)],
+      content_name: viewed.title_ar || viewed.title_en,
+    });
+  }, [viewed?.id]);
 
   if (isLoading) {
     return <ProductPageSkeleton />;

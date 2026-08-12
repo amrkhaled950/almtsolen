@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { UIProduct } from "./catalog.functions";
+import { trackMeta } from "./meta-pixel";
 
 export interface CartItem {
   product: UIProduct;
@@ -25,8 +26,16 @@ export const useCart = create<CartState>()(
     (set, get) => ({
       items: [],
       isOpen: false,
-      addItem: (product, quantity = 1) =>
-        set((s) => {
+      addItem: (product, quantity = 1) => {
+        trackMeta("AddToCart", {
+          value: Number(product.price) * quantity,
+          currency: "EGP",
+          content_type: "product",
+          content_ids: [String(product.id)],
+          content_name: (product as any).title_ar || (product as any).title_en || undefined,
+          contents: [{ id: String(product.id), quantity, item_price: Number(product.price) }],
+        });
+        return set((s) => {
           const existing = s.items.find((i) => i.product.id === product.id);
           if (existing) {
             return {
@@ -39,7 +48,8 @@ export const useCart = create<CartState>()(
             };
           }
           return { items: [...s.items, { product, quantity }], isOpen: true };
-        }),
+        });
+      },
       removeItem: (id) =>
         set((s) => ({ items: s.items.filter((i) => i.product.id !== id) })),
       updateQuantity: (id, quantity) =>
