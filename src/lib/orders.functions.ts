@@ -42,7 +42,7 @@ export const placeOrder = createServerFn({ method: "POST" })
     const ids = data.items.map((i) => i.product_id);
     const { data: products, error: pErr } = await supabaseAdmin
       .from("products")
-      .select("id, title_ar, title_en, price, cover_url, stock, is_active")
+      .select("id, title_ar, title_en, price, cover_url, stock, unlimited_stock, is_active")
       .in("id", ids);
     if (pErr) throw new Error(pErr.message);
     if (!products || products.length !== ids.length)
@@ -52,7 +52,9 @@ export const placeOrder = createServerFn({ method: "POST" })
     const orderItems = data.items.map((it) => {
       const p = products.find((x) => x.id === it.product_id);
       if (!p || !p.is_active) throw new Error("منتج غير صالح");
-      if (p.stock < it.quantity) throw new Error(`المخزون غير كافٍ للمنتج: ${p.title_ar}`);
+      // تخطّى فحص المخزون لو المنتج "متوفر دائماً"
+      if (!p.unlimited_stock && p.stock < it.quantity)
+        throw new Error(`المخزون غير كافٍ للمنتج: ${p.title_ar}`);
       const line = Number(p.price) * it.quantity;
       subtotal += line;
       return {
@@ -143,15 +145,20 @@ export const placeOrder = createServerFn({ method: "POST" })
       throw new Error(iErr.message);
     }
 
-    // Decrement stock — بالتوازي لتسريع الأداء
+    // Decrement stock — بالتوازي، ونتخطى المنتجات اللي unlimited_stock
     await Promise.all(
-      data.items.map((it) => {
-        const p = products.find((x) => x.id === it.product_id)!;
-        return supabaseAdmin
-          .from("products")
-          .update({ stock: Math.max(0, p.stock - it.quantity) })
-          .eq("id", it.product_id);
-      })
+      data.items
+        .filter((it) => {
+          const p = products.find((x) => x.id === it.product_id)!;
+          return !p.unlimited_stock;
+        })
+        .map((it) => {
+          const p = products.find((x) => x.id === it.product_id)!;
+          return supabaseAdmin
+            .from("products")
+            .update({ stock: Math.max(0, p.stock - it.quantity) })
+            .eq("id", it.product_id);
+        })
     );
 
     return { ok: true, order_number: order.order_number, id: order.id };
