@@ -23,6 +23,14 @@ const checkoutSchema = z.object({
   items: z.array(itemSchema).min(1).max(50),
 });
 
+/** توليد رقم أوردر فريد: ORD-YYYYMMDD-XXXXXX (timestamp + 6 أرقام عشوائية) */
+function generateOrderNumber(): string {
+  const now = new Date();
+  const date = now.toISOString().slice(0, 10).replace(/-/g, ""); // YYYYMMDD
+  const rand = Math.floor(100000 + Math.random() * 900000); // 6 أرقام
+  return `ORD-${date}-${rand}`;
+}
+
 export const placeOrder = createServerFn({ method: "POST" })
   .inputValidator((input) => checkoutSchema.parse(input))
   .handler(async ({ data }) => {
@@ -111,28 +119,42 @@ export const placeOrder = createServerFn({ method: "POST" })
       apartment: data.apartment || null,
     };
 
-    const { data: order, error: oErr } = await supabaseAdmin
-      .from("orders")
-      .insert({
-        user_id: userId,
-        guest_name: userId ? null : data.full_name,
-        guest_phone: data.phone,
-        guest_email: data.email || null,
-        status: "pending",
-        payment_method: data.payment_method === "card" ? "paymob_card" : "cod",
-        payment_status: "pending",
-        subtotal,
-        shipping_cost: shipping,
-        discount,
-        coupon_id,
-        coupon_code,
-        total,
-        shipping_address,
-        notes: data.notes || null,
-      })
-      .select("id, order_number")
-      .single();
-    if (oErr) throw new Error(oErr.message);
+    // إدخال الأوردر مع retry تلقائي لو حصل تعارض في order_number
+    let order: { id: string; order_number: string } | null = null;
+    let lastErr: string = "";
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const orderNumber = generateOrderNumber();
+      const { data: inserted, error: oErr } = await supabaseAdmin
+        .from("orders")
+        .insert({
+          order_number: orderNumber,
+          user_id: userId,
+          guest_name: userId ? null : data.full_name,
+          guest_phone: data.phone,
+          guest_email: data.email || null,
+          status: "pending",
+          payment_method: data.payment_method === "card" ? "paymob_card" : "cod",
+          payment_status: "pending",
+          subtotal,
+          shipping_cost: shipping,
+          discount,
+          coupon_id,
+          coupon_code,
+          total,
+          shipping_address,
+          notes: data.notes || null,
+        })
+        .select("id, order_number")
+        .single();
+      if (!oErr && inserted) { order = inserted; break; }
+      // لو التعارض في order_number نحاول تاني برقم مختلف
+      if (oErr?.code === "23505" && oErr.message.includes("order_number")) {
+        lastErr = oErr.message;
+        continue;
+      }
+      throw new Error(oErr!.message);
+    }
+    if (!order) throw new Error(`فشل إنشاء الطلب بعد عدة محاولات: ${lastErr}`);
     if (coupon_id) {
       const { data: cur } = await supabaseAdmin.from("coupons").select("used_count").eq("id", coupon_id).single();
       await supabaseAdmin.from("coupons").update({ used_count: (cur?.used_count ?? 0) + 1 }).eq("id", coupon_id);
