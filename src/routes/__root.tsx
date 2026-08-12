@@ -21,6 +21,7 @@ import { CartDrawer } from "../components/cart/CartDrawer";
 import { Toaster } from "../components/ui/sonner";
 import { useLocale } from "../lib/i18n";
 import { ensureAuthInit } from "../lib/auth-store";
+import { initMetaPixel, trackMeta } from "../lib/meta-pixel";
 import logoAsset from "../assets/logo.png.asset.json";
 
 function NotFoundComponent() {
@@ -175,6 +176,14 @@ function RootComponent() {
     document.documentElement.dir = locale === "ar" ? "rtl" : "ltr";
     ensureAuthInit();
   }, [locale]);
+
+  useEffect(() => {
+    initMetaPixel();
+  }, []);
+
+  useEffect(() => {
+    trackMeta("PageView");
+  }, [pathname]);
 
   if (isAdmin) {
     return (
