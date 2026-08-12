@@ -35,8 +35,8 @@ const orderStatusLabel: Record<OrderStatus, { ar: string; en: string; color: str
 const paymentMethodLabel: Record<string, { ar: string; en: string; icon: string }> = {
   cod:           { ar: "الدفع عند الاستلام", en: "Cash on delivery",  icon: "💵" },
   kashier:       { ar: "بطاقة (Kashier)",     en: "Card (Kashier)",    icon: "💳" },
-  paymob_card:   { ar: "بطاقة (Paymob)",      en: "Card (Paymob)",    icon: "💳" },
-  paymob_wallet: { ar: "محفظة (Paymob)",      en: "Wallet (Paymob)",  icon: "📱" },
+  paymob_card:   { ar: "بطاقة (Kashier)",     en: "Card (Kashier)",    icon: "💳" },
+  paymob_wallet: { ar: "محفظة (Kashier)",     en: "Wallet (Kashier)",  icon: "📱" },
 };
 
 const paymentStatusLabel: Record<string, { ar: string; en: string; color: string }> = {

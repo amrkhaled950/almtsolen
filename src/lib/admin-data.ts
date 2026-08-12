@@ -52,8 +52,9 @@ export const orderStatusLabel: Record<OrderStatus, { ar: string; en: string; col
   cancelled: { ar: "ملغي", en: "Cancelled", color: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300" },
 };
 
-export const paymentMethodLabel: Record<PaymentMethod, { ar: string; en: string }> = {
+export const paymentMethodLabel: Record<string, { ar: string; en: string }> = {
   cod: { ar: "الدفع عند الاستلام", en: "Cash on delivery" },
-  paymob_card: { ar: "بطاقة (Paymob)", en: "Card (Paymob)" },
-  paymob_wallet: { ar: "محفظة (Paymob)", en: "Wallet (Paymob)" },
+  kashier: { ar: "بطاقة (Kashier)", en: "Card (Kashier)" },
+  paymob_card: { ar: "بطاقة (Kashier)", en: "Card (Kashier)" },
+  paymob_wallet: { ar: "محفظة (Kashier)", en: "Wallet (Kashier)" },
 };

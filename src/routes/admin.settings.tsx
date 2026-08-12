@@ -496,8 +496,8 @@ function PaymentTab({ isAr }: { isAr: boolean }) {
       <h2 className="font-bold text-lg">{isAr ? "طرق الدفع" : "Payment methods"}</h2>
       {[
         { label: { ar: "الدفع عند الاستلام", en: "Cash on delivery" }, enabled: true },
-        { label: { ar: "Paymob - بطاقات", en: "Paymob - Cards" }, enabled: false },
-        { label: { ar: "Paymob - محافظ", en: "Paymob - Wallets" }, enabled: false },
+        { label: { ar: "Kashier - بطاقات", en: "Kashier - Cards" }, enabled: true },
+        { label: { ar: "Kashier - محافظ", en: "Kashier - Wallets" }, enabled: false },
       ].map((t) => (
         <div key={t.label.en} className="flex items-center justify-between py-2 border-b border-border last:border-0">
           <span className="text-sm font-medium">{isAr ? t.label.ar : t.label.en}</span>
