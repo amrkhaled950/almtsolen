@@ -4,6 +4,7 @@ import { useQuery, queryOptions } from "@tanstack/react-query";
 import { Star, ShoppingBag, Heart, Truck, ShieldCheck, RotateCcw, Flame } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useLocale, t, formatPrice } from "../lib/i18n";
+import { trackMeta } from "../lib/meta-pixel";
 import { useCart, useWishlist } from "../lib/cart-store";
 import { getProductPublic, listRelatedProductsPublic } from "../lib/catalog.functions";
 import { toast } from "sonner";
