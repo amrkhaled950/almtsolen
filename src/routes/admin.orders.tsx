@@ -32,10 +32,18 @@ const orderStatusLabel: Record<OrderStatus, { ar: string; en: string; color: str
   refunded:   { ar: "مسترجع",        en: "Refunded",   color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
 };
 
-const paymentMethodLabel: Record<string, { ar: string; en: string }> = {
-  cod:            { ar: "الدفع عند الاستلام", en: "Cash on delivery" },
-  paymob_card:    { ar: "بطاقة (Paymob)",      en: "Card (Paymob)" },
-  paymob_wallet:  { ar: "محفظة (Paymob)",      en: "Wallet (Paymob)" },
+const paymentMethodLabel: Record<string, { ar: string; en: string; icon: string }> = {
+  cod:           { ar: "الدفع عند الاستلام", en: "Cash on delivery",  icon: "💵" },
+  kashier:       { ar: "بطاقة (Kashier)",     en: "Card (Kashier)",    icon: "💳" },
+  paymob_card:   { ar: "بطاقة (Paymob)",      en: "Card (Paymob)",    icon: "💳" },
+  paymob_wallet: { ar: "محفظة (Paymob)",      en: "Wallet (Paymob)",  icon: "📱" },
+};
+
+const paymentStatusLabel: Record<string, { ar: string; en: string; color: string }> = {
+  pending:  { ar: "في انتظار الدفع", en: "Awaiting payment", color: "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300" },
+  paid:     { ar: "مدفوع",          en: "Paid",            color: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/30 dark:text-emerald-300" },
+  failed:   { ar: "فشل الدفع",      en: "Payment failed",  color: "bg-rose-100 text-rose-800 dark:bg-rose-900/30 dark:text-rose-300" },
+  refunded: { ar: "مسترجع",         en: "Refunded",        color: "bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300" },
 };
 
 function OrdersPage() {
@@ -195,6 +203,7 @@ function OrdersPage() {
                 <th className="text-start px-5 py-3 font-semibold">{isAr ? "التاريخ" : "Date"}</th>
                 <th className="text-start px-5 py-3 font-semibold">{isAr ? "العميل" : "Customer"}</th>
                 <th className="text-start px-5 py-3 font-semibold">{isAr ? "الدفع" : "Payment"}</th>
+                <th className="text-start px-5 py-3 font-semibold">{isAr ? "حالة الدفع" : "Pay status"}</th>
                 <th className="text-start px-5 py-3 font-semibold">{isAr ? "الحالة" : "Status"}</th>
                 <th className="text-end px-5 py-3 font-semibold">{isAr ? "الإجمالي" : "Total"}</th>
                 <th className="px-5 py-3" />
@@ -234,7 +243,25 @@ function OrdersPage() {
                       <div className="text-xs text-muted-foreground">{city}</div>
                     </td>
                     <td className="px-5 py-3 text-xs">
-                      {pm ? (isAr ? pm.ar : pm.en) : o.payment_method}
+                      <span className="flex items-center gap-1">
+                        <span>{pm?.icon ?? ""}</span>
+                        <span>{pm ? (isAr ? pm.ar : pm.en) : o.payment_method}</span>
+                      </span>
+                    </td>
+                    <td className="px-5 py-3">
+                      {(() => {
+                        // لو كاشير وحالة الدفع pending → لم يكمل الدفع
+                        const ps = o.payment_method === "kashier" || o.payment_method === "paymob_card"
+                          ? (paymentStatusLabel[o.payment_status] ?? paymentStatusLabel.pending)
+                          : null;
+                        return ps ? (
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${ps.color}`}>
+                            {isAr ? ps.ar : ps.en}
+                          </span>
+                        ) : (
+                          <span className="text-xs text-muted-foreground">—</span>
+                        );
+                      })()}
                     </td>
                     <td className="px-5 py-3">
                       <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${s.color}`}>
@@ -336,7 +363,20 @@ function OrdersPage() {
                   </section>
 
                   {/* Update Status */}
-                  <section className="flex gap-2">
+                  <section className="space-y-2">
+                    {/* Payment status badge for card orders */}
+                    {(detail.order.payment_method === "kashier" || detail.order.payment_method === "paymob_card") && (() => {
+                      const ps = paymentStatusLabel[detail.order.payment_status] ?? paymentStatusLabel.pending;
+                      return (
+                        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3 text-sm">
+                          <span className="text-muted-foreground font-medium">{isAr ? "حالة الدفع" : "Payment status"}</span>
+                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${ps.color}`}>
+                            {isAr ? ps.ar : ps.en}
+                          </span>
+                        </div>
+                      );
+                    })()}
+                    <div className="flex gap-2">
                     <select
                       value={detailStatus}
                       onChange={(e) => setDetailStatus(e.target.value as OrderStatus)}
@@ -356,6 +396,7 @@ function OrdersPage() {
                       {updateMut.isPending && <Loader2 className="h-4 w-4 animate-spin" />}
                       {isAr ? "تحديث" : "Update"}
                     </button>
+                    </div>
                   </section>
 
                   {/* Print waybill */}
