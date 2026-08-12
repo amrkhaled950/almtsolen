@@ -18,7 +18,7 @@ const checkoutSchema = z.object({
   building: z.string().trim().max(60).optional().or(z.literal("")),
   apartment: z.string().trim().max(60).optional().or(z.literal("")),
   notes: z.string().trim().max(500).optional().or(z.literal("")),
-  payment_method: z.enum(["cod"]).default("cod"),
+  payment_method: z.enum(["cod", "card"]).default("cod"),
   coupon_code: z.string().trim().max(50).optional().or(z.literal("")),
   items: z.array(itemSchema).min(1).max(50),
 });
@@ -116,7 +116,7 @@ export const placeOrder = createServerFn({ method: "POST" })
         guest_phone: data.phone,
         guest_email: data.email || null,
         status: "pending",
-        payment_method: "cod",
+        payment_method: data.payment_method === "card" ? "paymob_card" : "cod",
         payment_status: "pending",
         subtotal,
         shipping_cost: shipping,

@@ -8,6 +8,7 @@ import { useCart } from "../lib/cart-store";
 import { trackMeta } from "../lib/meta-pixel";
 import { EG_GOVERNORATES, EG_PHONE_REGEX } from "../lib/governorates";
 import { placeOrder } from "../lib/orders.functions";
+import { createKashierCheckout } from "../lib/kashier.functions";
 import { getShippingRates } from "../lib/shipping.functions";
 import { validateCoupon, type CouponPreview } from "../lib/coupons.functions";
 import { toast } from "sonner";
@@ -26,6 +27,8 @@ function Checkout() {
   const closeCart = useCart((s) => s.closeCart);
   const navigate = useNavigate();
   const placeOrderFn = useServerFn(placeOrder);
+  const kashierCheckoutFn = useServerFn(createKashierCheckout);
+  const [payMethod, setPayMethod] = useState<"cod" | "card">("cod");
   const fetchRatesFn = useServerFn(getShippingRates);
 
   const { data: ratesData } = useQuery({
@@ -131,7 +134,7 @@ function Checkout() {
           building: form.building.trim() || undefined,
           apartment: form.apartment.trim() || undefined,
           notes: form.notes.trim() || undefined,
-          payment_method: "cod",
+          payment_method: payMethod,
           coupon_code: coupon?.code,
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         },
@@ -149,6 +152,13 @@ function Checkout() {
         },
         { email: form.email.trim() || undefined, phone: form.phone.trim() || undefined },
       );
+      if (payMethod === "card") {
+        const pay = await kashierCheckoutFn({ data: { order_id: res.id } });
+        clear();
+        closeCart();
+        window.location.href = pay.url;
+        return;
+      }
       setSuccess({ order_number: res.order_number });
       clear();
       closeCart();
