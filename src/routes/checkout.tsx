@@ -271,13 +271,29 @@ function Checkout() {
           <h2 className="font-display font-bold text-xl mt-6 mb-2">
             {isAr ? "طريقة الدفع" : "Payment"}
           </h2>
-          <label className="flex items-center gap-3 p-4 border border-primary bg-primary/5 rounded-md cursor-pointer">
-            <input type="radio" name="pay" defaultChecked readOnly />
+          <label
+            className={`flex items-center gap-3 p-4 rounded-md cursor-pointer border ${payMethod === "cod" ? "border-primary bg-primary/5" : "border-border"}`}
+          >
+            <input
+              type="radio"
+              name="pay"
+              checked={payMethod === "cod"}
+              onChange={() => setPayMethod("cod")}
+            />
             <span className="font-semibold">{isAr ? "الدفع عند الاستلام" : "Cash on delivery"}</span>
           </label>
-          <label className="flex items-center gap-3 p-4 border border-border rounded-md cursor-not-allowed opacity-60">
-            <input type="radio" name="pay" disabled />
-            <span>{isAr ? "بطاقة ائتمان (قريباً مع Paymob)" : "Card (Paymob — soon)"}</span>
+          <label
+            className={`flex items-center gap-3 p-4 rounded-md cursor-pointer border mt-2 ${payMethod === "card" ? "border-primary bg-primary/5" : "border-border"}`}
+          >
+            <input
+              type="radio"
+              name="pay"
+              checked={payMethod === "card"}
+              onChange={() => setPayMethod("card")}
+            />
+            <span className="font-semibold">
+              {isAr ? "بطاقة ائتمان / خصم (Kashier)" : "Credit / debit card (Kashier)"}
+            </span>
           </label>
 
           <button type="submit" disabled={busy}
