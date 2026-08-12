@@ -66,7 +66,8 @@ export const placeOrder = createServerFn({ method: "POST" })
       };
     });
 
-    const shipping = subtotal >= 500 ? 0 : 50;
+    // شحن مجاني عند 2000 ج.م — يطابق قيمة الفرونت ليند
+    const shipping = subtotal >= 2000 ? 0 : 50;
 
     // Apply coupon if provided
     let discount = 0;
@@ -142,14 +143,16 @@ export const placeOrder = createServerFn({ method: "POST" })
       throw new Error(iErr.message);
     }
 
-    // Decrement stock
-    for (const it of data.items) {
-      const p = products.find((x) => x.id === it.product_id)!;
-      await supabaseAdmin
-        .from("products")
-        .update({ stock: Math.max(0, p.stock - it.quantity) })
-        .eq("id", it.product_id);
-    }
+    // Decrement stock — بالتوازي لتسريع الأداء
+    await Promise.all(
+      data.items.map((it) => {
+        const p = products.find((x) => x.id === it.product_id)!;
+        return supabaseAdmin
+          .from("products")
+          .update({ stock: Math.max(0, p.stock - it.quantity) })
+          .eq("id", it.product_id);
+      })
+    );
 
     return { ok: true, order_number: order.order_number, id: order.id };
   });
