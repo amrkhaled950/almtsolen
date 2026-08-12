@@ -1,6 +1,8 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { CheckCircle2, XCircle } from "lucide-react";
+import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
+import { CheckCircle2, XCircle, ShoppingCart, RotateCcw } from "lucide-react";
 import { useLocale } from "../lib/i18n";
+import { useCart } from "../lib/cart-store";
 
 export const Route = createFileRoute("/payment-result")({
   head: () => ({
@@ -26,52 +28,87 @@ function PaymentResult() {
   const { paymentStatus, merchantOrderId } = Route.useSearch();
   const isAr = useLocale((s) => s.locale === "ar");
   const success = paymentStatus.toUpperCase() === "SUCCESS";
+  const clear = useCart((s) => s.clear);
+  const closeCart = useCart((s) => s.closeCart);
+  const navigate = useNavigate();
+
+  // لو الدفع نجح — امسح العربة مرة واحدة فقط
+  useEffect(() => {
+    if (success) {
+      clear();
+      closeCart();
+    }
+  }, [success]);
 
   return (
     <div className="container-page py-20">
       <div className="max-w-md mx-auto text-center bg-card border border-border rounded-3xl p-10 shadow-elegant">
         <div
-          className={`grid h-16 w-16 mx-auto place-items-center rounded-full mb-4 ${success ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"}`}
+          className={`grid h-16 w-16 mx-auto place-items-center rounded-full mb-4 ${
+            success ? "bg-success/10 text-success" : "bg-destructive/10 text-destructive"
+          }`}
         >
           {success ? <CheckCircle2 className="h-9 w-9" /> : <XCircle className="h-9 w-9" />}
         </div>
+
         <h1 className="font-display font-black text-2xl mb-2">
           {success
-            ? isAr
-              ? "تم الدفع بنجاح!"
-              : "Payment successful!"
-            : isAr
-              ? "لم تكتمل عملية الدفع"
-              : "Payment failed"}
+            ? isAr ? "تم الدفع بنجاح!" : "Payment successful!"
+            : isAr ? "لم تكتمل عملية الدفع" : "Payment failed"}
         </h1>
+
         {merchantOrderId && (
           <p className="text-muted-foreground mb-1">
             {isAr ? "رقم الطلب" : "Order number"}:{" "}
             <span className="font-bold text-primary">{merchantOrderId}</span>
           </p>
         )}
+
         <p className="text-sm text-muted-foreground my-6">
           {success
             ? isAr
               ? "سنتواصل معك لتأكيد موعد التوصيل."
               : "We will contact you to confirm delivery."
             : isAr
-              ? "يمكنك المحاولة مرة أخرى أو اختيار الدفع عند الاستلام."
-              : "You can try again or choose cash on delivery."}
+              ? "لم يتم خصم أي مبلغ. يمكنك المحاولة مرة أخرى بنفس المنتجات أو اختيار الدفع عند الاستلام."
+              : "No charge was made. You can retry with the same items or choose cash on delivery."}
         </p>
+
         <div className="flex flex-wrap justify-center gap-2">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
-          >
-            {isAr ? "الرئيسية" : "Home"}
-          </Link>
-          <Link
-            to="/account"
-            className="inline-flex items-center justify-center rounded-md border border-input px-6 py-2.5 text-sm font-medium"
-          >
-            {isAr ? "طلباتي" : "My orders"}
-          </Link>
+          {success ? (
+            <>
+              <Link
+                to="/"
+                className="inline-flex items-center justify-center rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
+              >
+                {isAr ? "الرئيسية" : "Home"}
+              </Link>
+              <Link
+                to="/account"
+                className="inline-flex items-center justify-center rounded-md border border-input px-6 py-2.5 text-sm font-medium"
+              >
+                {isAr ? "طلباتي" : "My orders"}
+              </Link>
+            </>
+          ) : (
+            <>
+              {/* زر الرجوع للـ Checkout — العربة لا تزال موجودة */}
+              <Link
+                to="/checkout"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-primary px-6 py-2.5 text-sm font-medium text-primary-foreground"
+              >
+                <RotateCcw className="h-4 w-4" />
+                {isAr ? "حاول مرة أخرى" : "Try again"}
+              </Link>
+              <Link
+                to="/shop"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-input px-6 py-2.5 text-sm font-medium"
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {isAr ? "متابعة التسوق" : "Continue shopping"}
+              </Link>
+            </>
+          )}
         </div>
       </div>
     </div>

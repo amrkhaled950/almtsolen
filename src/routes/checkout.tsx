@@ -157,8 +157,8 @@ function Checkout() {
       } catch { /* Meta CAPI errors are non-fatal */ }
       if (payMethod === "card") {
         const pay = await kashierCheckoutFn({ data: { order_id: res.id } });
-        clear();
-        closeCart();
+        // لا تمسح العربة هنا — هتتمسح في صفحة payment-result لو الدفع نجح
+        // لو الدفع فشل، العميل يرجع يلاقي العربة موجودة
         window.location.href = pay.url;
         return;
       }
