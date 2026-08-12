@@ -76,8 +76,21 @@ export const placeOrder = createServerFn({ method: "POST" })
       };
     });
 
-    // شحن مجاني عند 2000 ج.م — يطابق قيمة الفرونت ليند
-    const shipping = subtotal >= 2000 ? 0 : 50;
+    // حساب تكلفة الشحن حسب المحافظة المختارة
+    let shipping = subtotal >= 2000 ? 0 : 50;
+    if (subtotal < 2000 && data.governorate) {
+      const { data: rates } = await (supabaseAdmin as any)
+        .from("shipping_rates")
+        .select("*");
+      if (rates && rates.length > 0) {
+        const match = rates.find(
+          (r: any) => r.governorate_ar === data.governorate || r.governorate_en === data.governorate
+        );
+        if (match && match.enabled) {
+          shipping = Number(match.price);
+        }
+      }
+    }
 
     // Apply coupon if provided
     let discount = 0;

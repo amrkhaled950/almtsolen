@@ -51,9 +51,10 @@ function Checkout() {
   const [busy, setBusy] = useState(false);
   const [success, setSuccess] = useState<{ order_number: string } | null>(null);
 
-  const getShippingPrice = () => {
+  const getShippingPrice = (): number | null => {
     if (subtotal >= 2000) return 0;
-    if (!form.governorate || !ratesData?.rates.length) return 50;
+    if (!form.governorate) return null;
+    if (!ratesData?.rates.length) return 50;
     const match = ratesData.rates.find(
       (r) => r.governorate_ar === form.governorate || r.governorate_en === form.governorate
     );
@@ -66,7 +67,7 @@ function Checkout() {
   const [couponBusy, setCouponBusy] = useState(false);
   const validateCouponFn = useServerFn(validateCoupon);
   const discount = coupon?.discount ?? 0;
-  const total = Math.max(0, subtotal + shipping - discount);
+  const total = Math.max(0, subtotal + (shipping ?? 0) - discount);
 
   const applyCoupon = async () => {
     if (!couponInput.trim()) return;
@@ -357,7 +358,20 @@ function Checkout() {
           </div>
           <div className="border-t border-border pt-4 space-y-2 text-sm">
             <Row label={isAr ? "المجموع الفرعي" : "Subtotal"} value={formatPrice(subtotal, locale)} />
-            <Row label={isAr ? "الشحن" : "Shipping"} value={shipping === 0 ? (isAr ? "مجاناً" : "Free") : formatPrice(shipping, locale)} />
+            <div className="flex justify-between items-center text-sm">
+              <span className="text-muted-foreground">{isAr ? "الشحن" : "Shipping"}</span>
+              <span className="font-semibold">
+                {subtotal >= 2000 ? (
+                  isAr ? "مجاناً" : "Free"
+                ) : shipping === null ? (
+                  <span className="text-xs font-medium text-amber-600 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 px-2 py-0.5 rounded border border-amber-200/60 dark:border-amber-800/40">
+                    {isAr ? "اختر المحافظة لمعرفة الشحن" : "Select governorate"}
+                  </span>
+                ) : (
+                  formatPrice(shipping, locale)
+                )}
+              </span>
+            </div>
             {discount > 0 && (
               <Row label={isAr ? "خصم الكوبون" : "Coupon"} value={`-${formatPrice(discount, locale)}`} />
             )}
