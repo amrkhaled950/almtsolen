@@ -8,6 +8,7 @@ import { useCart } from "../lib/cart-store";
 import { trackMeta } from "../lib/meta-pixel";
 import { EG_GOVERNORATES, EG_PHONE_REGEX } from "../lib/governorates";
 import { placeOrder } from "../lib/orders.functions";
+import { createKashierCheckout } from "../lib/kashier.functions";
 import { getShippingRates } from "../lib/shipping.functions";
 import { validateCoupon, type CouponPreview } from "../lib/coupons.functions";
 import { toast } from "sonner";
@@ -26,6 +27,8 @@ function Checkout() {
   const closeCart = useCart((s) => s.closeCart);
   const navigate = useNavigate();
   const placeOrderFn = useServerFn(placeOrder);
+  const kashierCheckoutFn = useServerFn(createKashierCheckout);
+  const [payMethod, setPayMethod] = useState<"cod" | "card">("cod");
   const fetchRatesFn = useServerFn(getShippingRates);
 
   const { data: ratesData } = useQuery({
@@ -131,7 +134,7 @@ function Checkout() {
           building: form.building.trim() || undefined,
           apartment: form.apartment.trim() || undefined,
           notes: form.notes.trim() || undefined,
-          payment_method: "cod",
+          payment_method: payMethod,
           coupon_code: coupon?.code,
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         },
@@ -149,6 +152,13 @@ function Checkout() {
         },
         { email: form.email.trim() || undefined, phone: form.phone.trim() || undefined },
       );
+      if (payMethod === "card") {
+        const pay = await kashierCheckoutFn({ data: { order_id: res.id } });
+        clear();
+        closeCart();
+        window.location.href = pay.url;
+        return;
+      }
       setSuccess({ order_number: res.order_number });
       clear();
       closeCart();
@@ -271,13 +281,29 @@ function Checkout() {
           <h2 className="font-display font-bold text-xl mt-6 mb-2">
             {isAr ? "طريقة الدفع" : "Payment"}
           </h2>
-          <label className="flex items-center gap-3 p-4 border border-primary bg-primary/5 rounded-md cursor-pointer">
-            <input type="radio" name="pay" defaultChecked readOnly />
+          <label
+            className={`flex items-center gap-3 p-4 rounded-md cursor-pointer border ${payMethod === "cod" ? "border-primary bg-primary/5" : "border-border"}`}
+          >
+            <input
+              type="radio"
+              name="pay"
+              checked={payMethod === "cod"}
+              onChange={() => setPayMethod("cod")}
+            />
             <span className="font-semibold">{isAr ? "الدفع عند الاستلام" : "Cash on delivery"}</span>
           </label>
-          <label className="flex items-center gap-3 p-4 border border-border rounded-md cursor-not-allowed opacity-60">
-            <input type="radio" name="pay" disabled />
-            <span>{isAr ? "بطاقة ائتمان (قريباً مع Paymob)" : "Card (Paymob — soon)"}</span>
+          <label
+            className={`flex items-center gap-3 p-4 rounded-md cursor-pointer border mt-2 ${payMethod === "card" ? "border-primary bg-primary/5" : "border-border"}`}
+          >
+            <input
+              type="radio"
+              name="pay"
+              checked={payMethod === "card"}
+              onChange={() => setPayMethod("card")}
+            />
+            <span className="font-semibold">
+              {isAr ? "بطاقة ائتمان / خصم (Kashier)" : "Credit / debit card (Kashier)"}
+            </span>
           </label>
 
           <button type="submit" disabled={busy}
