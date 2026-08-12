@@ -132,6 +132,18 @@ function ProductPage() {
     queryFn: () => fetchProduct({ data: { slug } }),
   });
 
+  const viewed = data?.product;
+  useEffect(() => {
+    if (!viewed) return;
+    trackMeta("ViewContent", {
+      value: Number(viewed.price),
+      currency: "EGP",
+      content_type: "product",
+      content_ids: [String(viewed.id)],
+      content_name: viewed.title_ar || viewed.title_en,
+    });
+  }, [viewed?.id]);
+
   if (isLoading) {
     return <ProductPageSkeleton />;
 
