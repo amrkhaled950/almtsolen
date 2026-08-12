@@ -139,20 +139,22 @@ function Checkout() {
           items: items.map((i) => ({ product_id: i.product.id, quantity: i.quantity })),
         },
       });
-      // Fire-and-forget: لا تنتظر Meta CAPI — لو فشل الاتصال مش يأثر على تأكيد الطلب
-      trackMeta(
-        "Purchase",
-        {
-          value: total,
-          currency: "EGP",
-          content_type: "product",
-          order_id: res.order_number,
-          num_items: items.reduce((n, i) => n + i.quantity, 0),
-          content_ids: items.map((i) => String(i.product.id)),
-          contents: items.map((i) => ({ id: String(i.product.id), quantity: i.quantity, item_price: Number(i.product.price) })),
-        },
-        { email: form.email.trim() || undefined, phone: form.phone.trim() || undefined },
-      ).catch(() => { /* Meta CAPI errors are non-fatal */ });
+      // Fire-and-forget: trackMeta ترجع void فنستخدم try/catch عادي
+      try {
+        trackMeta(
+          "Purchase",
+          {
+            value: total,
+            currency: "EGP",
+            content_type: "product",
+            order_id: res.order_number,
+            num_items: items.reduce((n, i) => n + i.quantity, 0),
+            content_ids: items.map((i) => String(i.product.id)),
+            contents: items.map((i) => ({ id: String(i.product.id), quantity: i.quantity, item_price: Number(i.product.price) })),
+          },
+          { email: form.email.trim() || undefined, phone: form.phone.trim() || undefined },
+        );
+      } catch { /* Meta CAPI errors are non-fatal */ }
       if (payMethod === "card") {
         const pay = await kashierCheckoutFn({ data: { order_id: res.id } });
         clear();
