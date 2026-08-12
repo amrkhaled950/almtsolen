@@ -18,6 +18,7 @@ import { Route as ShippingRouteImport } from './routes/shipping'
 import { Route as SearchRouteImport } from './routes/search'
 import { Route as ReturnsRouteImport } from './routes/returns'
 import { Route as PrivacyRouteImport } from './routes/privacy'
+import { Route as PaymentResultRouteImport } from './routes/payment-result'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as CheckoutRouteImport } from './routes/checkout'
 import { Route as CategoriesRouteImport } from './routes/categories'
@@ -82,6 +83,11 @@ const ReturnsRoute = ReturnsRouteImport.update({
 const PrivacyRoute = PrivacyRouteImport.update({
   id: '/privacy',
   path: '/privacy',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const PaymentResultRoute = PaymentResultRouteImport.update({
+  id: '/payment-result',
+  path: '/payment-result',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -195,6 +201,7 @@ export interface FileRoutesByFullPath {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/payment-result': typeof PaymentResultRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -225,6 +232,7 @@ export interface FileRoutesByTo {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/payment-result': typeof PaymentResultRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -257,6 +265,7 @@ export interface FileRoutesById {
   '/categories': typeof CategoriesRoute
   '/checkout': typeof CheckoutRoute
   '/contact': typeof ContactRoute
+  '/payment-result': typeof PaymentResultRoute
   '/privacy': typeof PrivacyRoute
   '/returns': typeof ReturnsRoute
   '/search': typeof SearchRoute
@@ -290,6 +299,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/contact'
+    | '/payment-result'
     | '/privacy'
     | '/returns'
     | '/search'
@@ -320,6 +330,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/contact'
+    | '/payment-result'
     | '/privacy'
     | '/returns'
     | '/search'
@@ -351,6 +362,7 @@ export interface FileRouteTypes {
     | '/categories'
     | '/checkout'
     | '/contact'
+    | '/payment-result'
     | '/privacy'
     | '/returns'
     | '/search'
@@ -383,6 +395,7 @@ export interface RootRouteChildren {
   CategoriesRoute: typeof CategoriesRoute
   CheckoutRoute: typeof CheckoutRoute
   ContactRoute: typeof ContactRoute
+  PaymentResultRoute: typeof PaymentResultRoute
   PrivacyRoute: typeof PrivacyRoute
   ReturnsRoute: typeof ReturnsRoute
   SearchRoute: typeof SearchRoute
@@ -459,6 +472,13 @@ declare module '@tanstack/react-router' {
       path: '/privacy'
       fullPath: '/privacy'
       preLoaderRoute: typeof PrivacyRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/payment-result': {
+      id: '/payment-result'
+      path: '/payment-result'
+      fullPath: '/payment-result'
+      preLoaderRoute: typeof PaymentResultRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -640,6 +660,7 @@ const rootRouteChildren: RootRouteChildren = {
   CategoriesRoute: CategoriesRoute,
   CheckoutRoute: CheckoutRoute,
   ContactRoute: ContactRoute,
+  PaymentResultRoute: PaymentResultRoute,
   PrivacyRoute: PrivacyRoute,
   ReturnsRoute: ReturnsRoute,
   SearchRoute: SearchRoute,
