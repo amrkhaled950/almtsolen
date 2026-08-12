@@ -66,6 +66,7 @@ function AdminCoupons() {
         data: {
           ...editing,
           code: editing.code.trim().toUpperCase(),
+          description: editing.description?.trim() || null,
           value: Number(editing.value),
           min_subtotal: Number(editing.min_subtotal) || 0,
           max_discount: editing.max_discount ? Number(editing.max_discount) : null,

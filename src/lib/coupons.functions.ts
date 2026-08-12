@@ -61,14 +61,14 @@ export const listCouponsAdmin = createServerFn({ method: "GET" })
 const couponSchema = z.object({
   id: z.string().uuid().optional(),
   code: z.string().trim().min(2).max(50),
-  description: z.string().trim().max(200).optional().or(z.literal("")),
+  description: z.string().trim().max(200).nullish(),
   type: z.enum(["percent", "fixed"]),
   value: z.number().positive(),
   min_subtotal: z.number().min(0).default(0),
-  max_discount: z.number().positive().nullable().optional(),
-  usage_limit: z.number().int().positive().nullable().optional(),
-  starts_at: z.string().nullable().optional(),
-  expires_at: z.string().nullable().optional(),
+  max_discount: z.number().positive().nullish(),
+  usage_limit: z.number().int().positive().nullish(),
+  starts_at: z.string().nullish(),
+  expires_at: z.string().nullish(),
   is_active: z.boolean().default(true),
 });
 
