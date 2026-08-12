@@ -111,7 +111,9 @@ export const placeOrder = createServerFn({ method: "POST" })
         let d = c.type === "percent"
           ? (subtotal * Number(c.value)) / 100
           : Number(c.value);
-        if (c.max_discount) d = Math.min(d, Number(c.max_discount));
+        if (c.type === "percent" && c.max_discount) {
+          d = Math.min(d, Number(c.max_discount));
+        }
         d = Math.min(d, subtotal);
         discount = Math.round(d * 100) / 100;
         coupon_id = c.id;

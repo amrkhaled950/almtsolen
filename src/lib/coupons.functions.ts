@@ -34,7 +34,9 @@ export const validateCoupon = createServerFn({ method: "POST" })
     let discount = c.type === "percent"
       ? (data.subtotal * Number(c.value)) / 100
       : Number(c.value);
-    if (c.max_discount) discount = Math.min(discount, Number(c.max_discount));
+    if (c.type === "percent" && c.max_discount) {
+      discount = Math.min(discount, Number(c.max_discount));
+    }
     discount = Math.min(discount, data.subtotal);
     discount = Math.round(discount * 100) / 100;
     return { id: c.id, code: c.code, type: c.type, value: Number(c.value), discount };
@@ -84,7 +86,7 @@ export const saveCouponAdmin = createServerFn({ method: "POST" })
       type: data.type,
       value: data.value,
       min_subtotal: data.min_subtotal,
-      max_discount: data.max_discount ?? null,
+      max_discount: data.type === "percent" ? (data.max_discount ?? null) : null,
       usage_limit: data.usage_limit ?? null,
       starts_at: data.starts_at || null,
       expires_at: data.expires_at || null,

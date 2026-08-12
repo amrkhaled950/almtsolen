@@ -67,9 +67,10 @@ function AdminCoupons() {
           ...editing,
           code: editing.code.trim().toUpperCase(),
           description: editing.description?.trim() || null,
+          type: editing.type,
           value: Number(editing.value),
           min_subtotal: Number(editing.min_subtotal) || 0,
-          max_discount: editing.max_discount ? Number(editing.max_discount) : null,
+          max_discount: editing.type === "percent" && editing.max_discount ? Number(editing.max_discount) : null,
           usage_limit: editing.usage_limit ? Number(editing.usage_limit) : null,
         },
       });
@@ -121,8 +122,13 @@ function AdminCoupons() {
               {(data?.coupons ?? []).map((c: any) => (
                 <tr key={c.id} className="border-t border-border hover:bg-muted/30">
                   <td className="p-3 font-mono font-bold">{c.code}</td>
-                  <td className="p-3">{c.type === "percent" ? "نسبة" : "ثابت"}</td>
-                  <td className="p-3">{c.value}{c.type === "percent" ? "%" : " ج.م"}</td>
+                  <td className="p-3 font-medium">{c.type === "percent" ? "نسبة مئوية" : "مبلغ ثابت"}</td>
+                  <td className="p-3">
+                    <span className="font-bold">{c.type === "percent" ? `${c.value}%` : `${c.value} ج.م`}</span>
+                    {c.type === "percent" && c.max_discount ? (
+                      <span className="text-xs text-muted-foreground block">أقصى خصم: {c.max_discount} ج.م</span>
+                    ) : null}
+                  </td>
                   <td className="p-3">{c.min_subtotal} ج.م</td>
                   <td className="p-3">{c.used_count}{c.usage_limit ? `/${c.usage_limit}` : ""}</td>
                   <td className="p-3">{c.expires_at ? new Date(c.expires_at).toLocaleDateString("ar-EG") : "—"}</td>
@@ -156,30 +162,87 @@ function AdminCoupons() {
           <div onClick={(e) => e.stopPropagation()} className="bg-card border border-border rounded-2xl p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
             <h2 className="font-display font-bold text-xl mb-4">{editing.id ? "تعديل كوبون" : "كوبون جديد"}</h2>
             <div className="space-y-3">
-              <FieldText label="الكود" value={editing.code} onChange={(v) => setEditing({ ...editing, code: v })} />
-              <FieldText label="الوصف" value={editing.description ?? ""} onChange={(v) => setEditing({ ...editing, description: v })} />
+              <FieldText label="كود الكوبون" value={editing.code} onChange={(v) => setEditing({ ...editing, code: v })} />
+              <FieldText label="الوصف (اختياري)" value={editing.description ?? ""} onChange={(v) => setEditing({ ...editing, description: v })} />
+              
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-sm font-medium mb-1.5">النوع</label>
-                  <select value={editing.type} onChange={(e) => setEditing({ ...editing, type: e.target.value as any })}
-                    className="w-full h-10 px-3 rounded-md border border-input bg-background">
-                    <option value="percent">نسبة %</option>
-                    <option value="fixed">مبلغ ثابت</option>
+                  <label className="block text-sm font-medium mb-1.5">نوع الخصم</label>
+                  <select
+                    value={editing.type}
+                    onChange={(e) => {
+                      const t = e.target.value as "percent" | "fixed";
+                      setEditing({
+                        ...editing,
+                        type: t,
+                        max_discount: t === "fixed" ? null : editing.max_discount,
+                      });
+                    }}
+                    className="w-full h-10 px-3 rounded-md border border-input bg-background font-medium"
+                  >
+                    <option value="percent">نسبة مئوية (%)</option>
+                    <option value="fixed">مبلغ ثابت (ج.م)</option>
                   </select>
                 </div>
-                <FieldNum label="القيمة" value={editing.value} onChange={(v) => setEditing({ ...editing, value: v })} />
+                <FieldNum
+                  label={editing.type === "percent" ? "نسبة الخصم (%)" : "مبلغ الخصم (ج.م)"}
+                  value={editing.value}
+                  onChange={(v) => setEditing({ ...editing, value: v })}
+                />
               </div>
+
               <div className="grid grid-cols-2 gap-3">
-                <FieldNum label="الحد الأدنى للطلب" value={editing.min_subtotal} onChange={(v) => setEditing({ ...editing, min_subtotal: v })} />
-                <FieldNum label="أقصى خصم (للنسبة)" value={editing.max_discount ?? 0} onChange={(v) => setEditing({ ...editing, max_discount: v || null })} />
+                <FieldNum
+                  label="الحد الأدنى للطلب (ج.م)"
+                  value={editing.min_subtotal}
+                  onChange={(v) => setEditing({ ...editing, min_subtotal: v })}
+                />
+                {editing.type === "percent" ? (
+                  <FieldNum
+                    label="أقصى خصم (ج.م) (اختياري)"
+                    value={editing.max_discount ?? 0}
+                    onChange={(v) => setEditing({ ...editing, max_discount: v || null })}
+                  />
+                ) : (
+                  <FieldNum
+                    label="حد الاستخدام (فارغ = لا حد)"
+                    value={editing.usage_limit ?? 0}
+                    onChange={(v) => setEditing({ ...editing, usage_limit: v || null })}
+                  />
+                )}
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <FieldNum label="حد الاستخدام (فارغ = لا حد)" value={editing.usage_limit ?? 0} onChange={(v) => setEditing({ ...editing, usage_limit: v || null })} />
-                <FieldDate label="تاريخ الانتهاء" value={editing.expires_at} onChange={(v) => setEditing({ ...editing, expires_at: v })} />
-              </div>
-              <label className="flex items-center gap-2 mt-2">
-                <input type="checkbox" checked={editing.is_active} onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })} />
-                <span>نشط</span>
+
+              {editing.type === "percent" ? (
+                <div className="grid grid-cols-2 gap-3">
+                  <FieldNum
+                    label="حد الاستخدام (فارغ = لا حد)"
+                    value={editing.usage_limit ?? 0}
+                    onChange={(v) => setEditing({ ...editing, usage_limit: v || null })}
+                  />
+                  <FieldDate
+                    label="تاريخ الانتهاء"
+                    value={editing.expires_at}
+                    onChange={(v) => setEditing({ ...editing, expires_at: v })}
+                  />
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 gap-3">
+                  <FieldDate
+                    label="تاريخ الانتهاء"
+                    value={editing.expires_at}
+                    onChange={(v) => setEditing({ ...editing, expires_at: v })}
+                  />
+                  <div />
+                </div>
+              )}
+
+              <label className="flex items-center gap-2 pt-2">
+                <input
+                  type="checkbox"
+                  checked={editing.is_active}
+                  onChange={(e) => setEditing({ ...editing, is_active: e.target.checked })}
+                />
+                <span className="text-sm font-medium">الكوبون نشط</span>
               </label>
             </div>
             <div className="flex gap-2 mt-6">
