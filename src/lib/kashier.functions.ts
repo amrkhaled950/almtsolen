@@ -33,7 +33,7 @@ export const createKashierCheckout = createServerFn({ method: "POST" })
       orderId,
       amount,
       currency,
-      secretKey: cfg.secretKey,
+      secretKey: cfg.apiKey || cfg.secretKey,
     });
 
     const origin =

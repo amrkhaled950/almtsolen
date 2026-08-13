@@ -6,18 +6,18 @@ function cleanEnv(val?: string): string {
 }
 
 const DEFAULT_KASHIER_MERCHANT_ID = "MID-41713-199";
-const DEFAULT_KASHIER_SECRET_KEY = "ef486945dbf8a0e8d6dbf98400ad84ac$4957d7863dd446f61117b7901f65dcecc01ada49e15abfef51a10f1c8efccea82bbff35d77f1949cff1224a4afa2907e";
 const DEFAULT_KASHIER_API_KEY = "87c8f98d-d279-4592-9618-e5299aec1daa";
+const DEFAULT_KASHIER_SECRET_KEY = "ef486945dbf8a0e8d6dbf98400ad84ac$4957d7863dd446f61117b7901f65dcecc01ada49e15abfef51a10f1c8efccea82bbff35d77f1949cff1224a4afa2907e";
 
 export function getKashierConfig() {
   const merchantId = cleanEnv(
     process.env["KASHIER_MERCHANT_ID"] || process.env["MERCHANT_ID"] || DEFAULT_KASHIER_MERCHANT_ID
   );
-  const secretKey = cleanEnv(
-    process.env["KASHIER_SECRET_KEY"] || process.env["SECRET_KEY"] || DEFAULT_KASHIER_SECRET_KEY
-  );
   const apiKey = cleanEnv(
     process.env["KASHIER_API_KEY"] || process.env["API_KEY"] || DEFAULT_KASHIER_API_KEY
+  );
+  const secretKey = cleanEnv(
+    process.env["KASHIER_SECRET_KEY"] || process.env["SECRET_KEY"] || DEFAULT_KASHIER_SECRET_KEY
   );
   const mode = cleanEnv(process.env["KASHIER_MODE"] || "live").toLowerCase() === "test" ? "test" : "live";
 
