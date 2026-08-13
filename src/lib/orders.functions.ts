@@ -148,7 +148,7 @@ export const placeOrder = createServerFn({ method: "POST" })
           guest_phone: data.phone,
           guest_email: data.email || null,
           status: "pending",
-          payment_method: data.payment_method === "card" ? "kashier" : "cod",
+          payment_method: data.payment_method === "card" ? "paymob_card" : "cod",
           payment_status: "pending",
           subtotal,
           shipping_cost: shipping,
