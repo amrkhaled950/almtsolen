@@ -287,6 +287,31 @@ export const updateOrderStatusAdmin = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const updateOrderPaymentStatusAdmin = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .inputValidator((input) =>
+    z
+      .object({
+        id: z.string().uuid(),
+        payment_status: z.enum(["pending", "paid", "failed", "refunded"]),
+      })
+      .parse(input),
+  )
+  .handler(async ({ context, data }) => {
+    const { supabase, userId } = context;
+    await assertAdmin(supabase, userId);
+    const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+    const { error } = await supabaseAdmin
+      .from("orders")
+      .update({
+        payment_status: data.payment_status,
+        ...(data.payment_status === "paid" ? { status: "confirmed" as const } : {}),
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
 export const deleteOrderAdmin = createServerFn({ method: "POST" })
   .middleware([requireSupabaseAuth])
   .inputValidator((input) => z.object({ id: z.string().uuid() }).parse(input))

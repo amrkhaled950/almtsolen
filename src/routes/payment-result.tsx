@@ -3,6 +3,8 @@ import { useEffect } from "react";
 import { CheckCircle2, XCircle, ShoppingCart, RotateCcw } from "lucide-react";
 import { useLocale } from "../lib/i18n";
 import { useCart } from "../lib/cart-store";
+import { confirmKashierPayment } from "../lib/kashier.functions";
+import { useServerFn } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/payment-result")({
   head: () => ({
@@ -27,18 +29,21 @@ export const Route = createFileRoute("/payment-result")({
 function PaymentResult() {
   const { paymentStatus, merchantOrderId } = Route.useSearch();
   const isAr = useLocale((s) => s.locale === "ar");
-  const success = paymentStatus.toUpperCase() === "SUCCESS";
+  const statusStr = (paymentStatus || "").toUpperCase();
+  const success = statusStr === "SUCCESS" || statusStr === "SUCCESSFUL";
   const clear = useCart((s) => s.clear);
   const closeCart = useCart((s) => s.closeCart);
   const navigate = useNavigate();
+  const confirmFn = useServerFn(confirmKashierPayment);
 
-  // لو الدفع نجح — امسح العربة مرة واحدة فقط
+  // لو الدفع نجح — حدث حالة الطلب في الداتابيز وامسح العربة
   useEffect(() => {
-    if (success) {
+    if (success && merchantOrderId) {
+      confirmFn({ data: { paymentStatus, merchantOrderId } }).catch(() => {});
       clear();
       closeCart();
     }
-  }, [success]);
+  }, [success, merchantOrderId]);
 
   return (
     <div className="container-page py-20">

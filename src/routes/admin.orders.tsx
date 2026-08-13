@@ -8,6 +8,7 @@ import {
   listOrdersAdmin,
   getOrderAdmin,
   updateOrderStatusAdmin,
+  updateOrderPaymentStatusAdmin,
   deleteOrderAdmin,
   exportOrdersCsvAdmin,
 } from "@/lib/orders.functions";
@@ -54,8 +55,20 @@ function OrdersPage() {
   const fetchOrders = useServerFn(listOrdersAdmin);
   const fetchOrder  = useServerFn(getOrderAdmin);
   const updateStatus = useServerFn(updateOrderStatusAdmin);
+  const updatePayStatus = useServerFn(updateOrderPaymentStatusAdmin);
   const deleteFn    = useServerFn(deleteOrderAdmin);
   const exportCsvFn = useServerFn(exportOrdersCsvAdmin);
+
+  const updatePayStatusMut = useMutation({
+    mutationFn: (vars: { id: string; payment_status: any }) =>
+      updatePayStatus({ data: vars }),
+    onSuccess: () => {
+      toast.success(isAr ? "تم تحديث حالة الدفع" : "Payment status updated");
+      qc.invalidateQueries({ queryKey: ["admin", "orders"] });
+      qc.invalidateQueries({ queryKey: ["admin", "order", selectedId] });
+    },
+    onError: (e: any) => toast.error(e?.message || "Error"),
+  });
 
   const exportMut = useMutation({
     mutationFn: (vars: { status?: OrderStatus }) =>
@@ -364,18 +377,27 @@ function OrdersPage() {
 
                   {/* Update Status */}
                   <section className="space-y-2">
-                    {/* Payment status badge for card orders */}
-                    {(detail.order.payment_method === "kashier" || detail.order.payment_method === "paymob_card") && (() => {
-                      const ps = paymentStatusLabel[detail.order.payment_status] ?? paymentStatusLabel.pending;
-                      return (
-                        <div className="flex items-center justify-between rounded-lg bg-muted/50 p-3 text-sm">
+                    {/* Payment status selector for card orders */}
+                    {(detail.order.payment_method === "kashier" || detail.order.payment_method === "paymob_card") && (
+                      <div className="rounded-lg bg-muted/50 p-3 text-sm space-y-2">
+                        <div className="flex items-center justify-between">
                           <span className="text-muted-foreground font-medium">{isAr ? "حالة الدفع" : "Payment status"}</span>
-                          <span className={`inline-flex px-2 py-0.5 rounded-full text-xs font-semibold ${ps.color}`}>
-                            {isAr ? ps.ar : ps.en}
-                          </span>
+                          <select
+                            value={detail.order.payment_status || "pending"}
+                            onChange={(e) =>
+                              updatePayStatusMut.mutate({ id: selectedId!, payment_status: e.target.value as any })
+                            }
+                            disabled={updatePayStatusMut.isPending}
+                            className="h-8 px-2 rounded border border-input bg-background text-xs font-semibold"
+                          >
+                            <option value="pending">{isAr ? "في انتظار الدفع" : "Awaiting payment"}</option>
+                            <option value="paid">{isAr ? "مدفوع (Paid)" : "Paid"}</option>
+                            <option value="failed">{isAr ? "فشل الدفع" : "Failed"}</option>
+                            <option value="refunded">{isAr ? "مسترجع" : "Refunded"}</option>
+                          </select>
                         </div>
-                      );
-                    })()}
+                      </div>
+                    )}
                     <div className="flex gap-2">
                     <select
                       value={detailStatus}

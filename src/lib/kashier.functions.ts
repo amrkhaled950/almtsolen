@@ -60,3 +60,32 @@ export const createKashierCheckout = createServerFn({ method: "POST" })
 
     return { url: `https://checkout.kashier.io/?${params.toString()}` };
   });
+
+export const confirmKashierPayment = createServerFn({ method: "POST" })
+  .inputValidator((input) =>
+    z
+      .object({
+        paymentStatus: z.string(),
+        merchantOrderId: z.string(),
+      })
+      .parse(input)
+  )
+  .handler(async ({ data }): Promise<{ ok: boolean }> => {
+    const status = (data.paymentStatus || "").toUpperCase();
+    const paid = status === "SUCCESS" || status === "SUCCESSFUL";
+    if (paid && data.merchantOrderId) {
+      const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
+      const { error } = await supabaseAdmin
+        .from("orders")
+        .update({
+          payment_status: "paid",
+          status: "confirmed",
+          updated_at: new Date().toISOString(),
+        })
+        .eq("order_number", data.merchantOrderId);
+      if (error) {
+        console.error("confirmKashierPayment DB update error:", error.message);
+      }
+    }
+    return { ok: paid };
+  });
