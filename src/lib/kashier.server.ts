@@ -6,10 +6,26 @@ function cleanEnv(val?: string): string {
 }
 
 export function getKashierConfig() {
-  const merchantId = cleanEnv(process.env["KASHIER_MERCHANT_ID"] || process.env["MERCHANT_ID"]);
-  const secretKey = cleanEnv(process.env["KASHIER_SECRET_KEY"] || process.env["KASHIER_API_KEY"] || process.env["SECRET_KEY"]);
-  const apiKey = cleanEnv(process.env["KASHIER_API_KEY"] || process.env["KASHIER_SECRET_KEY"]);
+  const merchantId = cleanEnv(
+    process.env["KASHIER_MERCHANT_ID"] || process.env["MERCHANT_ID"]
+  );
+  const secretKey = cleanEnv(
+    process.env["KASHIER_SECRET_KEY"] ||
+    process.env["KASHIER_API_KEY"] ||
+    process.env["SECRET_KEY"] ||
+    process.env["API_KEY"]
+  );
+  const apiKey = cleanEnv(
+    process.env["KASHIER_API_KEY"] ||
+    process.env["KASHIER_SECRET_KEY"] ||
+    process.env["API_KEY"] ||
+    process.env["SECRET_KEY"]
+  );
   const mode = cleanEnv(process.env["KASHIER_MODE"] || "live").toLowerCase() === "test" ? "test" : "live";
+
+  if (process.env.NODE_ENV !== "production") {
+    console.log(`[Kashier Config] Merchant: ${merchantId}, Mode: ${mode}, HasSecret: ${!!secretKey}`);
+  }
 
   return { merchantId, secretKey, apiKey, mode };
 }
