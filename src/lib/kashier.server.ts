@@ -1,12 +1,17 @@
 // Kashier (Egyptian payment gateway) helpers — server only.
 
+function cleanEnv(val?: string): string {
+  if (!val) return "";
+  return val.trim().replace(/^["']|["']$/g, "");
+}
+
 export function getKashierConfig() {
-  return {
-    merchantId: process.env["KASHIER_MERCHANT_ID"] ?? "",
-    secretKey: process.env["KASHIER_SECRET_KEY"] ?? "",
-    apiKey: process.env["KASHIER_API_KEY"] ?? "",
-    mode: (process.env["KASHIER_MODE"] || "live").toLowerCase() === "test" ? "test" : "live",
-  };
+  const merchantId = cleanEnv(process.env["KASHIER_MERCHANT_ID"] || process.env["MERCHANT_ID"]);
+  const secretKey = cleanEnv(process.env["KASHIER_SECRET_KEY"] || process.env["KASHIER_API_KEY"] || process.env["SECRET_KEY"]);
+  const apiKey = cleanEnv(process.env["KASHIER_API_KEY"] || process.env["KASHIER_SECRET_KEY"]);
+  const mode = cleanEnv(process.env["KASHIER_MODE"] || "live").toLowerCase() === "test" ? "test" : "live";
+
+  return { merchantId, secretKey, apiKey, mode };
 }
 
 async function hmacSha256Hex(secret: string, message: string): Promise<string> {
