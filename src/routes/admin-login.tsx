@@ -10,7 +10,7 @@ export const Route = createFileRoute("/admin-login")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "دخول المسؤولين | المتسولين" },
+      { title: "دخول المسؤولين | روبن هود" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),
@@ -81,7 +81,7 @@ function AdminLoginPage() {
             <ShieldCheck className="h-7 w-7" />
           </div>
           <h1 className="font-display font-black text-2xl">
-            {isAr ? "لوحه تحكم مكتبه المتسولين" : "Al-Mutasawilein Library Admin"}
+            {isAr ? "لوحة تحكم مكتبة روبن هود" : "Robin Hood Library Admin"}
           </h1>
           <p className="text-xs text-muted-foreground mt-1 text-center">
             {isAr ? "هذه الصفحة مخصصة للمسؤولين فقط" : "Authorized personnel only"}

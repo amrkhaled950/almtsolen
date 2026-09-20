@@ -8,7 +8,7 @@ export function SiteFooter() {
   const isAr = locale === "ar";
   const { settings } = useSiteSettings();
 
-  const siteName = (isAr ? settings?.site_name_ar : settings?.site_name_en) || (isAr ? "مكتبة المتسولين" : "Al-Motasawelin Library");
+  const siteName = (isAr ? settings?.site_name_ar : settings?.site_name_en) || (isAr ? "مكتبة روبن هود" : "Robin Hood Bookstore");
   const tagline = (isAr ? settings?.tagline_ar : settings?.tagline_en) || (isAr ? "للكتب العربية" : "Arabic Books");
   const aboutText = (isAr ? settings?.footer_about_ar : settings?.footer_about_en) || t("footer.tagline", locale);
   const logoUrl = settings?.logo_url || "/logo.png";

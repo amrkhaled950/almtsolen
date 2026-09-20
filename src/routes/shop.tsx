@@ -29,9 +29,9 @@ export const Route = createFileRoute("/shop")({
   validateSearch: zodValidator(shopSearchSchema),
   head: () => ({
     meta: [
-      { title: "المتجر | تسوق الكتب العربية | مكتبة المتسولين" },
-      { name: "description", content: "تصفح كل كتب مكتبة المتسولين: روايات، أدب، تنمية ذاتية، تاريخ، فلسفة وغيرها. توصيل لكل مصر ودفع عند الاستلام." },
-      { property: "og:title", content: "المتجر | مكتبة المتسولين" },
+      { title: "المتجر | تسوق الكتب العربية | مكتبة روبن هود" },
+      { name: "description", content: "تصفح كل كتب مكتبة روبن هود: روايات، أدب، تنمية ذاتية، تاريخ، فلسفة وغيرها. توصيل لكل مصر ودفع عند الاستلام." },
+      { property: "og:title", content: "المتجر | مكتبة روبن هود" },
       { property: "og:description", content: "تصفح آلاف الكتب العربية والمترجمة بأسعار مميزة." },
       { property: "og:url", content: "https://www.almotasolen.com/shop" },
       { property: "og:type", content: "website" },

@@ -16,11 +16,11 @@ export const Route = createFileRoute("/auth")({
   validateSearch: searchSchema,
   head: () => ({
     meta: [
-      { title: "تسجيل الدخول وإنشاء حساب | مكتبة المتسولين" },
-      { name: "description", content: "سجّل دخول حسابك في مكتبة المتسولين أو أنشئ حساباً جديداً لمتابعة طلباتك وحفظ كتبك المفضلة بسهولة." },
+      { title: "تسجيل الدخول وإنشاء حساب | مكتبة روبن هود" },
+      { name: "description", content: "سجّل دخول حسابك في مكتبة روبن هود أو أنشئ حساباً جديداً لمتابعة طلباتك وحفظ كتبك المفضلة بسهولة." },
       { name: "robots", content: "noindex, follow" },
-      { property: "og:title", content: "تسجيل الدخول | مكتبة المتسولين" },
-      { property: "og:description", content: "ادخل إلى حسابك أو أنشئ حساباً جديداً في مكتبة المتسولين." },
+      { property: "og:title", content: "تسجيل الدخول | مكتبة روبن هود" },
+      { property: "og:description", content: "ادخل إلى حسابك أو أنشئ حساباً جديداً في مكتبة روبن هود." },
       { property: "og:url", content: "https://www.almotasolen.com/auth" },
     ],
     links: [{ rel: "canonical", href: "https://www.almotasolen.com/auth" }],
@@ -96,9 +96,9 @@ function AuthPage() {
     <div className="min-h-screen grid lg:grid-cols-2">
       <div className="hidden lg:flex relative bg-gradient-hero text-primary-foreground p-12 flex-col justify-between">
         <Link to="/" className="flex items-center gap-3">
-          <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/15 backdrop-blur font-display font-black text-2xl">م</div>
+          <div className="grid h-12 w-12 place-items-center rounded-xl bg-white/15 backdrop-blur font-display font-black text-2xl">ر</div>
           <div>
-            <div className="font-display font-extrabold text-lg">المتسولين</div>
+            <div className="font-display font-extrabold text-lg">روبن هود</div>
             <div className="text-xs opacity-80 tracking-widest uppercase">للكتب</div>
           </div>
         </Link>
@@ -113,14 +113,14 @@ function AuthPage() {
               : "Sign in to track your orders and save your wishlist."}
           </p>
         </div>
-        <div className="text-xs opacity-70">© {new Date().getFullYear()} المتسولين</div>
+        <div className="text-xs opacity-70">© {new Date().getFullYear()} روبن هود</div>
       </div>
 
       <div className="flex items-center justify-center p-6 lg:p-12 bg-background">
         <div className="w-full max-w-md">
           <div className="lg:hidden mb-8 flex items-center gap-3">
-            <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-hero text-primary-foreground font-display font-black">م</div>
-            <div className="font-display font-extrabold text-lg">المتسولين</div>
+            <div className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-hero text-primary-foreground font-display font-black">ر</div>
+            <div className="font-display font-extrabold text-lg">روبن هود</div>
           </div>
 
           <h1 className="font-display font-black text-3xl mb-2">
@@ -131,7 +131,7 @@ function AuthPage() {
           <p className="text-muted-foreground text-sm mb-8">
             {mode === "signin"
               ? isAr ? "أهلاً بعودتك! ادخل بياناتك للمتابعة" : "Welcome back! Enter your details"
-              : isAr ? "انضم لمجتمع المتسولين في دقيقة" : "Join our community in a minute"}
+              : isAr ? "انضم لمجتمع روبن هود في دقيقة" : "Join our community in a minute"}
           </p>
 
           <form onSubmit={handleSubmit} className="space-y-4">

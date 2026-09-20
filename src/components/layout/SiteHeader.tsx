@@ -24,7 +24,7 @@ export function SiteHeader() {
   const navigate = useNavigate();
   const catRef = useRef<HTMLDivElement>(null);
   const { settings } = useSiteSettings();
-  const siteName = (locale === "ar" ? settings?.site_name_ar : settings?.site_name_en) || "مكتبة المتسولين";
+  const siteName = (locale === "ar" ? settings?.site_name_ar : settings?.site_name_en) || (locale === "ar" ? "مكتبة روبن هود" : "Robin Hood Bookstore");
   const logoUrl = settings?.logo_url || "/logo.png";
 
   const submitSearch = (e: React.FormEvent) => {

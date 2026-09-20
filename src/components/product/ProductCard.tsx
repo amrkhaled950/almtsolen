@@ -10,7 +10,7 @@ import { cn } from "../../lib/utils";
 const PLACEHOLDER =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 420'><rect width='300' height='420' fill='#98040c'/><text x='150' y='220' font-family='Cairo,serif' font-size='22' fill='#f5e7c4' text-anchor='middle' font-weight='700'>المتسولين</text></svg>`,
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 420'><rect width='300' height='420' fill='#1c3d2a'/><text x='150' y='220' font-family='Cairo,serif' font-size='22' fill='#f5e7c4' text-anchor='middle' font-weight='700'>روبن هود</text></svg>`,
   );
 
 export function ProductCard({ product, index = 0 }: { product: UIProduct; index?: number }) {

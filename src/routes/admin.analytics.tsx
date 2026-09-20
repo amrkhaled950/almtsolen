@@ -23,7 +23,7 @@ export const Route = createFileRoute("/admin/analytics")({
   component: AnalyticsPage,
 });
 
-const COLORS = ["#98040c", "#f59e0b", "#3b82f6", "#10b981", "#a855f7", "#ec4899"];
+const COLORS = ["#1c3d2a", "#f59e0b", "#3b82f6", "#10b981", "#a855f7", "#ec4899"];
 
 const orderStatusLabel: Record<string, { ar: string; en: string }> = {
   pending:    { ar: "قيد الانتظار",  en: "Pending" },
@@ -225,8 +225,8 @@ function AnalyticsPage() {
               <AreaChart data={chartData}>
                 <defs>
                   <linearGradient id="grad-sales" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#98040c" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="#98040c" stopOpacity={0} />
+                    <stop offset="5%" stopColor="#1c3d2a" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#1c3d2a" stopOpacity={0} />
                   </linearGradient>
                   <linearGradient id="grad-orders" x1="0" y1="0" x2="0" y2="1">
                     <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.4} />
@@ -238,7 +238,7 @@ function AnalyticsPage() {
                 <YAxis tick={{ fontSize: 11 }} stroke="hsl(var(--muted-foreground))" />
                 <Tooltip contentStyle={{ background: "hsl(var(--card))", border: "1px solid hsl(var(--border))", borderRadius: 8, fontSize: 12 }} />
                 <Legend wrapperStyle={{ fontSize: 12 }} />
-                <Area type="monotone" dataKey="sales" stroke="#98040c" strokeWidth={2.5} fillOpacity={1} fill="url(#grad-sales)" name={isAr ? "المبيعات (ج.م)" : "Sales (EGP)"} />
+                <Area type="monotone" dataKey="sales" stroke="#1c3d2a" strokeWidth={2.5} fillOpacity={1} fill="url(#grad-sales)" name={isAr ? "المبيعات (ج.م)" : "Sales (EGP)"} />
                 <Area type="monotone" dataKey="orders" stroke="#f59e0b" strokeWidth={2.5} fillOpacity={1} fill="url(#grad-orders)" name={isAr ? "الطلبات" : "Orders"} />
               </AreaChart>
             </ResponsiveContainer>

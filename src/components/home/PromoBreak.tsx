@@ -7,7 +7,7 @@ import { formatPrice } from "../../lib/i18n";
 const PLACEHOLDER =
   "data:image/svg+xml;utf8," +
   encodeURIComponent(
-    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 420'><rect width='300' height='420' fill='#8b1c17'/><text x='150' y='220' font-family='Cairo,serif' font-size='22' fill='#f5e7c4' text-anchor='middle' font-weight='700'>المتسولين</text></svg>`,
+    `<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 300 420'><rect width='300' height='420' fill='#1c3d2a'/><text x='150' y='220' font-family='Cairo,serif' font-size='22' fill='#f5e7c4' text-anchor='middle' font-weight='700'>روبن هود</text></svg>`,
   );
 
 export type PromoBreakProps = {
@@ -46,10 +46,10 @@ export function PromoBreak({ product, isAr, badge, headline, cta, priceOverride 
         whileInView={{ opacity: 1, y: 0, scale: 1 }}
         viewport={{ once: true, margin: "-80px" }}
         transition={{ type: "spring", stiffness: 180, damping: 18, mass: 0.9 }}
-        className="relative overflow-hidden rounded-[2rem] bg-[#8b1c17] text-primary-foreground shadow-elegant"
+        className="relative overflow-hidden rounded-[2rem] bg-[#1c3d2a] text-primary-foreground shadow-elegant"
       >
         {/* Layered gradient backdrop */}
-        <div className="absolute inset-0 bg-gradient-to-br from-[#a52822] via-[#8b1c17] to-[#3d0a08]" />
+        <div className="absolute inset-0 bg-gradient-to-br from-[#244f37] via-[#1c3d2a] to-[#0d1f15]" />
 
         {/* Soft light beams */}
         <div className="pointer-events-none absolute -top-32 -end-24 h-80 w-80 rounded-full bg-gold/25 blur-[100px]" />

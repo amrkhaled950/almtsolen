@@ -5,9 +5,9 @@ import { useSiteSettings } from "../lib/use-site-settings";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "من نحن | قصة مكتبة المتسولين" },
-      { name: "description", content: "تعرف على مكتبة المتسولين — رحلتنا في نشر الكتاب العربي وإيصاله لكل قارئ في مصر بأسعار مناسبة." },
-      { property: "og:title", content: "من نحن — مكتبة المتسولين" },
+      { title: "من نحن | قصة مكتبة روبن هود" },
+      { name: "description", content: "تعرف على مكتبة روبن هود — رحلتنا في نشر الكتاب العربي وإيصاله لكل قارئ في مصر بأسعار مناسبة." },
+      { property: "og:title", content: "من نحن — مكتبة روبن هود" },
       { property: "og:description", content: "قصتنا ورسالتنا في عالم الكتب العربية." },
       { property: "og:url", content: "https://www.almotasolen.com/about" },
     ],
@@ -20,8 +20,8 @@ export const Route = createFileRoute("/about")({
     const { settings, isLoading } = useSiteSettings();
     const content = (isAr ? settings?.about_ar : settings?.about_en) || "";
     const fallback = isAr
-      ? "المتسولين للكتب — متجر متخصص في الكتب العربية والعالمية، نهدف إلى نشر المعرفة وإيصال الكتاب لكل قارئ في مصر بأسعار مناسبة وخدمة متميزة."
-      : "Al-Mutasawilein Books — a bookstore dedicated to making knowledge accessible across Egypt.";
+      ? "روبن هود للكتب — متجر متخصص في الكتب العربية والعالمية، نهدف إلى نشر المعرفة وإيصال الكتاب لكل قارئ في مصر بأسعار مناسبة وخدمة متميزة."
+      : "Robin Hood Books — a bookstore dedicated to making knowledge accessible across Egypt.";
     return (
       <div className="container-page py-16 max-w-3xl">
         <h1 className="font-display font-black text-4xl mb-6">{isAr ? "من نحن" : "About us"}</h1>

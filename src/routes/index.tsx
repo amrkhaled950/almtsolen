@@ -26,9 +26,9 @@ const DEFAULT_HERO_IMAGES = [
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "مكتبة المتسولين | أفضل متجر كتب عربية في مصر" },
-      { name: "description", content: "اشترِ كتبك المفضلة من مكتبة المتسولين. آلاف العناوين العربية والمترجمة، أسعار مميزة، توصيل لكل محافظات مصر، والدفع عند الاستلام." },
-      { property: "og:title", content: "مكتبة المتسولين | كتبك العربية المفضلة" },
+      { title: "مكتبة روبن هود | أفضل متجر كتب عربية في مصر" },
+      { name: "description", content: "اشترِ كتبك المفضلة من مكتبة روبن هود. آلاف العناوين العربية والمترجمة، أسعار مميزة، توصيل لكل محافظات مصر، والدفع عند الاستلام." },
+      { property: "og:title", content: "مكتبة روبن هود | كتبك العربية المفضلة" },
       { property: "og:description", content: "آلاف العناوين العربية بأسعار مميزة وتوصيل لكل مصر مع الدفع عند الاستلام." },
       { property: "og:url", content: "https://www.almotasolen.com/" },
       { property: "og:type", content: "website" },
@@ -229,7 +229,7 @@ function Home() {
                 whileTap={{ scale: 0.95 }}
               >
                 <Link to="/shop" search={{ category: c.slug } as any}
-                  className="flex flex-col items-center gap-2 bg-gradient-to-br from-[#a52822] via-[#8b1c17] to-[#6a1410] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-shadow border border-[#8b1c17]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_6px_16px_-6px_rgba(139,28,23,0.55)] group">
+                  className="flex flex-col items-center gap-2 bg-gradient-to-br from-[#244f37] via-[#1c3d2a] to-[#12271b] text-primary-foreground rounded-xl p-3 text-center hover:shadow-elegant transition-shadow border border-[#1c3d2a]/60 shadow-[inset_0_1px_0_rgba(255,255,255,0.12),0_6px_16px_-6px_rgba(28,61,42,0.55)] group">
                   <motion.span
                     className="text-3xl [text-shadow:0_1px_2px_rgba(0,0,0,0.35),0_4px_10px_rgba(0,0,0,0.25)]"
                     whileHover={{ rotate: [0, -12, 12, -6, 0], scale: 1.15 }}

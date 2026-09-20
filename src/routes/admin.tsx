@@ -9,7 +9,7 @@ export const Route = createFileRoute("/admin")({
   ssr: false,
   head: () => ({
     meta: [
-      { title: "لوحة التحكم | المتسولين" },
+      { title: "لوحة التحكم | روبن هود" },
       { name: "robots", content: "noindex, nofollow" },
     ],
   }),

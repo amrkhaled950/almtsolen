@@ -51,7 +51,7 @@ const cover = (title: string, hue: number) =>
       <rect x='12' y='12' width='276' height='396' fill='none' stroke='hsl(40,55%,65%)' stroke-width='1' opacity='0.5'/>
       <text x='150' y='200' font-family='Cairo, serif' font-size='22' font-weight='700' fill='hsl(40,55%,75%)' text-anchor='middle'>${title}</text>
       <circle cx='150' cy='330' r='28' fill='none' stroke='hsl(40,55%,65%)' stroke-width='1.5'/>
-      <text x='150' y='338' font-family='serif' font-size='20' fill='hsl(40,55%,75%)' text-anchor='middle'>المتسولين</text>
+      <text x='150' y='338' font-family='serif' font-size='20' fill='hsl(40,55%,75%)' text-anchor='middle'>روبن هود</text>
     </svg>`,
   )}`;
 

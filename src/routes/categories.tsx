@@ -7,9 +7,9 @@ import { listCategoriesPublic } from "../lib/catalog.functions";
 export const Route = createFileRoute("/categories")({
   head: () => ({
     meta: [
-      { title: "التصنيفات | تصفح أقسام الكتب | مكتبة المتسولين" },
-      { name: "description", content: "تصفح جميع تصنيفات الكتب في مكتبة المتسولين: روايات، أدب، تنمية، تاريخ، فلسفة، علوم وأكثر." },
-      { property: "og:title", content: "كل تصنيفات الكتب | مكتبة المتسولين" },
+      { title: "التصنيفات | تصفح أقسام الكتب | مكتبة روبن هود" },
+      { name: "description", content: "تصفح جميع تصنيفات الكتب في مكتبة روبن هود: روايات، أدب، تنمية، تاريخ، فلسفة، علوم وأكثر." },
+      { property: "og:title", content: "كل تصنيفات الكتب | مكتبة روبن هود" },
       { property: "og:description", content: "اكتشف الكتب حسب التصنيف بسهولة." },
       { property: "og:url", content: "https://www.almotasolen.com/categories" },
     ],

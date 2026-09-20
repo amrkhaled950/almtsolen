@@ -42,7 +42,7 @@ export const dict = {
   "nav.wishlist": { ar: "المفضلة", en: "Wishlist" },
 
   // Hero
-  "hero.tag": { ar: "مكتبة المتسولين", en: "Al-Mutasawilein Library" },
+  "hero.tag": { ar: "مكتبة روبن هود", en: "Robin Hood Library" },
   "hero.title": { ar: "اكتشف عالم الكتب", en: "Discover the world of books" },
   "hero.subtitle": {
     ar: "آلاف العناوين من أمهات الكتب العربية والعالمية، توصيل لكل مصر",

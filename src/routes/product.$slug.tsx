@@ -32,13 +32,13 @@ export const Route = createFileRoute("/product/$slug")({
     if (!p) {
       return {
         meta: [
-          { title: "كتاب | مكتبة المتسولين" },
+          { title: "كتاب | مكتبة روبن هود" },
           { name: "robots", content: "noindex" },
         ],
       };
     }
-    const title = `${p.title_ar} - ${p.author_ar} | مكتبة المتسولين`;
-    const rawDesc = (p.description_ar || `كتاب ${p.title_ar} للمؤلف ${p.author_ar}. اشتر الآن من مكتبة المتسولين بسعر ${p.price} ج.م مع توصيل لكل مصر.`).trim();
+    const title = `${p.title_ar} - ${p.author_ar} | مكتبة روبن هود`;
+    const rawDesc = (p.description_ar || `كتاب ${p.title_ar} للمؤلف ${p.author_ar}. اشتر الآن من مكتبة روبن هود بسعر ${p.price} ج.م مع توصيل لكل مصر.`).trim();
     const description = rawDesc.slice(0, 160);
     const url = `${SITE_URL}/product/${encodeURIComponent(params.slug)}`;
     const image = p.cover_url || `${SITE_URL}/logo.png`;
@@ -78,7 +78,7 @@ export const Route = createFileRoute("/product/$slug")({
             description: rawDesc,
             sku: p.id,
             ...(p.isbn ? { gtin13: p.isbn } : {}),
-            brand: { "@type": "Brand", name: p.publisher_ar || "مكتبة المتسولين" },
+            brand: { "@type": "Brand", name: p.publisher_ar || "مكتبة روبن هود" },
             author: { "@type": "Person", name: p.author_ar },
             offers: {
               "@type": "Offer",

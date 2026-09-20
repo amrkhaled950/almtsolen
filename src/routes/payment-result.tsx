@@ -9,11 +9,11 @@ import { useServerFn } from "@tanstack/react-start";
 export const Route = createFileRoute("/payment-result")({
   head: () => ({
     meta: [
-      { title: "نتيجة الدفع | مكتبة المتسولين" },
-      { name: "description", content: "حالة عملية الدفع الخاصة بطلبك من مكتبة المتسولين." },
+      { title: "نتيجة الدفع | مكتبة روبن هود" },
+      { name: "description", content: "حالة عملية الدفع الخاصة بطلبك من مكتبة روبن هود." },
       { name: "robots", content: "noindex, nofollow" },
-      { property: "og:title", content: "نتيجة الدفع | مكتبة المتسولين" },
-      { property: "og:description", content: "حالة عملية الدفع الخاصة بطلبك من مكتبة المتسولين." },
+      { property: "og:title", content: "نتيجة الدفع | مكتبة روبن هود" },
+      { property: "og:description", content: "حالة عملية الدفع الخاصة بطلبك من مكتبة روبن هود." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
     ],

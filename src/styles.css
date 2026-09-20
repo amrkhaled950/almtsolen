@@ -52,8 +52,8 @@
   --shadow-card: 0 2px 12px -2px oklch(0 0 0 / 0.08);
   --shadow-glow: 0 0 30px color-mix(in oklab, var(--primary) 35%, transparent);
 
-  --gradient-primary: linear-gradient(135deg, var(--primary), oklch(0.38 0.18 25));
-  --gradient-hero: linear-gradient(135deg, var(--primary) 0%, oklch(0.25 0.15 25) 100%);
+  --gradient-primary: linear-gradient(135deg, var(--primary), #0f2419);
+  --gradient-hero: linear-gradient(135deg, var(--primary) 0%, #0d1f15 100%);
   --gradient-gold: linear-gradient(135deg, var(--gold), oklch(0.78 0.14 75));
 }
 
@@ -69,10 +69,10 @@
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.18 0.02 30);
 
-  /* Brand red #8b1c17 */
-  --primary: #8b1c17;
+  /* Brand Forest Green (from Robin Hood Logo) */
+  --primary: #1c3d2a;
   --primary-foreground: oklch(0.99 0.005 60);
-  --primary-hover: #6a1410;
+  --primary-hover: #244f37;
 
   --secondary: oklch(0.96 0.01 60);
   --secondary-foreground: oklch(0.18 0.02 30);
@@ -80,8 +80,8 @@
   --muted: oklch(0.96 0.008 60);
   --muted-foreground: oklch(0.5 0.02 30);
 
-  --accent: oklch(0.94 0.03 27);
-  --accent-foreground: oklch(0.42 0.21 27);
+  --accent: oklch(0.95 0.03 150);
+  --accent-foreground: #1c3d2a;
 
   /* warm gold accent */
   --gold: oklch(0.72 0.14 75);
@@ -95,16 +95,16 @@
 
   --border: oklch(0.9 0.01 60);
   --input: oklch(0.92 0.01 60);
-  --ring: oklch(0.42 0.21 27);
+  --ring: #1c3d2a;
 
   --sidebar: oklch(0.99 0.005 60);
   --sidebar-foreground: oklch(0.18 0.02 30);
-  --sidebar-primary: oklch(0.42 0.21 27);
+  --sidebar-primary: #1c3d2a;
   --sidebar-primary-foreground: oklch(0.99 0.005 60);
-  --sidebar-accent: oklch(0.94 0.03 27);
-  --sidebar-accent-foreground: oklch(0.42 0.21 27);
+  --sidebar-accent: oklch(0.95 0.03 150);
+  --sidebar-accent-foreground: #1c3d2a;
   --sidebar-border: oklch(0.9 0.01 60);
-  --sidebar-ring: oklch(0.42 0.21 27);
+  --sidebar-ring: #1c3d2a;
 }
 
 .dark {
@@ -114,14 +114,14 @@
   --card-foreground: oklch(0.96 0.01 60);
   --popover: oklch(0.2 0.02 30);
   --popover-foreground: oklch(0.96 0.01 60);
-  --primary: #8b1c17;
+  --primary: #244f37;
   --primary-foreground: oklch(0.99 0.005 60);
-  --primary-hover: #a52822;
+  --primary-hover: #2f6547;
   --secondary: oklch(0.25 0.02 30);
   --secondary-foreground: oklch(0.96 0.01 60);
   --muted: oklch(0.25 0.02 30);
   --muted-foreground: oklch(0.7 0.02 60);
-  --accent: oklch(0.3 0.08 27);
+  --accent: oklch(0.28 0.05 150);
   --accent-foreground: oklch(0.96 0.01 60);
   --gold: oklch(0.78 0.14 75);
   --gold-foreground: oklch(0.18 0.02 30);
@@ -131,15 +131,15 @@
   --success-foreground: oklch(0.99 0.005 60);
   --border: oklch(0.3 0.02 30);
   --input: oklch(0.3 0.02 30);
-  --ring: oklch(0.55 0.22 27);
+  --ring: #244f37;
   --sidebar: oklch(0.2 0.02 30);
   --sidebar-foreground: oklch(0.96 0.01 60);
-  --sidebar-primary: oklch(0.55 0.22 27);
+  --sidebar-primary: #244f37;
   --sidebar-primary-foreground: oklch(0.99 0.005 60);
-  --sidebar-accent: oklch(0.3 0.08 27);
+  --sidebar-accent: oklch(0.28 0.05 150);
   --sidebar-accent-foreground: oklch(0.96 0.01 60);
   --sidebar-border: oklch(0.3 0.02 30);
-  --sidebar-ring: oklch(0.55 0.22 27);
+  --sidebar-ring: #244f37;
 }
 
 @layer base {

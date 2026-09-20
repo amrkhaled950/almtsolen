@@ -14,7 +14,7 @@ import { validateCoupon, type CouponPreview } from "../lib/coupons.functions";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/checkout")({
-  head: () => ({ meta: [{ title: "إتمام الشراء | المتسولين" }] }),
+  head: () => ({ meta: [{ title: "إتمام الشراء | روبن هود" }] }),
   component: Checkout,
 });
 

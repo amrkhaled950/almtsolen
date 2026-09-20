@@ -4,9 +4,9 @@ import { PolicyPage } from "../components/layout/PolicyPage";
 export const Route = createFileRoute("/returns")({
   head: () => ({
     meta: [
-      { title: "سياسة الاسترجاع والاستبدال | مكتبة المتسولين" },
-      { name: "description", content: "تعرف على سياسة استرجاع واستبدال الكتب في مكتبة المتسولين خلال 14 يوم من تاريخ الاستلام." },
-      { property: "og:title", content: "الاسترجاع والاستبدال | مكتبة المتسولين" },
+      { title: "سياسة الاسترجاع والاستبدال | مكتبة روبن هود" },
+      { name: "description", content: "تعرف على سياسة استرجاع واستبدال الكتب في مكتبة روبن هود خلال 14 يوم من تاريخ الاستلام." },
+      { property: "og:title", content: "الاسترجاع والاستبدال | مكتبة روبن هود" },
       { property: "og:description", content: "سياسة مرنة لاسترجاع واستبدال الكتب." },
       { property: "og:url", content: "https://www.almotasolen.com/returns" },
     ],

@@ -104,7 +104,7 @@ export function PromoModal() {
 
           <button
             onClick={handleClose}
-            className="w-full bg-red-600 hover:bg-red-700 active:bg-red-800 text-white font-bold text-lg py-3 rounded-full transition-colors duration-200"
+            className="w-full bg-primary hover:bg-primary-hover active:opacity-90 text-primary-foreground font-bold text-lg py-3 rounded-full transition-colors duration-200"
           >
             {cta}
           </button>

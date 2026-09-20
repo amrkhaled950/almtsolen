@@ -9,9 +9,9 @@ const CONTACT_PHONE_DEFAULT = "+20 100 000 0000";
 export const Route = createFileRoute("/contact")({
   head: () => ({
     meta: [
-      { title: "تواصل معنا | مكتبة المتسولين" },
-      { name: "description", content: "تواصل مع خدمة عملاء مكتبة المتسولين عبر البريد الإلكتروني أو الهاتف للاستفسار عن الكتب والطلبات والتوصيل." },
-      { property: "og:title", content: "تواصل معنا | مكتبة المتسولين" },
+      { title: "تواصل معنا | مكتبة روبن هود" },
+      { name: "description", content: "تواصل مع خدمة عملاء مكتبة روبن هود عبر البريد الإلكتروني أو الهاتف للاستفسار عن الكتب والطلبات والتوصيل." },
+      { property: "og:title", content: "تواصل معنا | مكتبة روبن هود" },
       { property: "og:description", content: "نحن هنا للإجابة على استفساراتك بخصوص الكتب والطلبات." },
       { property: "og:url", content: "https://www.almotasolen.com/contact" },
     ],
@@ -22,8 +22,8 @@ export const Route = createFileRoute("/contact")({
         children: JSON.stringify({
           "@context": "https://schema.org",
           "@type": "LocalBusiness",
-          name: "مكتبة المتسولين",
-          alternateName: "Al Motasolen Bookstore",
+          name: "مكتبة روبن هود",
+          alternateName: "Robin Hood Bookstore",
           url: "https://www.almotasolen.com",
           telephone: CONTACT_PHONE_DEFAULT,
           email: CONTACT_EMAIL_DEFAULT,

@@ -30,10 +30,10 @@ export const Route = createFileRoute("/search")({
   validateSearch: zodValidator(searchSchema),
   head: () => ({
     meta: [
-      { title: "البحث | مكتبة المتسولين" },
+      { title: "البحث | مكتبة روبن هود" },
       {
         name: "description",
-        content: "ابحث عن كتبك المفضلة في مكتبة المتسولين بالعنوان، المؤلف، أو دار النشر.",
+        content: "ابحث عن كتبك المفضلة في مكتبة روبن هود بالعنوان، المؤلف، أو دار النشر.",
       },
       { name: "robots", content: "noindex,follow" },
     ],

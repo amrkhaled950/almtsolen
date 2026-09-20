@@ -47,9 +47,9 @@ export function AdminSidebar({ onNavigate }: { onNavigate?: () => void }) {
   return (
     <aside className="flex h-full w-64 flex-col border-e border-sidebar-border bg-sidebar text-sidebar-foreground">
       <div className="flex h-16 items-center gap-2.5 border-b border-sidebar-border px-5">
-        <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-hero text-primary-foreground font-display font-black">م</div>
+        <div className="grid h-9 w-9 place-items-center rounded-lg bg-gradient-hero text-primary-foreground font-display font-black">ر</div>
         <div>
-          <div className="font-display font-extrabold text-sm leading-tight">{isAr ? "المتسولين" : "Al-Mutasawilein"}</div>
+          <div className="font-display font-extrabold text-sm leading-tight">{isAr ? "روبن هود" : "Robin Hood"}</div>
           <div className="text-[10px] text-muted-foreground tracking-widest uppercase">{isAr ? "لوحة التحكم" : "Admin Panel"}</div>
         </div>
       </div>

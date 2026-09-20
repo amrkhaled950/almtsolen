@@ -18,8 +18,8 @@ export function WhatsAppFloat() {
   if (!phone || phone.length < 8) return null;
 
   const message = locale === "ar"
-    ? "السلام عليكم، عاوز أستفسر عن كتاب من مكتبة المتسولين"
-    : "Hello, I'd like to ask about a book from Al-Motasolen library";
+    ? "السلام عليكم، عاوز أستفسر عن كتاب من مكتبة روبن هود"
+    : "Hello, I'd like to ask about a book from Robin Hood Bookstore";
   const href = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
 
   return (
